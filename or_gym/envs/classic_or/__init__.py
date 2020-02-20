@@ -1,1 +1,1 @@
-from or_gym.envs.classic_or.knapsack import KnapsackEnv
+from envs.classic_or.knapsack import KnapsackEnv
