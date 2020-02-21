@@ -5,44 +5,44 @@ from gym.utils import seeding
 import copy
 
 class KnapsackEnv(gym.Env):
-	'''
-	Unbounded Knapsack Problem
+    '''
+    Unbounded Knapsack Problem
 
-	The Knapsack Problem (KP) is a combinatorial optimization problem which
-	requires the user to select from a range of goods of different values and
-	weights in order to maximize the value of the selected items within a 
-	given weight limit. This version is unbounded meaning the we can select
-	items without limit. 
+    The Knapsack Problem (KP) is a combinatorial optimization problem which
+    requires the user to select from a range of goods of different values and
+    weights in order to maximize the value of the selected items within a 
+    given weight limit. This version is unbounded meaning the we can select
+    items without limit. 
 
-	The episodes proceed by selecting items and placing them into the
-	knapsack one at a time until the weight limit is reached or exceeded, at
-	which point the episode ends.
+    The episodes proceed by selecting items and placing them into the
+    knapsack one at a time until the weight limit is reached or exceeded, at
+    which point the episode ends.
 
-	Observation:
-		Type: Tuple, Discrete
-		0: list of item weights
-		1: list of item values
-		2: current weight in knapsack
+    Observation:
+        Type: Tuple, Discrete
+        0: list of item weights
+        1: list of item values
+        2: current weight in knapsack
 
-	Actions:
-		Type: Discrete
-		0: Place item 0 into knapsack
-		1: Place item 1 into knapsack
-		2: ...
+    Actions:
+        Type: Discrete
+        0: Place item 0 into knapsack
+        1: Place item 1 into knapsack
+        2: ...
 
-	Reward:
-		Value of item successfully placed into knapsack or 0 if the item
-		doesn't fit, at which point the episode ends.
+    Reward:
+        Value of item successfully placed into knapsack or 0 if the item
+        doesn't fit, at which point the episode ends.
 
-	Starting State:
-		Lists of available items and empty knapsack.
+    Starting State:
+        Lists of available items and empty knapsack.
 
-	Episode Termination:
-		Full knapsack or selection that puts the knapsack over the limit.
-	'''
+    Episode Termination:
+        Full knapsack or selection that puts the knapsack over the limit.
+    '''
     
     def __init__(self):
-        self.item_weights = [0, 2, 3, 6, 10, 18]
+        self.item_weights = [1, 2, 3, 6, 10, 18]
         self.item_values = [0, 1, 3, 14, 20, 100]
         self.item_numbers = np.arange(len(self.item_weights))
         self.N = len(self.item_weights)
