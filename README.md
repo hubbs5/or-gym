@@ -14,7 +14,7 @@ Clone the repo to your machine. Then navigate to the `or_gym_envs` folder. From 
 
 ## Environments
 
-- `Knapsack-v0`: a small version of the classic unbounded knapsack problem (<font color="#ff2400">find a simple one in the lit to cite</font>).
+- `Knapsack-v0`: a small version of the classic unbounded knapsack problem (<font color="#ff2400">find a simple one in the lit to cite</font>). See the [`unbounded_knapsack_problem`](https://github.com/hubbs5/or-gym/blob/knapsack_problem/notebooks/unbounded_knapsack_opt.ipynb) notebook for additional details and solutions.
 - `Knapsack-v1`: bounded knapsack problem with uncertainty (<font color="#ff2400">to be implemented</font>).
 - `NewsVendor-v0`: <font color="#ff2400">to be implemented</font>
 - `TSP-v0`: <font color="#ff2400">to be implemented</font>
