@@ -1,0 +1,163 @@
+% Christian Hubbs
+% 28.08.2019
+
+% because I always forget, make sure to run the bibtex command on THIS document!
+
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+\usepackage[pdftex]{graphicx}
+\graphicspath{{./images/}}
+\usepackage{setspace}
+\usepackage{color}
+\usepackage{float}
+%\hypersetup{draft}
+\usepackage[draft]{hyperref}
+\usepackage{amsmath}
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage[margin=1in]{geometry}
+\usepackage{subcaption}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+\usepackage{chngcntr} % Adjusts the equation numbering by section
+%\counterwithin*{equation}{section}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert} % Provides norms in mathmode
+\newcommand{\citetemp}[1]{(#1)}
+\usepackage{wrapfig}
+\usepackage{hanging}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\usepackage[toc,page]{appendix}
+\usepackage{rotating}
+\usepackage{multirow}
+\newcommand{\textcite}[1]{\citeauthor{#1}, \citeyear{#1}}
+\providecommand{\keywords}[1]{\textit{Keywords:} #1}
+%\usepackage{biblatex}
+\doublespacing
+ 
+%Import the natbib package and sets a bibliography  and citation styles
+\usepackage{natbib}
+\bibliographystyle{abbrvnat}
+
+\title{OR-Gym: A Reinforcement Learning Library for Operations Research Problems}
+\author{
+	Christian D.~Hubbs,\thanks{Department of Chemical Engineering, Carnegie Mellon University, Pittsburgh, PA 15123} \\
+	Hector Parra Perez,\footnotemark[1] \\
+	Owais Sarwar,\footnotemark[1]\\
+	Nikolaos V. Sahinidis,\footnotemark[1] \\
+	Ignacio E. Grossmann,\footnotemark[1] \\
+	John M. Wassick\thanks{Dow Chemical, Digital Fulfillment Center, Midland, MI 48667}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We introduce OR-Gym, an open-source benchmark in the form of OpenAI Gym for developing reinforcement learning algorithms to address operations research problems.
+Reinforcement learning has been widely applied to game-playing and surpassed the best human-level performance in many domains, yet there are few use-cases in industrial or commercial settings.
+We apply reinforcement learning to the knapsack, bin packing, travelling salesman, news vendor, max pooling, portfolio optimization, and vehicle routing problems as well as more general, multi-period resource task networks. 
+These problems cover logistics, finance, engineering, and are common in many business operation settings.
+In each case, we select a prototypical version from the literature to benchmark reinforcement learning and other optimal approaches against. 
+\end{abstract}
+
+\keywords{Machine Learning, Reinforcement Learning, Optimization, Scheduling, Stochastic Programming}
+
+\section{Introduction}
+
+\section{Knapsack}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Bin Packing}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{News Vendor}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Travelling Salesman}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Vehicle Routing}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Max Pooling}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Portfolio Optimization}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Resource Task Network}
+
+\subsection{Problem Formulation}
+
+\subsection{Benchmark}
+
+\subsection{Reinforcement Learning Algorithm}
+
+\subsection{Results}
+
+\section{Conclusion}
+
+\subsection{Future Work}
+
+\newpage
+
+\bibliography{library.bib}
+
+\end{document}
