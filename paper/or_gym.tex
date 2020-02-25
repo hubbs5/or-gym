@@ -87,7 +87,7 @@ There is a growing body of literature that is applying RL techniques to existing
 
 Despite these successes only a handful of industrial examples exist in the literature. 
 \citet{Hubbs2020} use RL to schedule a single-stage chemical reactor under uncertain demand which outperforms naive optimization models. 
-% Add other industrial applications as they may arise
+% Add other industrial applications as they may arise. There are some other refs in my paper.
 
 We seek to provide a standardized library for the research community who wishes to extend RL into commercial applications by building on top of the preceeding work and releasing OR-Gym, a single library that relies on the familiar OpenAI interface for RL \citep{Brockman2016}, but contains problems relevant for industrial use.
 To this end, we have incorporated the benchmarks in \citet{Balaji2019}, while extending the library to address the TSP, KP, portfolio optimization, and multi-period resource task networks (RTN). 
@@ -97,9 +97,91 @@ It is our goal that this work encourages further development and integration of 
 
 \section{Knapsack}
 
-\subsection{Problem Formulation}
+The Knapsack Problem (KP) was first introduced by \citet{Matthews1896}. 
+It is a NP-hard combinatorial optimization problem that seeks to maximize the value of items ($v_i$) with a given weight ($w_i$)contained in a knapsack subject to a weight limit $W$. 
+
+There are a few versions of the problem in the literature, the undbounded KP, bounded, (anything with stochastic elements?)
+
+\textcolor{red}{Also add info about practical applications, additional citations, etc. to put this particular problem into more context. Is there a motivating example we can draw on?}
+
+\subsection{Unbounded Knapsack}
+
+The unbounded version of the knapsack problem (UPK) can be formulated as an optimization problem as follows:
+
+\begin{equation}
+\textrm{max} \; z = \sum_i v_i x_i
+\end{equation}
+
+\begin{equation}
+\textrm{s.t.} \; \sum_i w_i x_i \leq W
+\end{equation}
+
+\begin{equation}
+x_i \in [0, 1]
+\end{equation}
+
+\begin{equation}
+v_i, w_i \in \rm I\!R^+
+\end{equation}
+
+where $x_i$ denotes a binary decision variable to include or exclude an item from the knapsack. 
+This can be solved as an integer programming problem using algorithms such as branch-and-bound to maximize the objective function. 
+In the unbounded case, the number of times the algorithm can select a given item is unlimited.
+
+\subsection{Bounded Knapsack}
+
+The bounded knapsack problem (BKP) differs from the unbounded case in that each item can only be selected a limited number of times. 
+This introduces an additional constraint into our model.
+
+\begin{equation}
+\textrm{max} \; z = \sum_i v_i x_i
+\end{equation}
+
+\begin{equation}
+\textrm{s.t.} \; \sum_i w_i x_i \leq W
+\end{equation}
+
+\begin{equation}
+\sum_i x_i \leq N_i
+\end{equation}
+
+\begin{equation}
+x_i \in [0, 1]
+\end{equation}
+
+\begin{equation}
+v_i, w_i \in \rm I\!R^+
+\end{equation}
+
+where $N_i$ is the number of times an item can be selected.
+
+\subsection{Stochastic Bounded Knapsack}
+SBKP?
 
 \subsection{Benchmark}
+
+The UKP and BKP are solved as integer programs using Gurobi 8.2 and Pyomo 5.6.2 to optimality.
+This method will yield the optimal solution for comparison of the RL model. 
+Additionally, we will employ a heuristic solution that uses the value to weight ratio of each item to fill the knapsack first with the items that have the highest value to weight ratio before moving to the second item in the list and so forth until the weight limit is reached.
+Each of these methods is available within the OR-Gym library.
+The UKP is given by Knapsack-v0, BKP by Knapsack-v1. 
+Example code is given to enable reproducibility.
+
+\subsection{Problem Formulation}
+
+While IP solutions seek to solve the problem simultaneously, RL requires a MDP formulation which relies on sequential decision making.
+In this case, the RL model must select successive items to place in the knapsack until the limit is reached.
+This approach seems more akin to how a human would pack a bag, placing one in at a time until the knapsack is full.
+The human knapsack-packer can always remove an item if she determines it does not fit or finds a better item, our RL system, however cannot.
+Once an item is selected for inclusion, it must remain. 
+
+The RL system requires a state to make each decision.
+In each case, the state could be as simple as the current weight load inside the knapsack, at which point the system would make random selections until it learned a suitable sequence of actions to fill the knapsack.
+This approach certainly does not bode well for transfer to new sets of items or knapsacks with different weight limits.
+Moreover, the single-state input is wasting potentially valuable information such as the value of the items, the weight, the ultimate carrying capacity of the knapsack, and in the bounded cases, the number of items available to be selected.
+For this reason, we provide each of these values as part of the state output.
+In the UKP case, the environment returns a tuple of three vectors: item value, item weight, and a vector containing the current load in the knapsack and weight limit.
+For the BKP case, we add a fourth vector containing the number of items available to be selected.
 
 \subsection{Reinforcement Learning Algorithm}
 
