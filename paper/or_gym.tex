@@ -72,7 +72,28 @@ In each case, we select a prototypical version from the literature to benchmark 
 
 \section{Introduction}
 
-Reinforcement learning (RL) is a branch of machine learning that seeks to make a series of sequential decisions to maximize a reward \citep{Sutton2018}. 
+Reinforcement learning (RL) is a branch of machine learning that seeks to make a series of sequential decisions to maximize a reward \citep{Sutton2018}.
+The technique has recieved widespread attention in game-playing, whereby RL approaches have beaten some of the world's best human players in Go, DOTA2, and StarCraft II to name a few (\citet{Silver2017}, \citet{Berner2010a}, \citet{Vinyals2019}). 
+There is a growing body of literature that is applying RL techniques to existing OR problems.
+% Basically took these next few lines from Balaji 2019 for a placeholder 
+\citet{Bello2019} applies RL to the travelling salesman problem (TSP) and knapsack problems (KP). 
+\citet{Kool2019} apply RL to the TSP and variants such as the vehicle routing problem (VRP) and a prize-collection variant. 
+\citet{Nazari2018} solve static and online versions of the VRP.
+\citet{Kong2019} use RL to solve an online knapsack problem, secretary and adwords problems.
+\citet{Oroojlooyjadid2017} apply RL to the beer game.
+\citet{Lin2018} us RL for taxi fleet management. 
+% End plagarism
+\citet{Balaji2019} provided versions of online bin packing, news vendor, and vehicle routing problems as well as models for RL benchmarks.
+
+Despite these successes only a handful of industrial examples exist in the literature. 
+\citet{Hubbs2020} use RL to schedule a single-stage chemical reactor under uncertain demand which outperforms naive optimization models. 
+% Add other industrial applications as they may arise
+
+We seek to provide a standardized library for the research community who wishes to extend RL into commercial applications by building on top of the preceeding work and releasing OR-Gym, a single library that relies on the familiar OpenAI interface for RL \citep{Brockman2016}, but contains problems relevant for industrial use.
+To this end, we have incorporated the benchmarks in \citet{Balaji2019}, while extending the library to address the TSP, KP, portfolio optimization, and multi-period resource task networks (RTN). 
+RL problems are formulated as Markov Decision Processes (MDP), meaning they are sequential decision making problems, often times probabalistic in nature, and rely on the current state of the system to capture all relevant information for determining future states. % Can clean up this language a bit.
+This framework is not widely used in the optimization community, so we make explicit our thought process as we reformulate many optimization problems to fit into the MDP mold without loss of generality.
+It is our goal that this work encourages further development and integration of RL into optimization and the OR community while also opening the RL community to many of the problems and challenges that the OR community has been wrestling with for decades.
 
 \section{Knapsack}
 
