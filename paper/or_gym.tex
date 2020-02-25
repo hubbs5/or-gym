@@ -107,23 +107,23 @@ There are a few versions of the problem in the literature, the undbounded KP, bo
 \subsection{Unbounded Knapsack}
 
 The unbounded version of the knapsack problem (UPK) can be formulated as an optimization problem as follows:
-
+%
 \begin{equation}
 \textrm{max} \; z = \sum_i v_i x_i
 \end{equation}
-
+%
 \begin{equation}
 \textrm{s.t.} \; \sum_i w_i x_i \leq W
 \end{equation}
-
+%
 \begin{equation}
 x_i \in [0, 1]
 \end{equation}
-
+%
 \begin{equation}
 v_i, w_i \in \rm I\!R^+
 \end{equation}
-
+%
 where $x_i$ denotes a binary decision variable to include or exclude an item from the knapsack. 
 This can be solved as an integer programming problem using algorithms such as branch-and-bound to maximize the objective function. 
 In the unbounded case, the number of times the algorithm can select a given item is unlimited.
@@ -131,28 +131,29 @@ In the unbounded case, the number of times the algorithm can select a given item
 \subsection{Bounded Knapsack}
 
 The bounded knapsack problem (BKP) differs from the unbounded case in that each item can only be selected a limited number of times. 
-This introduces an additional constraint into our model.
-
+This introduces an additional constraint into our model shown below in equation \ref{eq:bounding_constraint}.
+%
 \begin{equation}
 \textrm{max} \; z = \sum_i v_i x_i
 \end{equation}
-
+%
 \begin{equation}
 \textrm{s.t.} \; \sum_i w_i x_i \leq W
 \end{equation}
-
+%
 \begin{equation}
 \sum_i x_i \leq N_i
+\label{eq:bounding_constraint}
 \end{equation}
-
+%
 \begin{equation}
 x_i \in [0, 1]
 \end{equation}
-
+%
 \begin{equation}
 v_i, w_i \in \rm I\!R^+
 \end{equation}
-
+%
 where $N_i$ is the number of times an item can be selected.
 
 \subsection{Stochastic Bounded Knapsack}
