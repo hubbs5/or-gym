@@ -97,7 +97,7 @@ It is our goal that this work encourages further development and integration of 
 
 \section{Knapsack}
 
-The Knapsack Problem (KP) was first introduced by \citet{Mathews1896}. 
+The Knapsack Problem (KP) was first introduced by \citet{Mathews1896} and a classic exposition of the problem can be found in \citet{Dantzig1957}.
 It is a NP-hard combinatorial optimization problem that seeks to maximize the value of items ($v_i$) with a given weight ($w_i$)contained in a knapsack subject to a weight limit $W$. 
 
 There are a few versions of the problem in the literature, the undbounded KP, bounded, (anything with stochastic elements?)
@@ -186,7 +186,26 @@ For the BKP case, we add a fourth vector containing the number of items availabl
 
 \subsection{Reinforcement Learning Algorithm}
 
+Need to select an algorithm here...
+
 \subsection{Results}
+
+\begin{table}
+\centering
+\caption{Knapsack Results}
+\ra{1.3}
+\begin{tabular}{@{}lccc@{}}\toprule
+%\multirow{2}{opt}{Problem} & Heuristic & IP & RL 
+Problem & Heuristic & IP & RL \\
+\midrule
+UKB & 0 & 0 & 0 \\
+BKB & 0 & 0 & 0 \\
+SBKB & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\label{tab:kp_results}
+\end{table}
+
 
 \section{Bin Packing}
 
