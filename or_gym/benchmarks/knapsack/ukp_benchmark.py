@@ -1,3 +1,3 @@
 #!usr/bin/env python
 
-from algos.math_programming.knapsack import ukp_mp
+from or_gym.algos import ukp_mp
