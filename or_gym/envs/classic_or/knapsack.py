@@ -72,13 +72,13 @@ class KnapsackEnv(gym.Env):
             reward = 0
             done = True
             
-        self._update_state()
+        self._update_state(item)
         return self.state, reward, done, {}
     
     def _get_obs(self):
         return self.state
     
-    def _update_state(self):
+    def _update_state(self, item):
         self.state = (self.item_weights,
                       self.item_values, 
                       self.current_weight)
