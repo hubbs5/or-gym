@@ -156,8 +156,14 @@ v_i, w_i \in \rm I\!R^+
 %
 where $N_i$ is the number of times an item can be selected.
 
-\subsection{Stochastic Bounded Knapsack}
-SBKP?
+\subsection{Online Knapsack}
+
+A version of the Online Knapsack Problem (OKP) is found in \citet{Kong2019}.
+This requires the algorithm to either accept or reject a given item that it is presented with.
+There are a limited number of items that the algorithm can choose from and each is drawn randomly with a probability $p_i$. 
+After $M$ items have been drawn, the episode terminates leaving the knapsack with the items inside.
+The goal here is the same, to maximize the value of the items in the knapsack while staying within the weight limit.
+
 
 \subsection{Benchmark}
 
@@ -165,8 +171,8 @@ The UKP and BKP are solved as integer programs using Gurobi 8.2 and Pyomo 5.6.2 
 This method will yield the optimal solution for comparison of the RL model. 
 Additionally, we will employ a heuristic solution that uses the value to weight ratio of each item to fill the knapsack first with the items that have the highest value to weight ratio before moving to the second item in the list and so forth until the weight limit is reached.
 Each of these methods is available within the OR-Gym library.
-The UKP is given by Knapsack-v0, BKP by Knapsack-v1. 
-Example code is given to enable reproducibility.
+The UKP is given by Knapsack-v0, BKP by Knapsack-v1, and the OKP by Knapsack-v2. 
+Example code is given to enable reproducibility at \href{www.github.com/hubbs5/or-gym/notebooks}{www.github.com/hubbs5/or-gym/notebooks}.
 
 \subsection{Problem Formulation}
 
@@ -174,7 +180,7 @@ While IP solutions seek to solve the problem simultaneously, RL requires a MDP f
 In this case, the RL model must select successive items to place in the knapsack until the limit is reached.
 This approach seems more akin to how a human would pack a bag, placing one in at a time until the knapsack is full.
 The human knapsack-packer can always remove an item if she determines it does not fit or finds a better item, our RL system, however cannot.
-Once an item is selected for inclusion, it must remain. 
+Once an item is selected for inclusion, it must remain (this is made explicit for all algorithms in the OKP case).
 
 The RL system requires a state to make each decision.
 In each case, the state could be as simple as the current weight load inside the knapsack, at which point the system would make random selections until it learned a suitable sequence of actions to fill the knapsack.
@@ -182,7 +188,9 @@ This approach certainly does not bode well for transfer to new sets of items or 
 Moreover, the single-state input is wasting potentially valuable information such as the value of the items, the weight, the ultimate carrying capacity of the knapsack, and in the bounded cases, the number of items available to be selected.
 For this reason, we provide each of these values as part of the state output.
 In the UKP case, the environment returns a tuple of three vectors: item value, item weight, and a vector containing the current load in the knapsack and weight limit.
-For the BKP case, we add a fourth vector containing the number of items available to be selected.
+For the BKP and OKP cases, we add a fourth vector containing the number of items available to be selected.
+
+The reward function for our RL algorithm will simply be the value of each item that is placed within the knapsack for all cases.
 
 \subsection{Reinforcement Learning Algorithm}
 
