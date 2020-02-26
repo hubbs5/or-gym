@@ -78,7 +78,7 @@ class KnapsackEnv(gym.Env):
     def _get_obs(self):
         return self.state
     
-    def _update_state(self, item):
+    def _update_state(self, item=None):
         self.state = (self.item_weights,
                       self.item_values, 
                       self.current_weight)
