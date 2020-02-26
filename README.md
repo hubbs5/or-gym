@@ -10,7 +10,7 @@ This library contains environments consisting of operations research problems wh
 ## Installation
 
 Clone the repo to your machine. Then navigate to the `or_gym_envs` folder. From there, run `pip install -e .` to install the OR Gym environments. To test the installation, run the `or_gym_test.py` file. You should receive a printout saying that the model was loaded successfully.
-<font color="#ff2400">Eventually, we need to get a simple `pip install or-gym` command.</font>
+<font color="#ff2400">Eventually, we need to get a simple `pip install or-gym` command. Also, would like to set this up such that we can just import or_gym.envs to get the environments, or_gym.benchmarks, to get those files, etc. Right now, using relative imports, which isn't ideal.</font>
 
 ## Environments
 
