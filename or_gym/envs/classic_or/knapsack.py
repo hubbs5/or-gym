@@ -42,8 +42,8 @@ class KnapsackEnv(gym.Env):
     '''
     
     def __init__(self):
-        self.item_weights = [1, 2, 3, 6, 10, 18]
-        self.item_values = [0, 1, 3, 14, 20, 100]
+        self.item_weights = np.array([1, 2, 3, 6, 10, 18])
+        self.item_values = np.array([0, 1, 3, 14, 20, 100])
         self.item_numbers = np.arange(len(self.item_weights))
         self.N = len(self.item_weights)
         self.max_weight = 15
