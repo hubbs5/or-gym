@@ -1,6 +1,6 @@
 #!usr/bin/env python
 
-from or_gym.algos.knapsack import ukp_math_prog
+from or_gym.algos.knapsack.math_prog import *
 from or_gym.algos.math_prog_utils import *
 import sys
 from argparse import ArgumentParser
@@ -14,7 +14,7 @@ def parse_arguments():
 
 def optimize_ukp():
 
-	model = ukp_math_prog.build_ip_model('Knapsack-v0')
+	model = ukp_math_prog.build_ukp_ip_model('Knapsack-v0')
 	model, results = solve_math_program(model)
 	return model, results
 
