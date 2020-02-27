@@ -17,10 +17,10 @@ def build_ukp_ip_model(env_name='Knapsack-v0'):
 	    initialize={i: j for i, j in zip(env.item_numbers, env.item_weights)})
 	m.v = Param(m.i, 
 	    initialize={i: j for i, j in zip(env.item_numbers, env.item_values)})
-	m.x = Var(m.i, within=Binary)
+	m.x = Var(m.i, within=NonNegativeIntegers)
 
-	@m.Constraint(m.i)
-	def weight_constraint(m, i):
+	@m.Constraint()
+	def weight_constraint(m):
 	    return sum(m.w[i] * m.x[i] for i in m.i) - m.W <= 0
 
 	m.obj = Objective(expr=(
@@ -42,10 +42,10 @@ def build_bkp_ip_model(env_name='Knapsack-v1'):
 	    initialize={i: j for i, j in zip(env.item_numbers, env.item_weights)})
 	m.v = Param(m.i, 
 	    initialize={i: j for i, j in zip(env.item_numbers, env.item_values)})
-	m.x = Var(m.i, within=Binary)
+	m.x = Var(m.i, within=NonNegativeIntegers)
 
-	@m.Constraint(m.i)
-	def weight_constraint(m, i):
+	@m.Constraint()
+	def weight_constraint(m):
 	    return sum(m.w[i] * m.x[i] for i in m.i) - m.W <= 0
 
 	m.obj = Objective(expr=(
