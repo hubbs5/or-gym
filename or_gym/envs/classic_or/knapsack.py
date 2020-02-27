@@ -276,8 +276,8 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         return np.random.choice([0, 1])
     
     def reset(self):
-    	if not hasattr(self, 'item_probs'):
-    		self.item_probs = self.item_limits_init / self.item_limits_init.sum()
+        if not hasattr(self, 'item_probs'):
+            self.item_probs = self.item_limits_init / self.item_limits_init.sum()
         self.current_weight = 0
         self.item_limits = self.item_limits_init.copy()
         self._update_state()
