@@ -48,6 +48,10 @@ def build_bkp_ip_model(env_name='Knapsack-v1'):
 	def weight_constraint(m):
 	    return sum(m.w[i] * m.x[i] for i in m.i) - m.W <= 0
 
+	@m.Constraint(m.i)
+	def item_constraint(m, i):
+		return m.x[i] - m.b[i] <= 0
+
 	m.obj = Objective(expr=(
 	    sum([m.v[i] * m.x[i] for i in m.i])),
 	    sense=maximize)
