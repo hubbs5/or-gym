@@ -183,7 +183,43 @@ class BoundedKnapsackEnv(KnapsackEnv):
         return self.state
 
 class OnlineKnapsackEnv(BoundedKnapsackEnv):
-    
+    '''
+    Online Knapsack Problem
+
+    The Knapsack Problem (KP) is a combinatorial optimization problem which
+    requires the user to select from a range of goods of different values and
+    weights in order to maximize the value of the selected items within a 
+    given weight limit. This version is online meaning each item is randonly
+    presented to the algorithm one at a time, at which point the algorithm 
+    can either accept or reject the item. After seeing a fixed number of 
+    items are shown, the episode terminates. If the weight limit is reached
+    before the episode ends, then it terminates early.
+
+    Observation:
+        Type: Tuple, Discrete
+        0: list of item weights
+        1: list of item values
+        2: list of item limits
+        3: maximum weight of the knapsack
+        4: current weight in knapsack
+
+
+    Actions:
+        Type: Discrete
+        0: Reject item
+        1: Place item into knapsack
+
+    Reward:
+        Value of item successfully placed into knapsack or 0 if the item
+        doesn't fit, at which point the episode ends.
+
+    Starting State:
+        Lists of available items and empty knapsack.
+
+    Episode Termination:
+        Full knapsack, selection that puts the knapsack over the limit, or
+        the number of items to be drawn has been reached.
+    '''
     def __init__(self):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
