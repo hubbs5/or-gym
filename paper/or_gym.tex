@@ -98,7 +98,7 @@ It is our goal that this work encourages further development and integration of 
 \section{Knapsack}
 
 The Knapsack Problem (KP) was first introduced by \citet{Mathews1896} and a classic exposition of the problem can be found in \citet{Dantzig1957}.
-It is a NP-hard combinatorial optimization problem that seeks to maximize the value of items ($v_i$) with a given weight ($w_i$)contained in a knapsack subject to a weight limit $W$. 
+It is a NP-hard combinatorial optimization problem that seeks to maximize the value of items ($v_i$) with a given non-negative weight ($w_i$) contained in a knapsack subject to a weight limit $W$. 
 
 There are a few versions of the problem in the literature, the undbounded KP, bounded, (anything with stochastic elements?)
 
@@ -117,11 +117,11 @@ The unbounded version of the knapsack problem (UPK) can be formulated as an opti
 \end{equation}
 %
 \begin{equation}
-x_i \in [0, 1]
+x_i \in \rm I\!I^+
 \end{equation}
 %
 \begin{equation}
-v_i, w_i \in \rm I\!R^+
+v_i\in \rm I\!R^+
 \end{equation}
 %
 where $x_i$ denotes a binary decision variable to include or exclude an item from the knapsack. 
@@ -217,6 +217,8 @@ SBKB & 0 & 0 & 0 \\
 
 \section{Bin Packing}
 
+\lipsum[1]
+
 \subsection{Problem Formulation}
 
 \subsection{Benchmark}
@@ -225,7 +227,9 @@ SBKB & 0 & 0 & 0 \\
 
 \subsection{Results}
 
-\section{News Vendor}
+\section{Newsvendor}
+
+
 
 \subsection{Problem Formulation}
 
@@ -237,6 +241,8 @@ SBKB & 0 & 0 & 0 \\
 
 \section{Travelling Salesman}
 
+\lipsum[1]
+
 \subsection{Problem Formulation}
 
 \subsection{Benchmark}
@@ -245,9 +251,15 @@ SBKB & 0 & 0 & 0 \\
 
 \subsection{Results}
 
+or here...
+
 \section{Vehicle Routing}
 
+What's going on here?
+
 \subsection{Problem Formulation}
+
+\lipsum[1]
 
 \subsection{Benchmark}
 
@@ -257,7 +269,7 @@ SBKB & 0 & 0 & 0 \\
 
 \section{Dynamic Pooling}
 
-\textcolor{red}{To be honest, these next few could be independent papers because I haven't seen them addressed in the RL literature at all.}
+%\textcolor{red}{To be honest, these next few could be independent papers because I haven't seen them addressed in the RL literature at all.}
 
 The Dynamic Pooling Problem is well studied in the oil, gas, chemicals, and wastewater industries.
 It consists of combining streams in intermediate tanks, then blending these streams in terminal points.
