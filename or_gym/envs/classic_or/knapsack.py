@@ -226,7 +226,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self.observation_space = spaces.Tuple((
             spaces.Discrete(self.N),
             spaces.Discrete(self.N),
-            spaces.Discrete(3)))
+            spaces.Discrete(2)))
 
         self.step_counter = 0
         self.step_limit = 5
@@ -279,6 +279,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         if not hasattr(self, 'item_probs'):
             self.item_probs = self.item_limits_init / self.item_limits_init.sum()
         self.current_weight = 0
+        self.step_counter = 0
         self.item_limits = self.item_limits_init.copy()
         self._update_state()
         return self.state
