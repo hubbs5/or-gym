@@ -56,6 +56,6 @@ if __name__ == '__main__':
 		env.reset()
 		actions, items, rewards = okp_heuristic(env, item_sequence[n])
 		avg_heur_rewards += (sum(rewards) - avg_heur_rewards) / (n + 1)
-	print("Average Heuristic Reward\t=\t{}".format(avg_heur_rewards))
+	print("Average Heuristic Reward\t=\t{:.2f}".format(avg_heur_rewards))
 	
 	# print("Average RL Reward\t\t=\t{}".format())
