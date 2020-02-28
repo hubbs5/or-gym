@@ -57,7 +57,7 @@ def bkp_heuristic(env):
     return actions, rewards
 
 def okp_heuristic(env, scenario=None):
-	'''TwoBins from Han 2015'''
+    '''TwoBins from Han 2015'''
     assert env.spec.id == 'Knapsack-v2', \
         '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
     if scenario is not None:
