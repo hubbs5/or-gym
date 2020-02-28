@@ -4,9 +4,9 @@ import gym
 import or_gym
 from pyomo.environ import *
 
-def build_ukp_ip_model(env_name='Knapsack-v0'):
-	env = gym.make(env_name)
-
+def build_ukp_ip_model(env):
+	assert env.spec.id == 'Knapsack-v0', 'Optimization designed for Knapsack-v0.'
+	env.reset()
 	# Initialize model
 	m = ConcreteModel()
 
@@ -29,8 +29,9 @@ def build_ukp_ip_model(env_name='Knapsack-v0'):
 
 	return m
 
-def build_bkp_ip_model(env_name='Knapsack-v1'):
-	env = gym.make(env_name)
+def build_bkp_ip_model(env):
+	assert env.spec.id == 'Knapsack-v1', 'Optimization designed for Knapsack-v1.'
+	env.reset()
 
 	# Initialize model
 	m = ConcreteModel()
@@ -57,3 +58,8 @@ def build_bkp_ip_model(env_name='Knapsack-v1'):
 	    sense=maximize)
 
 	return m
+
+def build_okp_ip_model(env):
+	assert env.spec.id == 'Knapsack-v2', 'Optimization designed for Knapsack-v2.'
+	env.reset()
+	pass
