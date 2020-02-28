@@ -1,4 +1,5 @@
 import numpy as np
+from collections import Iterable
 
 def ukp_heuristic(env):
     assert env.spec.id == 'Knapsack-v0', \
@@ -55,14 +56,17 @@ def bkp_heuristic(env):
         
     return actions, rewards
 
-def okp_heuristic(env):
+def okp_heuristic(env, scenario=None):
     assert env.spec.id == 'Knapsack-v2', \
         '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
+    if scenario is not None:
+        # Ensure scenario is iterable of length step_limit
+        assert isinstance(scenario, Iterable), 'scenario not iterable.'
+        assert len(scenario) >= env.step_limit, 'scenario too short.'
     env.reset()
 
     vw_ratio = env.item_values / env.item_weights
     T = np.mean(vw_ratio)
-    item = copy.copy(env.current_item)
     done = False
     actions = []
     items_taken = []
@@ -70,6 +74,10 @@ def okp_heuristic(env):
     rewards = []
     count = 0
     while not done:
+        if scenario is not None:
+            item = scenario[count]
+        else:
+            item = copy.copy(env.current_item)
         if env.item_weights[item] >= (env.max_weight - env.current_weight):
             action = 0
         elif vw_ratio[item] >= T / (1 + count):
@@ -81,7 +89,6 @@ def okp_heuristic(env):
         actions.append(action)
         rewards.append(reward)
         items_offered.append(item)
-        item = state[-1][-1]
         count += 1
 
     return actions, items_offered, rewards
