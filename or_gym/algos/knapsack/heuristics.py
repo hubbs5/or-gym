@@ -54,3 +54,34 @@ def bkp_heuristic(env):
         rewards.append(reward)
         
     return actions, rewards
+
+def okp_heuristic(env):
+    assert env.spec.id == 'Knapsack-v2', \
+        '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
+    env.reset()
+
+    vw_ratio = env.item_values / env.item_weights
+    T = np.mean(vw_ratio)
+    item = copy.copy(env.current_item)
+    done = False
+    actions = []
+    items_taken = []
+    items_offered = []
+    rewards = []
+    count = 0
+    while not done:
+        if env.item_weights[item] >= (env.max_weight - env.current_weight):
+            action = 0
+        elif vw_ratio[item] >= T / (1 + count):
+            action = 1
+            items_taken.append(item)
+        else:
+            action = 0
+        state, reward, done, _ = env.step(action)
+        actions.append(action)
+        rewards.append(reward)
+        items_offered.append(item)
+        item = state[-1][-1]
+        count += 1
+
+    return actions, items_offered, rewards
