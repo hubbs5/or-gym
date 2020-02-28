@@ -15,18 +15,18 @@ def parse_arguments():
 
 	return parser.parse_args()
 
-def optimize_ukp(env):
+def optimize_bkp(env):
 
-	model = build_ukp_ip_model(env)
+	model = build_bkp_ip_model(env)
 	model, results = solve_math_program(model)
 	return model, results
 
 if __name__ == '__main__':
 	# parser = parse_arguments()
 	# args = parser(sys.argv)
-	env = gym.make('Knapsack-v0')
-	model, results = optimize_ukp(env)
+	env = gym.make('Knapsack-v1')
+	model, results = optimize_bkp(env)
 	print("Optimal reward\t\t=\t{}".format(model.obj.expr()))
-	actions, rewards = ukp_heuristic(env)
+	actions, rewards = bkp_heuristic(env)
 	print("Heuristic reward\t=\t{}".format(sum(rewards)))
 	# print("RL reward\t\t=\t{}".format())
