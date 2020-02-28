@@ -31,8 +31,8 @@ def build_ukp_ip_model(env):
     return m
 
 def build_bkp_ip_model(env):
-    assert env.spec.id == 'Knapsack-v0', \
-        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
+    assert env.spec.id == 'Knapsack-v1', \
+        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
     env.reset()
 
     # Initialize model
@@ -45,6 +45,8 @@ def build_bkp_ip_model(env):
         initialize={i: j for i, j in zip(env.item_numbers, env.item_weights)})
     m.v = Param(m.i, 
         initialize={i: j for i, j in zip(env.item_numbers, env.item_values)})
+    m.b = Param(m.i,
+        initialize={i: j for i, j in zip(env.item_numbers, env.item_limits)})
     m.x = Var(m.i, within=NonNegativeIntegers)
 
     @m.Constraint()
@@ -62,7 +64,7 @@ def build_bkp_ip_model(env):
     return m
 
 def build_okp_ip_model(env):
-    assert env.spec.id == 'Knapsack-v0', \
-        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
+    assert env.spec.id == 'Knapsack-v2', \
+        '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
     env.reset()
     pass

@@ -1,9 +1,9 @@
 import numpy as np
 
 def ukp_heuristic(env):
-	assert env.spec.id == 'Knapsack-v0', \
-	    '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
-	env.reset()
+    assert env.spec.id == 'Knapsack-v0', \
+        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
+    env.reset()
     
     # Get value-weight ratios
     vw_ratio = env.item_values / env.item_weights
@@ -26,9 +26,9 @@ def ukp_heuristic(env):
     return actions, rewards
 
 def bkp_heuristic(env):
-	assert env.spec.id == 'Knapsack-v1', \
-	    '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
-	env.reset()
+    assert env.spec.id == 'Knapsack-v1', \
+        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
+    env.reset()
 
     # Get value-weight ratios
     vw_ratio = env.item_values / env.item_weights
