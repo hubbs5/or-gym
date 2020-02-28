@@ -57,6 +57,7 @@ def bkp_heuristic(env):
     return actions, rewards
 
 def okp_heuristic(env, scenario=None):
+	'''TwoBins from Han 2015'''
     assert env.spec.id == 'Knapsack-v2', \
         '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
     if scenario is not None:
@@ -64,9 +65,7 @@ def okp_heuristic(env, scenario=None):
         assert isinstance(scenario, Iterable), 'scenario not iterable.'
         assert len(scenario) >= env.step_limit, 'scenario too short.'
     env.reset()
-
-    vw_ratio = env.item_values / env.item_weights
-    T = np.mean(vw_ratio)
+    
     done = False
     actions = []
     items_taken = []
@@ -78,13 +77,14 @@ def okp_heuristic(env, scenario=None):
             item = scenario[count]
         else:
             item = copy.copy(env.current_item)
-        if env.item_weights[item] >= (env.max_weight - env.current_weight):
-            action = 0
-        elif vw_ratio[item] >= T / (1 + count):
-            action = 1
-            items_taken.append(item)
-        else:
-            action = 0
+            
+        r = bool(np.random.choice([0, 1]))
+        action = 0
+        if r:
+            # Greedy algorithm
+            if env.item_weights[item] <= (env.max_weight - env.current_weight):
+                action = 1
+
         state, reward, done, _ = env.step(action)
         actions.append(action)
         rewards.append(reward)
