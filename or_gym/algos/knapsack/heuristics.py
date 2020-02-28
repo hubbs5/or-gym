@@ -71,19 +71,22 @@ def okp_heuristic(env, scenario=None):
     items_taken = []
     items_offered = []
     rewards = []
-    count = 0
+    r = bool(np.random.choice([0, 1]))
+    count, rejection_weight = 0, 0
     while not done:
         if scenario is not None:
             item = scenario[count]
         else:
             item = copy.copy(env.current_item)
-            
-        r = bool(np.random.choice([0, 1]))
         action = 0
         if r:
             # Greedy algorithm
             if env.item_weights[item] <= (env.max_weight - env.current_weight):
                 action = 1
+        else:
+        	rejection_weight += env.item_weights[item]
+        	if rejection_weight > env.max_weight:
+        		action = 1
 
         state, reward, done, _ = env.step(action)
         actions.append(action)

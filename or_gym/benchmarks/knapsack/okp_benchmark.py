@@ -9,6 +9,8 @@ import numpy as np
 import sys
 from argparse import ArgumentParser
 
+np.random.seed(0)
+
 def parse_arguments():
 	parser = ArgumentParser()
 	parser.add_argument('--print', type=bool, default=True,
