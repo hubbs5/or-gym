@@ -18,7 +18,7 @@ def parse_arguments():
 
 	return parser.parse_args()
 
-def optimize_okp(env, scenario=None):
+def online_optimize_okp(env, scenario=None):
 	raise NotImplementedError('OKP optimization not yet implemented.')
 
 	actions, items, rewards = [], [], []
@@ -36,6 +36,12 @@ def optimize_okp(env, scenario=None):
 
 	return actions, items, rewards
 
+def optimize_okp(env, scenario, print_results=False):
+	model = build_okp_ip_model(env, scenario)
+	model, results = solve_math_program(model, print_results=print_results)
+
+	return model, results
+
 if __name__ == '__main__':
 	# parser = parse_arguments()
 	# args = parser(sys.argv)
@@ -45,13 +51,13 @@ if __name__ == '__main__':
 	N_SCENARIOS = 1000
 	item_sequence = np.random.choice(env.item_numbers, 
 		size=(N_SCENARIOS, env.step_limit), p=env.item_probs)
-	# avg_opt_rewards = 0
-	# for n in range(N_SCENARIOS):
-	# 	env.reset()
-	# 	actions, items, rewards = optimize_okp(env, item_sequence[n])
-	# 	avg_opt_rewards += (sum(rewards) - avg_opt_rewards) / (n + 1)
+	avg_opt_rewards = 0
+	for n in range(N_SCENARIOS):
+		env.reset()
+		model, results = optimize_okp(env, item_sequence[n])
+		avg_opt_rewards += (model.obj.expr() - avg_opt_rewards) / (n + 1)
 
-	# print("Average Optimal Reward\t\t=\t{}".format(avg_opt_rewards))
+	print("Average Optimal Reward\t\t=\t{}".format(avg_opt_rewards))
 
 	avg_heur_rewards = 0
 	for n in range(N_SCENARIOS):
