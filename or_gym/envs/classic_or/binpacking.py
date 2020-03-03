@@ -4,6 +4,8 @@ from gym import spaces, logger
 from gym.utils import seeding
 import copy
 
+
+BIG_NEG_REWARD = -100
 # Matches the AWS model as first pass
 class BinPackingEnv(gym.Env):
     '''
