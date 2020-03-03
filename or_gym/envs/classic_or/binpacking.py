@@ -5,7 +5,7 @@ from gym.utils import seeding
 import copy
 
 # Matches the AWS model as first pass
-class OnlineBinPackingEnv(gym.Env):
+class BinPackingEnv(gym.Env):
     '''
     Online Bin Packing Problem
 

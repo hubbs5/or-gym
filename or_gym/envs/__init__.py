@@ -11,3 +11,7 @@ register(id='Knapsack-v1',
 register(id='Knapsack-v2',
 	entry_point='or_gym.envs.classic_or:OnlineKnapsackEnv'
 )
+
+register(id='BinPacking-v0',
+	entry_point='or_gym.envs.classic_or:BinPackingEnv'
+)
