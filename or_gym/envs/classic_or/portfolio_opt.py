@@ -39,8 +39,9 @@ class PortfoliOptEnv(gym.Env):
         2: ...
 
     Reward:
-        Value of item successfully placed into knapsack or 0 if the item
-        doesn't fit, at which point the episode ends.
+        Change in total wealth from previous period or 0 
+        if an asset quantity becomes negative, at which 
+        point the episode ends.
 
     Starting State:
         Lists of available items and empty knapsack.
