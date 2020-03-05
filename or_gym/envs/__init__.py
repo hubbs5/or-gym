@@ -19,3 +19,7 @@ register(id='BinPacking-v0',
 register(id='VMPacking-v0',
 	entry_point='or_gym.envs.classic_or:VMPackingEnv'
 )
+
+register(id='VMPacking-v1',
+	entry_point='or_gym.envs.classic_or:TempVMPackingEnv'
+)
