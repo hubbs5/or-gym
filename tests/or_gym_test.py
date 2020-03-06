@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
+            'VMPacking-v0', 'VMPacking-v1',
             'PortfolioOpt-v0',
             'TSP-v0',
             'VRP-v0',

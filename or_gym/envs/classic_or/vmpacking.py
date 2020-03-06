@@ -5,7 +5,7 @@ from gym.utils import seeding
 import copy
 
 class VMPackingEnv(gym.Env):
-	'''
+    '''
     Online VM Packing Problem
 
     The VM Packing Problem (VMPP) is a combinatorial optimization problem which
