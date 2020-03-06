@@ -43,6 +43,7 @@ class VMPackingEnv(gym.Env):
         self.ram_capacity = 1
         self.step_limit = 60 * 24 / 15
         self.n_pms = 100 # Number of physical machines to choose from
+        self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
         
         self.observation_space = spaces.Box(
             low=np.zeros((self.n_pms, 3), dtype=np.float32),
@@ -65,7 +66,7 @@ class VMPackingEnv(gym.Env):
             if pm_state[action, 0] == 0:
                 # Open PM if closed
                 pm_state[action, 0] = 1
-            pm_state[action, np.array([1, 2])] += self.demand[self.step_count]
+            pm_state[action, self.load_idx] += self.demand[self.step_count]
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
             
@@ -133,7 +134,7 @@ class TempVMPackingEnv(VMPackingEnv):
             if pm_state[action, 0] == 0:
                 # Open PM if closed
                 pm_state[action, 0] = 1
-            pm_state[action, self.loads] += self.demand[self.step_count]
+            pm_state[action, self.load_idx] += self.demand[self.step_count]
             self.assignments[self.step_count] = action
         
         # Remove processes
@@ -142,9 +143,9 @@ class TempVMPackingEnv(VMPackingEnv):
                 # Remove process from PM
                 if self.durations[process] == self.step_count:
                     pm = alist[process]
-                    pm_state[pm, self.loads] -= env.demand[process]
+                    pm_state[pm, self.load_idx] -= env.demand[process]
                     # Shut down PM's if state is 0
-                    if pm_state[pm, self.loads].sum() == 0:
+                    if pm_state[pm, self.load_idx].sum() == 0:
                         pm_state[pm, 0] = 0
             
         if self.step_count >= self.step_limit:
