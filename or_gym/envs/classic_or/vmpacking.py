@@ -127,7 +127,7 @@ class TempVMPackingEnv(VMPackingEnv):
         pm_state = self.state[0]
         if action < 0 or action >= self.n_pms:
             raise ValueError('Invalid Action')
-        elif any(pm_state[action, 0] + self.demand[self.step_count] > 1):
+        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1):
             # Demand doesn't fit into PM
             reward = -100
             done = True
