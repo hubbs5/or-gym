@@ -50,7 +50,7 @@ class PortfoliOptEnv(gym.Env):
         Negative asset quantity or traversal of investment horizon. 
     '''
 
-    def __init__(self): 
+    def __init__(self, *args, **kwargs): 
     	
     	#Immutable Parameters 
     	self.max_transaction_size = 25
