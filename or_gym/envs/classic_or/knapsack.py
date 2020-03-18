@@ -146,7 +146,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.item_limits_init = limits
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
@@ -233,7 +233,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         Full knapsack, selection that puts the knapsack over the limit, or
         the number of items to be drawn has been reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Tuple((
