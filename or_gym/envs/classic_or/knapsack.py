@@ -44,7 +44,7 @@ class KnapsackEnv(gym.Env):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.item_weights = weights
         self.item_values = values
         self.item_numbers = np.arange(len(self.item_weights))
@@ -53,10 +53,12 @@ class KnapsackEnv(gym.Env):
         self.current_weight = 0
         
         self.action_space = spaces.Discrete(self.N)
-        self.observation_space = spaces.Tuple((
-            spaces.Discrete(self.N),
-            spaces.Discrete(self.N),
-            spaces.Discrete(2)))
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(2, self.N + 1), dtype=np.int16)
+        # self.observation_space = spaces.Tuple((
+        #     spaces.Discrete(self.N),
+        #     spaces.Discrete(self.N),
+        #     spaces.Discrete(2)))
         
         self.seed()
         self.reset()
@@ -82,11 +84,20 @@ class KnapsackEnv(gym.Env):
         return self.state
     
     def _update_state(self):
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
-            self.item_values,
-            self.max_weight,
-            self.current_weight)
+            self.item_values
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight]])
+        ])
+        # self.state = (
+        #     self.item_weights,
+        #     self.item_values,
+        #     self.max_weight,
+        #     self.current_weight)
     
     def reset(self):
         self.current_weight = 0
