@@ -84,6 +84,9 @@ class PortfoliOptEnv(gym.Env):
 
 		return self.state
 
+    def _get_obs(self):
+        return self.state
+
 	def _update_state(self): 
 		self.asset_prices = np.concatenate((np.array([self.cash_price]), np.random.normal([1,2,3],[1,1,1])))
 		self.total_wealth = self.current_total_wealth
