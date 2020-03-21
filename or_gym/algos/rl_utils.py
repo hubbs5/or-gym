@@ -52,7 +52,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 	try:
 		vf_clip_param = env._max_rewards
 	except AttributeError:
-		vf_clip_param = 10
+		vf_clip_param = 5000
 
 	# TODO: Add grid search capabilities
 	rl_config = {
@@ -62,6 +62,8 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			"reuse_actors":True
 			},
 		"vf_clip_param": vf_clip_param,
+		"vf_share_layers": tune.grid_search([True, False]),
+		"lr": tune.grid_search([1e-2, 1e-3, 1e-4, 1e-5]),
 		"model": {
 			"custom_model": model_name,
 			"fcnet_activation": "elu",
@@ -99,10 +101,12 @@ def tune_model(env_name, rl_config, model_name=None):
 	register_env(env_name)
 	ray.init()
 	ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
+	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
 	results = tune.run(
 		"PPO",
 		stop={
-			"timesteps_total": 10000,
+			"timesteps_total": 1000000,
+			"training_iteration": 10000 # Is this number of episodes?
 		},
 		config=rl_config
 	)
