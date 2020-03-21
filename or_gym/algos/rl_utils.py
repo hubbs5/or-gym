@@ -1,6 +1,8 @@
 from ray import tune
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
+import gym
+import or_gym
 
 # Get Ray to work with gym registry
 def create_env(env_name):
@@ -56,12 +58,11 @@ def check_config(env_name, *args, **kwargs):
 def register_env(env_name):
 	tune.register_env(env_name, lambda config: create_env(config))
 
-class CustomModel(TFModelV2):
-    """Example of a custom model that just delegates to a fc-net."""
+class FCModel(TFModelV2):
 
     def __init__(self, obs_space, action_space, num_outputs, model_config,
                  name):
-        super(CustomModel, self).__init__(
+        super(FCModel, self).__init__(
         	obs_space, action_space, num_outputs,
             model_config, name)
         self.model = FullyConnectedNetwork(

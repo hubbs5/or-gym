@@ -2,7 +2,6 @@ import numpy as np
 import time
 import gym
 import or_gym
-from ray.rllib.models import ModelCatalog
 
 import ray
 from ray import tune
