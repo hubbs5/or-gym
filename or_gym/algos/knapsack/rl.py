@@ -1,59 +1,67 @@
 import numpy as np
+import time
 import gym
 import or_gym
 from ray.rllib.models import ModelCatalog
-from ray.rllib.models.tf.tf_modelv2 import TFModelV2
-from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
 
 import ray
 from ray import tune
-from ray.rllib.utils import try_import_tf
-from ray.tune import grid_search, register_env
+from ray.rllib.agents import ppo
+from ray.tune import grid_search
 
-from or_gym.envs.classic_or.knapsack import KnapsackEnv
+from or_gym.algos import rl_utils
 
-tf = try_import_tf()
+def train_rl_knapsack(env_name, rl_config, max_episodes=1000):
+    ray.init(ignore_reinit_error=True)
+    # rl_utils.register_env(env_name) # Needed for Tune
+    trainer = ppo.PPOTrainer(env=rl_utils.create_env(env_name), 
+        config=rl_config)
 
-def create_env(config_env):
-#     env = gym.make(config_env["version"])
-    return KnapsackEnv()
+    rewards = []
+    eps, eps_total = [], []
+    training = True
+    batch = 0
+    t_start = time.time()
+    while training:
+        t_batch = time.time()
+        results = trainer.train()
+        rewards.append(results['episode_reward_mean'])
+        eps_total.append(results['episodes_total'])
+        batch += 1
+        t_end = time.time()
+        if eps_total[-1] >= max_episodes:
+            training = False
+            break
+        if batch % 10 == 0:
+            t = t_end - t_batch
+            t_tot = t_end - t_start
+            print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}s\tTotal Time: {:.1f}s".format(
+                eps_total[-1], rewards[-1], eps[-1]/t, t_tot), end="")
+            
+    print("Total Training Time: {:.1f}s\t".format(t_end - t_start))
+    return trainer, np.array(rewards), np.array(eps_total)
 
-class CustomModel(TFModelV2):
-    """Example of a custom model that just delegates to a fc-net."""
 
-    def __init__(self, obs_space, action_space, num_outputs, model_config,
-                 name):
-        super(CustomModel, self).__init__(obs_space, action_space, num_outputs,
-                                          model_config, name)
-        self.model = FullyConnectedNetwork(obs_space, action_space,
-                                           num_outputs, model_config, name)
-        self.register_variables(self.model.variables())
+# ModelCatalog.register_custom_model("my_model", rl_utils.CustomModel)
 
-    def forward(self, input_dict, state, seq_lens):
-        return self.model.forward(input_dict, state, seq_lens)
 
-    def value_function(self):
-        return self.model.value_function()
 
-register_env("Knapsack-v0", lambda config: create_env(config))
-ray.init(ignore_reinit_error=True)
-ModelCatalog.register_custom_model("my_model", CustomModel)
-x = tune.run(
-    "PPO",
-    stop={
-        "timesteps_total": 10000,
-    },
-    config={
-        "env": "Knapsack-v0",  # or "corridor" if registered above
-        "model": {
-            "custom_model": "my_model",
-        },
-        "env_config": {
-            "version": "Knapsack-v0"
-#             "corridor_length": 5,
-        },
-        "vf_share_layers": True,
-        "lr": grid_search([1e-2, 1e-4, 1e-6]),  # try different lrs
-        "num_workers": 1,  # parallelism
-    },
-)
+
+# x = tune.run(
+#     "PPO",
+#     stop={
+#         "timesteps_total": 10000,
+#     },
+#     config={
+#         "env": env_name,
+#         "model": {
+#             "custom_model": "my_model",
+#         },
+#         "env_config": {
+#             "version": "Knapsack-v0"
+#         },
+#         "vf_share_layers": True,
+#         "lr": grid_search([1e-2, 1e-4, 1e-6]),  # try different lrs
+#         "num_workers": 1,  # parallelism
+#     },
+# )
