@@ -1,11 +1,18 @@
+import ray
 from ray import tune
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
 import gym
 import or_gym
+from datetime import datetime
 
 # Get Ray to work with gym registry
-def create_env(env_name):
+def create_env(config, *args, **kwargs):
+    if type(config) == dict:
+        env_name = config['env']
+    else:
+        env_name = config
+        print('Environment\t{}'.format(env_name))
     if env_name == 'Knapsack-v0':
         from or_gym.envs.classic_or.knapsack import KnapsackEnv as env
     elif env_name == 'Knapsack-v1':
@@ -13,60 +20,62 @@ def create_env(env_name):
     elif env_name == 'Knapsack-v2':
         from or_gym.envs.classic_or.knapsack import OnlineKnapsackEnv as env
     elif env_name == 'BinPacking-v0':
-    	from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
+        from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
     elif env_name == 'BinPacking-v1':
-    	raise NotImplementedError('{} not yet implemented.'.format(env_name))
-    	from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
+        raise NotImplementedError('{} not yet implemented.'.format(env_name))
+        from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
     elif env_name == 'BinPacking-v2':
-    	raise NotImplementedError('{} not yet implemented.'.format(env_name))
-    	from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
+        raise NotImplementedError('{} not yet implemented.'.format(env_name))
+        from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
     elif env_name == 'VMPackgin-v0':
-    	from or_gym.envs.classic_or.vm_packing import VMPackingEnv as env
+        from or_gym.envs.classic_or.vm_packing import VMPackingEnv as env
     elif env_name == 'VMPacking-v1':
-    	from or_gym.envs.classic_or.vm_packing import TempVMPackingEnv as env
+        from or_gym.envs.classic_or.vm_packing import TempVMPackingEnv as env
     elif env_name == 'PortfolioOpt-v0':
-    	from or_gym.envs.classic_or.portfolio_opt import PortfolioOptEnv as env
+        from or_gym.envs.classic_or.portfolio_opt import PortfolioOptEnv as env
     elif env_name == 'TSP-v0':
-    	raise NotImplementedError('{} not yet implemented.'.format(env_name))
-    	from or_gym.envs.classic_or.tsp import TSPEnv as env
+        raise NotImplementedError('{} not yet implemented.'.format(env_name))
+        from or_gym.envs.classic_or.tsp import TSPEnv as env
     elif env_name == 'VRP-v0':
-    	raise NotImplementedError('{} not yet implemented.'.format(env_name))
+        raise NotImplementedError('{} not yet implemented.'.format(env_name))
     elif env_name == 'NewsVendor-v0':
-    	raise NotImplementedError('{} not yet implemented.'.format(env_name))
+        raise NotImplementedError('{} not yet implemented.'.format(env_name))
     else:
         raise NotImplementedError('Environment {} not recognized.'.format(env_name))
     return env
 
 
 def check_config(env_name, *args, **kwargs):
-	env = gym.make(env_name)
-	try:
-		vf_clip_param = env._max_rewards
-	except AttributeError:
-		vf_clip_param = 10
-	rl_config = {
-    	"env_config": {
-    		"reuse_actors":True
-    	},
-    	"vf_clip_param": vf_clip_param,
-    	"model": {
-    		"fcnet_activation": "elu",
+    env = gym.make(env_name)
+    try:
+        vf_clip_param = env._max_rewards
+    except AttributeError:
+        vf_clip_param = 10
+    rl_config = {
+        "env_config": {
+            # "version": env.spec.id.split('-')[-1]
+            "reuse_actors":True
+        },
+        "vf_clip_param": vf_clip_param,
+        "model": {
+            "fcnet_activation": "elu",
         "fcnet_hiddens": [128, 128, 128]}}
-	
-	return rl_config
+    
+    return rl_config
 
 def register_env(env_name):
-	tune.register_env(env_name, lambda config: create_env(config))
+    env = create_env(env_name)
+    tune.register_env(env_name, lambda env_name: env(env_name))
 
 class FCModel(TFModelV2):
 
     def __init__(self, obs_space, action_space, num_outputs, model_config,
                  name):
         super(FCModel, self).__init__(
-        	obs_space, action_space, num_outputs,
+            obs_space, action_space, num_outputs,
             model_config, name)
         self.model = FullyConnectedNetwork(
-        	obs_space, action_space,
+            obs_space, action_space,
             num_outputs, model_config, name)
         self.register_variables(self.model.variables())
 
@@ -75,3 +84,19 @@ class FCModel(TFModelV2):
 
     def value_function(self):
         return self.model.value_function()
+
+def tune_model(env_name, rl_config, save_dir=None):
+	model_name = 'or_gym_tune'
+	register_env(env_name)
+	ray.init()
+	ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
+	results = tune.run(
+		"PPO",
+		stop={
+		    "timesteps_total": 10000,
+		},
+		config=rl_config
+	)
+	if save_dir == None:
+		model_name + '_' + env_name + datetime.strftime(datetime.today(), '%Y-%m-%d') + '.csv'
+	results.dataframe().to_csv(model_name)

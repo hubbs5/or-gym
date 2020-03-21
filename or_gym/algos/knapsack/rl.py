@@ -36,7 +36,7 @@ def train_rl_knapsack(env_name, rl_config, max_episodes=1000):
             t_tot = t_end - t_start
             print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}s\tTotal Time: {:.1f}s".format(
                 eps_total[-1], rewards[-1], eps[-1]/t, t_tot), end="")
-            
+    ray.shutdown()
     print("Total Training Time: {:.1f}s\t".format(t_end - t_start))
     return trainer, np.array(rewards), np.array(eps_total)
 
