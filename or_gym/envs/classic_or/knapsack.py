@@ -150,6 +150,8 @@ class BoundedKnapsackEnv(KnapsackEnv):
         self.item_limits_init = limits
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
         
     def step(self, item):
         # Check item limit
