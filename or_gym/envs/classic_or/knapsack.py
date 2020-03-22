@@ -173,17 +173,31 @@ class BoundedKnapsackEnv(KnapsackEnv):
             
         self._update_state(item)
         return self.state, reward, done, {}
-        
-    def _update_state(self, item=None):
+
+    def _update_state(self):
         if item is not None:
             self.item_limits[item] -= 1
-            
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
             self.item_values,
-            self.item_limits,
-            self.max_weight,
-            self.current_weight)
+            self.item_limits
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight]])
+        ])
+        
+    # def _update_state(self, item=None):
+    #     if item is not None:
+    #         self.item_limits[item] -= 1
+            
+    #     self.state = (
+    #         self.item_weights,
+    #         self.item_values,
+    #         self.item_limits,
+    #         self.max_weight,
+    #         self.current_weight)
         
     def sample_action(self):
         return np.random.choice(
