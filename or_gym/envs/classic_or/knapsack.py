@@ -187,7 +187,9 @@ class BoundedKnapsackEnv(KnapsackEnv):
         self.state = np.hstack([
             self.state, 
             np.array([[self.max_weight],
-                      [self.current_weight]])
+                      [self.current_weight], 
+                      [0] # Serves as place holder
+                ])
         ])
         
     # def _update_state(self, item=None):
