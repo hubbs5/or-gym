@@ -129,7 +129,7 @@ class PortfoliOptEnv(gym.Env):
 
 		self._update_state()
 
-		return self.state, reward, done, Termination
+		return self.state, reward, done, {"Status": Termination}
 
 	def sample_action(self): 
 		return np.array(np.random.choice(range(2*self.max_transaction_size+1), size=len(self.asset_prices-1)))
