@@ -176,7 +176,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         self._update_state(item)
         return self.state, reward, done, {}
 
-    def _update_state(self):
+    def _update_state(self, item=None):
         if item is not None:
             self.item_limits[item] -= 1
         self.state = np.vstack([
