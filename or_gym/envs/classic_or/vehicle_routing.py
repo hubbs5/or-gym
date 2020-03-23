@@ -10,12 +10,17 @@ class VehicleRouting(gym.Env):
 	The Vehicle Routing Problem is a classic.....
 
 	In this version of the problem, there are 3 cars vehicles that receive pick-up 
-	orders dynamically on a 10 x 10 grid. 
+	orders dynamically on a 10 x 10 grid.
+	Each grid spot is numbered starting 0 to 99, left to right, up to bottom. 
 	The size of the order to be picked-up is variable and also revealed dynamically.
 	Each region in the grid is numbered and modeled as 15 minutes apart. 
 	The cars begin at the depot which is in spot 56. 
+	Each step involves each car moving 1 spot in the grid (or not moving), 15 min elapsing, 
+	and chosing to pick up or leave the item. 
+	If >1 vehicles are in the same spot (and there is demand) and >1 has chosen to pick it up, 
+	it will go the first vehicle in order 1-2-3 that has capacity to accept it. 
 	Each vehicle has a fixed capacity that is reset upon every visit to the depot.
-	Each vehicle has 8 hours to collect as much reward before finishing the day at 
+	Each vehicle has 8 hours to collect as much reward before (ideally) finishing the day at 
 	the depot.  
 	
 	Observation:
@@ -134,8 +139,8 @@ class VehicleRouting(gym.Env):
 		return self.state 
 
 	def _update_state(self): 
-		self.state = (self.vehicle_locations, 
-			self.vehicle_load, self.time_period, self.demand)
+		self.state = np.array([self.vehicle_locations, 
+			self.vehicle_load, self.time_period, self.demand])
 
 	def sample_action(self):
 		return np.concatenate((np.random.choice(range(4), size=3), np.random.choice(range(2), size=3)),axis=0)
