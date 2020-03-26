@@ -164,6 +164,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
                     done = True
                 else:
                     done = False
+                self._update_state(item)
             else:
                 # End if over weight
                 reward = 0
@@ -173,7 +174,6 @@ class BoundedKnapsackEnv(KnapsackEnv):
             reward = 0
             done = True
             
-        self._update_state(item)
         return self.state, reward, done, {}
 
     def _update_state(self, item=None):
