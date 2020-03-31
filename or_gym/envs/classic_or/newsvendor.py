@@ -74,7 +74,6 @@ class MultiLevelNewsVendorEnv(gym.Env):
     seed = [integer] seed for random state.
     '''
     def __init__(self, *args, **kwargs):
-    	# periods, I0, p, r, k, h, c, L, backlog, dist, dist_param, seed=0):
         self.seed(self.seed) 
         self.p = 1
         self.r = [0.2, 0.2, 0.2]
@@ -86,6 +85,13 @@ class MultiLevelNewsVendorEnv(gym.Env):
         self.I0 = [0, 0]
         self.dist = 1
         self.num_periods = 200
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
+
         self.unit_price = np.append(self.p, self.r[:-1]) #cost to stage 1 is price to stage 2
         self.unit_cost = np.array(self.r)
         self.demand_cost = np.array(self.k)
