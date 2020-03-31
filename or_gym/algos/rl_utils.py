@@ -95,7 +95,7 @@ class FCModel(TFModelV2):
 	def value_function(self):
 		return self.model.value_function()
 
-def tune_model(env_name, rl_config, model_name=None):
+def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 	if model_name is None:
 		model_name = 'or_gym_tune'
 	register_env(env_name)
@@ -103,7 +103,7 @@ def tune_model(env_name, rl_config, model_name=None):
 	ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
 	results = tune.run(
-		"PPO",
+		algo,
 		stop={
 			"timesteps_total": 1000000,
 			"training_iteration": 10000 # Is this number of episodes?
