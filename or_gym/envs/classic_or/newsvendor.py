@@ -10,7 +10,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
     It is a multiperiod multiechelon production-inventory system for a single 
     non-perishable product that is sold only in discrete quantities. Each 
     stage in the supply chain consists of an inventory holding area and a 
-    production area. The exception are the first stage (retailer: only 
+    production area. The exceptions are the first stage (retailer: only 
     inventory area) and the last stage (raw material transformation plant: 
     only production area, with unlimited raw material availability). The 
     inventory holding area holds the inventory necessary to produce the 
@@ -25,8 +25,8 @@ class MultiLevelNewsVendorEnv(gym.Env):
     At the each time period, the following sequence of events occurs:
     
     0) Stages 0 through M-1 place replinishment orders to their respective 
-    suppliers. Replenishment orders are filled according to available 
-    production capacity and available inventory at the respective suppliers.
+       suppliers. Replenishment orders are filled according to available 
+       production capacity and current inventory at the respective suppliers.
     1) Stages 0 through M-1 receive incoming inventory replenishment shipments
        that have made it down the product pipeline after the stage's 
        respective lead time.
@@ -93,21 +93,17 @@ class MultiLevelNewsVendorEnv(gym.Env):
         self.supply_capacity = np.array(self.c)
         self.lead_time = np.array(self.L)
         self.backlog = True
-        
-        #intermediate calculation
+
         m = len(self.I0) + 1 #number of stages
         self.num_stages = m
         
-        #parameters
-        #dictionary with options for demand distributions
         self.distributions = {1:poisson,
                          2:binom,
                          3:randint,
                          4:geom}
-        #distribution parameters
         self.dist_param = {'mu': 5}
         
-        #check inputs
+        # Check inputs
         assert m >= 2, "The minimum number of stages is 2. Please try again"
         assert len(self.r) == m, "The length of r is not equal to the number of stages."
         assert len(self.k) == m, "The length of k is not equal to the number of stages."
@@ -116,15 +112,12 @@ class MultiLevelNewsVendorEnv(gym.Env):
         assert len(self.L) == m-1, "The length of L is not equal to the number of stages - 1."
         assert self.dist in [1,2,3,4], "dist must be one of 1, 2, 3, 4."
         assert self.distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
-        
-        #select distribution
+
         self.demand_dist = self.distributions[dist]  
-        
-        #intialize
+
         self.reset()
         
-        #define spaces
-        #action space (reorder quantities for each stage; list)
+        # action space (reorder quantities for each stage; list)
         action_i = Spaces.Discrete(2**31) #very large number (should be unbounded in reality)
         action = [action_i for i in range(m-1)] #an action is defined for every stage (except last one)
         action_tuple = tuple(action) #convert list to tuple
