@@ -27,4 +27,5 @@ if __name__ == "__main__":
 	if os.path.exists('results') == False:
 		os.mkdir('results')
 
-	results.dataframe().to_csv('results/' + env_name + '_' + model_name + '_' + timestamp + '.csv')
+	results.dataframe().to_csv('results/' + env_name + '_' + model_name + '_' + timestamp + '.csv',
+		use_index=False)
