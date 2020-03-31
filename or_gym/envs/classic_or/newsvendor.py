@@ -41,36 +41,41 @@ class MultiLevelNewsVendorEnv(gym.Env):
           loss penalty. 
     5) Surplus inventory is held at each stage at a holding cost.
         
+    periods = [positive integer] number of periods in simulation.
+    I0 = [non-negative integer; dimension |Stages|-1] initial inventories for 
+    	each stage.
+    p = [positive float] unit price for final product.
+    r = [non-negative float; dimension |Stages|] unit cost for replenishment 
+    	orders at each stage.
+    k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss 
+    	(per unit) for unfulfilled orders (demand or replenishment orders).
+    h = [non-negative float; dimension |Stages|-1] unit holding cost for 
+    	excess on-hand inventory at each stage.
+        (Note: does not include pipeline inventory).
+    c = [positive integer; dimension |Stages|-1] production capacities for 
+    	each suppliers (stages 1 through |Stage|).
+    L = [non-negative integer; dimension |Stages|-1] lead times in betwen 
+    	stages.
+    backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, 
+    	False = lost sales.
+    dist = [integer] value between 1 and 4. Specifies distribution for 
+    	customer demand.
+        1: poisson distribution
+        2: binomial distribution
+        3: uniform random integer
+        4: geometric distribution
+    dist_param = [dictionary] named values for parameters fed to statistical 
+    	distribution.
+        poisson: {'mu': <mean value>}
+        binom: {'n': <mean value>, 'p': <probability between 0 and 1 of 
+        	getting the mean value>}
+        raindint: {'low' = <lower bound>, 'high': <upper bound>}
+        geom: {'p': <probability. Outcome is the number of trials to success>}
+    seed = [integer] seed for random state.
     '''
     def __init__(self, *args, **kwargs):
     	# periods, I0, p, r, k, h, c, L, backlog, dist, dist_param, seed=0):
-        '''
-        periods = [positive integer] number of periods in simulation.
-        I0 = [non-negative integer; dimension |Stages|-1] initial inventories for each stage.
-        p = [positive float] unit price for final product.
-        r = [non-negative float; dimension |Stages|] unit cost for replenishment orders at each stage.
-        k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss (per unit) for unfulfilled orders (demand or replenishment orders).
-        h = [non-negative float; dimension |Stages|-1] unit holding cost for excess on-hand inventory at each stage.
-            (Note: does not include pipeline inventory).
-        c = [positive integer; dimension |Stages|-1] production capacities for each suppliers (stages 1 through |Stage|).
-        L = [non-negative integer; dimension |Stages|-1] lead times in betwen stages.
-        backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, False = lost sales.
-        dist = [integer] value between 1 and 4. Specifies distribution for customer demand.
-            1: poisson distribution
-            2: binomial distribution
-            3: uniform random integer
-            4: geometric distribution
-        dist_param = [dictionary] named values for parameters fed to statistical distribution.
-            poisson: {'mu': <mean value>}
-            binom: {'n': <mean value>, 'p': <probability between 0 and 1 of getting the mean value>}
-            raindint: {'low' = <lower bound>, 'high': <upper bound>}
-            geom: {'p': <probability. Outcome is the number of trials to success>}
-        seed = [integer] seed for random state.
-        '''
-        #set random generation seed
         self.seed(self.seed) 
-        
-        #input parameters
         self.p = 1
         self.r = [0.2, 0.2, 0.2]
         self.k = [0.3, 0.3, 0]
