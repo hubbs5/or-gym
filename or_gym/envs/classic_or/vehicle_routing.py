@@ -24,18 +24,18 @@ class VehicleRouting(gym.Env):
 	the depot.  
 	
 	Observation:
-		Type: Dictionary 
-		"vehicle locations" (MultiDiscrete(100,100,100)): location 0-99 of vehicles (v) [v1, v2, v3]
-		"vehicle load" (MultiDiscrete(C,C,C)): current load (l) 0-C of vehicles [l1, l2, l3]
-		"time period" (Discrete(8*60/15)): current 15 minute time period in workday
-		"amount demand" (Box(10,10)): amount of pick-up demand in each point in grid 
+		Type: Box(107) 
+		"vehicle locations" (idx 0 1 2): location 0-99 of vehicles (v) [v1, v2, v3]
+		"vehicle load" (idx 3 4 5): current load (l) 0-C of vehicles [l1, l2, l3]
+		"time period" (idx 6): current 15 minute time period in workday
+		"amount demand" (idx 7-106): amount of pick-up demand in each point in grid 
 
 
 	Action: 
-		Type: Dictionary 
-		"vehicle move direction" (MultiDiscrete(5,5,5)): 0 - No movement; 1 - Up; 2 - Down; 3 - Left; 4 - Right;
+		Type: Box(3) 
+		"vehicle move direction" (idx 0 1 2): 0 - No movement; 1 - Up; 2 - Down; 3 - Left; 4 - Right;
 								For vehicles (v) [v1, v2, v3]
-		"vehicle pickup order" (MultiBinary(3)): 0 - deny order; 1 - pickup order; for vehicles (v) [v1, v2, v3]
+		"vehicle pickup order" (idx 3): 0 - deny order; 1 - pickup order; for vehicles (v) [v1, v2, v3]
 
 
 	Reward: 
@@ -67,14 +67,11 @@ class VehicleRouting(gym.Env):
 		self.max_time_period = 31
 		self.num_vehicles = 3 
 		self.depot_location = 56 
+		self._max_reward = 500 
 
 		#state and action space 
-		self.observation_space = spaces.Dict({"vehicle locations": spaces.MultiDiscrete(100,100,100), 
-			"vehicle load": spaces.MultiDiscrete(self.vehicle_max_capacity, self.vehicle_max_capacity, self.vehicle_max_capacity), 
-			"time period": spaces.Discrete(32), 
-			"amount demand": spaces.Box(10,10)})
-		self.action_space = spaces.Dict({"vehicle move direction": spaces.MultiDiscrete(5,5,5), 
-			"vehicle pickup order": MultiBinary(3)})
+		self.observation_space = spaces.Box(107)
+		self.action_space = spaces.Box(3)
 
 
 
@@ -143,7 +140,7 @@ class VehicleRouting(gym.Env):
 			self.vehicle_load, self.time_period, self.demand])
 
 	def sample_action(self):
-		return np.concatenate((np.random.choice(range(4), size=3), np.random.choice(range(2), size=3)),axis=0)
+		return np.concatenate((np.random.choice(range(5), size=3), np.random.choice(range(2), size=3)),axis=0)
 
 	def _get_obs(self): 
 		return self.state 
