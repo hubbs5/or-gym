@@ -26,17 +26,17 @@ class PortfoliOptEnv(gym.Env):
     if the amount of any given asset held becomes negative.  
 
     Observation:
-        Type: Dictionary
-        "asset prices" (Box(4)): array of asset prices [cash, asset1, asset2, asset3]
-        "asset quantities" (Box(4)): array of asset quantities [cash, asset1, asset2, asset3]
-        "total wealth" (Box(1)): current total wealth (sum of price*quantity for each asset)
+        Type: Box(7)
+        "asset prices" (idx 0,1,2): array of asset prices [cash, asset1, asset2, asset3]
+        "asset quantities" (idx 3,4,5): array of asset quantities [cash, asset1, asset2, asset3]
+        "total wealth" (idx 6): current total wealth (sum of price*quantity for each asset)
     
 
     Actions:
-        Type: Dictionary 
-        "asset 1 transaction amount" (Discrete(2n+1)): Buy/sell up to n amount of asset 1; 0: no transaction
-        "asset 2 transaction amount" (Discrete(2n+1)): Buy/sell up to n amount of asset 2; 1-n: Sell j "in" [1,n] amt of asset
-        "asset 3 transaction amount" (Discrete(2n+1)): Buy/sell up to n amount of asset 3; n+1-2n: Buy j "in" [1,n] amt of asset
+        Type: Box (3)
+        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 0: no transaction
+        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 1-n: Sell j "in" [1,n] amt of asset
+        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; n+1-2n: Buy j "in" [1,n] amt of asset
 
     Reward:
         Change in total wealth from previous period or [-max(asset price of all assets) *  maximum transaction size]
@@ -59,17 +59,14 @@ class PortfoliOptEnv(gym.Env):
     	self.initial_assets = np.array([0,0,0])
     	self.buy_cost = np.array([0.045, 0.025, 0.035])
     	self.sell_cost = np.array([0.040, 0.020, 0.030])
+        self._max_reward = 400
 
     	self.investment_horizon = 10 
     	self.max_steps = copy(self.investment_hoirzon)
 
     	#Define observation and action spaces
-    	self.observation_space = spaces.Dict({"asset prices": spaces.Box(4), 
-    										"asset quantities": spaces.Box(4), 
-    										"total wealth": spaces.Box(1)})
-    	self.action_space = spaces.Dict({"asset 1 transaction amount": spaces.Discrete(2*self.max_transaction_size+1), 
-    									"asset 2 transaction amount": spaces.Discrete(2*self.max_transaction_size+1),
-    									"asset 3 transaction amount": spaces.Discrete(2*self.max_transaction_size+1)})
+    	self.observation_space = spaces.Box(7) 
+    	self.action_space = spaces.Box(3)
     	#set seed 
     	self.seed()
     	#reset state 
