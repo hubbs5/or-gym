@@ -43,32 +43,32 @@ class MultiLevelNewsVendorEnv(gym.Env):
         
     periods = [positive integer] number of periods in simulation.
     I0 = [non-negative integer; dimension |Stages|-1] initial inventories for 
-    	each stage.
+        each stage.
     p = [positive float] unit price for final product.
     r = [non-negative float; dimension |Stages|] unit cost for replenishment 
-    	orders at each stage.
+        orders at each stage.
     k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss 
-    	(per unit) for unfulfilled orders (demand or replenishment orders).
+        (per unit) for unfulfilled orders (demand or replenishment orders).
     h = [non-negative float; dimension |Stages|-1] unit holding cost for 
-    	excess on-hand inventory at each stage.
+        excess on-hand inventory at each stage.
         (Note: does not include pipeline inventory).
     c = [positive integer; dimension |Stages|-1] production capacities for 
-    	each suppliers (stages 1 through |Stage|).
+        each suppliers (stages 1 through |Stage|).
     L = [non-negative integer; dimension |Stages|-1] lead times in betwen 
-    	stages.
+        stages.
     backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, 
-    	False = lost sales.
+        False = lost sales.
     dist = [integer] value between 1 and 4. Specifies distribution for 
-    	customer demand.
+        customer demand.
         1: poisson distribution
         2: binomial distribution
         3: uniform random integer
         4: geometric distribution
     dist_param = [dictionary] named values for parameters fed to statistical 
-    	distribution.
+        distribution.
         poisson: {'mu': <mean value>}
         binom: {'n': <mean value>, 'p': <probability between 0 and 1 of 
-        	getting the mean value>}
+            getting the mean value>}
         raindint: {'low' = <lower bound>, 'high': <upper bound>}
         geom: {'p': <probability. Outcome is the number of trials to success>}
     seed = [integer] seed for random state.
@@ -103,10 +103,11 @@ class MultiLevelNewsVendorEnv(gym.Env):
         m = len(self.I0) + 1 #number of stages
         self.num_stages = m
         
-        self.distributions = {1:poisson,
-                         2:binom,
-                         3:randint,
-                         4:geom}
+        self.distributions = {
+            1:poisson,
+            2:binom,
+            3:randint,
+            4:geom}
         self.dist_param = {'mu': 5}
         
         # Check inputs
@@ -139,7 +140,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         if seed != None:
             np.random.seed(seed=int(seed))
         else:
-        	np.random.seed(0)
+            np.random.seed(0)
         
     def reset(self):
         '''
@@ -225,7 +226,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         RnL = np.zeros(m-1) 
         for i in range(m-1):
             if n - L[i] >= 0:
-            	# replenishment placed at the end of period n-L-1
+                # replenishment placed at the end of period n-L-1
                 RnL[i] = self.R[n-L[i],i].copy() 
                 I[i] = I[i] + RnL[i]
             
