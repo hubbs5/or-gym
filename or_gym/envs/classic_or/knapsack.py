@@ -44,7 +44,7 @@ class KnapsackEnv(gym.Env):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.item_weights = weights
         self.item_values = values
         self.item_numbers = np.arange(len(self.item_weights))
@@ -53,10 +53,12 @@ class KnapsackEnv(gym.Env):
         self.current_weight = 0
         
         self.action_space = spaces.Discrete(self.N)
-        self.observation_space = spaces.Tuple((
-            spaces.Discrete(self.N),
-            spaces.Discrete(self.N),
-            spaces.Discrete(2)))
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(2, self.N + 1), dtype=np.int16)
+        # self.observation_space = spaces.Tuple((
+        #     spaces.Discrete(self.N),
+        #     spaces.Discrete(self.N),
+        #     spaces.Discrete(2)))
         
         self.seed()
         self.reset()
@@ -82,11 +84,20 @@ class KnapsackEnv(gym.Env):
         return self.state
     
     def _update_state(self):
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
-            self.item_values,
-            self.max_weight,
-            self.current_weight)
+            self.item_values
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight]])
+        ])
+        # self.state = (
+        #     self.item_weights,
+        #     self.item_values,
+        #     self.max_weight,
+        #     self.current_weight)
     
     def reset(self):
         self.current_weight = 0
@@ -135,10 +146,12 @@ class BoundedKnapsackEnv(KnapsackEnv):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.item_limits_init = limits
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
         
     def step(self, item):
         # Check item limit
@@ -151,6 +164,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
                     done = True
                 else:
                     done = False
+                self._update_state(item)
             else:
                 # End if over weight
                 reward = 0
@@ -160,19 +174,34 @@ class BoundedKnapsackEnv(KnapsackEnv):
             reward = 0
             done = True
             
-        self._update_state(item)
         return self.state, reward, done, {}
-        
+
     def _update_state(self, item=None):
         if item is not None:
             self.item_limits[item] -= 1
-            
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
             self.item_values,
-            self.item_limits,
-            self.max_weight,
-            self.current_weight)
+            self.item_limits
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight], 
+                      [0] # Serves as place holder
+                ])
+        ])
+        
+    # def _update_state(self, item=None):
+    #     if item is not None:
+    #         self.item_limits[item] -= 1
+            
+    #     self.state = (
+    #         self.item_weights,
+    #         self.item_values,
+    #         self.item_limits,
+    #         self.max_weight,
+    #         self.current_weight)
         
     def sample_action(self):
         return np.random.choice(
@@ -222,7 +251,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         Full knapsack, selection that puts the knapsack over the limit, or
         the number of items to be drawn has been reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Tuple((
@@ -247,6 +276,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
                     done = True
                 else:
                     done = False
+                self._update_state()
             else:
                 # End if over weight
                 reward = 0
@@ -259,7 +289,6 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         if self.step_counter >= self.step_limit:
             done = True
             
-        self._update_state()
         return self.state, reward, done, {}
     
     def _update_state(self):

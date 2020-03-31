@@ -37,7 +37,7 @@ class VMPackingEnv(gym.Env):
         When invalid action is selected, attempt to overload VM, or step
         limit is reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         # Normalized Capacities
         self.cpu_capacity = 1
         self.ram_capacity = 1
