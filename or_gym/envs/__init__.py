@@ -24,6 +24,6 @@ register(id='VMPacking-v1',
 	entry_point='or_gym.envs.classic_or:TempVMPackingEnv'
 )
 
-register(id='NewsVendor-v0',
+register(id='NewsVendor-v1',
 	entry_point='or_gym.envs.classic_or:MultiLevelNewsVendorEnv'
 )
