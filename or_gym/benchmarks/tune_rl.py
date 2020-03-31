@@ -28,4 +28,4 @@ if __name__ == "__main__":
 		os.mkdir('results')
 
 	results.dataframe().to_csv('results/' + env_name + '_' + model_name + '_' + timestamp + '.csv',
-		use_index=False)
+		index=False)
