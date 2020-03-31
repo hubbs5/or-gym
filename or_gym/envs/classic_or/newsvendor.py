@@ -3,33 +3,43 @@ from gym import spaces, logger
 import itertools
 import numpy as np
 
-class SupplyChain(gym.Env):
+class MultiLevelNewsVendorEnv(gym.Env):
     '''
     The supply chain environment is structured as follows:
     
-    It is a multiperiod multiechelon production-inventory system for a single non-perishable product that is sold only
-    in discrete quantities. Each stage in the supply chain consists of an inventory holding area and a production area.
-    The exception are the first stage (retailer: only inventory area) and the last stage (raw material transformation
-    plant: only production area, with unlimited raw material availability). The inventory holding area holds the inventory
-    necessary to produce the material at that stage. One unit of inventory produces one unit of product at each stage.
-    There are lead times between the transfer of material from one stage to the next. The outgoing material from stage i 
-    is the feed material for production at stage i-1. Stages are numbered in ascending order: Stages = {0, 1, ..., M} 
-    (i.e. m = 0 is the retailer). Production at each stage is bounded by the stage's production capacity and the available
+    It is a multiperiod multiechelon production-inventory system for a single 
+    non-perishable product that is sold only in discrete quantities. Each 
+    stage in the supply chain consists of an inventory holding area and a 
+    production area. The exception are the first stage (retailer: only 
+    inventory area) and the last stage (raw material transformation plant: 
+    only production area, with unlimited raw material availability). The 
+    inventory holding area holds the inventory necessary to produce the 
+    material at that stage. One unit of inventory produces one unit of product
+    at each stage. There are lead times between the transfer of material from
+    one stage to the next. The outgoing material from stage i is the feed 
+    material for production at stage i-1. Stages are numbered in ascending 
+    order: Stages = {0, 1, ..., M} (i.e. m = 0 is the retailer). Production at
+    each stage is bounded by the stage's production capacity and the available
     inventory.
         
     At the each time period, the following sequence of events occurs:
     
-    0) Stages 0 through M-1 place replinishment orders to their respective suppliers. Replenishment orders are filled
-        according to available production capacity and available inventory at the respective suppliers.
-    1) Stages 0 through M-1 receive incoming inventory replenishment shipments that have made it down the product pipeline
-        after the stage's respective lead time.
-    2) Customer demand occurs at stage 0 (retailer). It is sampled from a specified discrete probability distribution.
+    0) Stages 0 through M-1 place replinishment orders to their respective 
+    suppliers. Replenishment orders are filled according to available 
+    production capacity and available inventory at the respective suppliers.
+    1) Stages 0 through M-1 receive incoming inventory replenishment shipments
+       that have made it down the product pipeline after the stage's 
+       respective lead time.
+    2) Customer demand occurs at stage 0 (retailer). It is sampled from a 
+       specified discrete probability distribution.
     3) Demand is filled according to available inventory at stage 0.
     4) Option: one of the following occurs,
-        a) Unfulfilled sales and replenishment orders are backlogged at a penalty. 
-            Note: Backlogged sales take priority in the following period.
-        b) Unfulfilled sales and replenishment orders are lost with a goodwill loss penalty. 
-    5) Surpluss inventory is held at each stage at a holding cost.
+       a) Unfulfilled sales and replenishment orders are backlogged at a 
+          penalty. 
+          Note: Backlogged sales take priority in the following period.
+       b) Unfulfilled sales and replenishment orders are lost with a goodwill 
+          loss penalty. 
+    5) Surplus inventory is held at each stage at a holding cost.
         
     '''
     def __init__(self, *args, **kwargs):
