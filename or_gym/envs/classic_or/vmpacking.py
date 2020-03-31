@@ -44,7 +44,13 @@ class VMPackingEnv(gym.Env):
         self.step_limit = 60 * 24 / 15
         self.n_pms = 100 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
-        
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
+
         self.observation_space = spaces.Box(
             low=np.zeros((self.n_pms, 3), dtype=np.float32),
             high=np.ones((self.n_pms, 3), dtype=np.float32),
@@ -118,7 +124,7 @@ class TempVMPackingEnv(VMPackingEnv):
         When invalid action is selected, attempt to overload VM, or step
         limit is reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()       
         self.state = self.reset()
         

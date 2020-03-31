@@ -48,17 +48,20 @@ class KnapsackEnv(gym.Env):
         self.item_weights = weights
         self.item_values = values
         self.item_numbers = np.arange(len(self.item_weights))
-        self.N = len(self.item_weights)
         self.max_weight = 200
         self.current_weight = 0
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
         
+        self.N = len(self.item_weights)
         self.action_space = spaces.Discrete(self.N)
         self.observation_space = spaces.Box(
-            0, self.max_weight, shape=(2, self.N + 1), dtype=np.int16)
-        # self.observation_space = spaces.Tuple((
-        #     spaces.Discrete(self.N),
-        #     spaces.Discrete(self.N),
-        #     spaces.Discrete(2)))
+            0, self.max_weight, shape=(2, self.N + 1), 
+            dtype=np.int16)
         
         self.seed()
         self.reset()
@@ -93,11 +96,6 @@ class KnapsackEnv(gym.Env):
             np.array([[self.max_weight],
                       [self.current_weight]])
         ])
-        # self.state = (
-        #     self.item_weights,
-        #     self.item_values,
-        #     self.max_weight,
-        #     self.current_weight)
     
     def reset(self):
         self.current_weight = 0
@@ -128,7 +126,6 @@ class BoundedKnapsackEnv(KnapsackEnv):
         2: list of item limits
         3: maximum weight of the knapsack
         4: current weight in knapsack
-
 
     Actions:
         Type: Discrete
