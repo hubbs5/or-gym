@@ -124,11 +124,8 @@ class MultiLevelNewsVendorEnv(gym.Env):
 
         self.reset()
         
-        # action space (reorder quantities for each stage; list)
-        action_i = Spaces.Discrete(2**31) #very large number (should be unbounded in reality)
-        action = [action_i for i in range(m-1)] #an action is defined for every stage (except last one)
-        action_tuple = tuple(action) #convert list to tuple
-        self.action_space = Spaces.Tuple(action_tuple) #(i.e. if 2 stages, then aciton space is (0 to 4294967295, 0 to 4294967295))
+        action = [Spaces.Discrete(self.c[i] + 1) for i in range(len(c) - 1)]
+        self.action_space = Spaces.Tuple(tuple(action_tuple))
         #observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = Spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
