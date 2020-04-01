@@ -59,6 +59,12 @@ class VehicleRoutingEnv(gym.Env):
         self.num_vehicles = 3
         self.depot_location = 56
         self._max_reward = 500
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
 
         # State and action space definitions
         self.observation_space = spaces.Box(0, 150, shape=(107,))
