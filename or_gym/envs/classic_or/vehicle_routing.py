@@ -55,21 +55,30 @@ class VehicleRoutingEnv(gym.Env):
         self.vehicle_max_capacity = 50
         self.movement_cost  = 0.2
         self.after_hours_movement_multipler = 2
-        self.max_time_period = 31
+        self.max_time_period = 31 # Should this be 32?
         self.num_vehicles = 3
         self.depot_location = 56
+        self.num_locs = 100
         self._max_reward = 500
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
 
         # State and action space definitions
-        self.observation_space = spaces.Box(0, 150, shape=(107,))
-        self.action_space = spaces.Box(0, 5, shape=(6,))
+        self.observation_space = spaces.Box(0, self.num_locs, 
+        	shape=(self.num_locs+2*self.num_vehicles + 1,))
+        self.action_space = spaces.Box(0, 2*self.num_vehicles, 
+        	shape=(2*self.num_vehicles,))
         self.seed()
         self.reset()
 
     def step(self, action): 
         reward = 0
         # Movement actions ('if' statement ensures movement off grid does not occur)
-        for idx, a in enumerate(action[0:self.num_vehicles]): 
+        for idx, a in enumerate(action[:self.num_vehicles]): 
             # Move up
             if a == 1:
                 if self.vehicle_locations[idx] > 9: 
@@ -96,9 +105,10 @@ class VehicleRoutingEnv(gym.Env):
             # If car chooses to pick up item, make sure it fits; if so, demand is set to 0  
             if a == 1:   
                 if self.demand[self.vehicle_locations[idx]] + \
-                self.vehicle_load[idx] <= self.vehicle_max_capacity: 
+                    self.vehicle_load[idx] <= self.vehicle_max_capacity:
+                    
                     self.vehicle_load[idx] += self.demand[self.vehicle_locations[idx]]
-                    self.reward += self.demand[self.vehicle_locations[idx]]
+                    reward += self.demand[self.vehicle_locations[idx]]
                     self.demand[self.vehicle_locations[idx]] = 0
             if self.vehicle_locations[idx] == self.depot_location: 
                 self.vehicle_load[idx] = 0 
@@ -142,17 +152,18 @@ class VehicleRoutingEnv(gym.Env):
         return self.state
 
     def generate_initial_demand(self):
-        demand = np.zeros(100)
-        #Pick 10 random points in grid (excluding depot) to have random demand according to "random" choice of normal distribution 
+        demand = np.zeros(self.num_locs)
+        # Pick 10 random points in grid (excluding depot) to have random 
+        # demand according to "random" choice of normal distribution 
         for point in np.random.choice(
-            np.setdiff1d(np.arange(100), 
+            np.setdiff1d(np.arange(self.num_locs),
                 self.depot_location), size=10): 
             demand[point] = max(0, np.random.normal(
                 np.random.choice([4, 8, 10]), 
                 np.random.choice([1, 2, 3])))
         return demand 
 
-    def update_demand(demand): 
+    def update_demand(self): 
         if self.time_period in range(1,12): 
             prob_new_order = 0.25
         elif self.time_period in range(12, 24): 
@@ -163,18 +174,18 @@ class VehicleRoutingEnv(gym.Env):
         if np.random.choice([1,0], 
             p=[prob_new_order, 1-prob_new_order]) == 1: 
             for point in np.random.choice(
-                np.setdiff1d(np.arange(100), 
+                np.setdiff1d(np.arange(self.num_locs), 
                     self.depot_location), 
                 size=np.random.choice([1,2])): 
-                demand[point] += max(0, np.random.normal(
+                self.demand[point] += max(0, np.random.normal(
                     np.random.choice([4, 8, 10]), 
                     np.random.choice([1, 2, 3])))
 
-        return demand 
+        return self.demand 
 
     def distance_from_depot(self, location): 
         depot_x = self.depot_location//10
         depot_y = self.depot_location%10 
         location_x = location//10 
         location_y = location%10 
-        return abs(location_x-depot_x) + abs(location_y - depot_y)
+        return abs(location_x-depot_x) + abs(location_y-depot_y)
