@@ -50,6 +50,7 @@ class KnapsackEnv(gym.Env):
         self.item_numbers = np.arange(len(self.item_weights))
         self.max_weight = 200
         self.current_weight = 0
+        self._max_reward = 4800
         # Add env_config, if any
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -149,6 +150,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         super().__init__()
         self.observation_space = spaces.Box(
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
+        self._max_reward = 1900
         
     def step(self, item):
         # Check item limit
@@ -252,15 +254,17 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Tuple((
-            spaces.Discrete(self.N),
-            spaces.Discrete(self.N),
-            spaces.Discrete(2)))
+            spaces.Box(0, self.max_weight, shape=(self.N,)),
+            spaces.Box(0, self.max_weight, shape=(self.N,)),
+            spaces.Box(0, self.max_weight, shape=(self.N,)),
+            spaces.Box(0, self.max_weight, shape=(3,))))
 
         self.step_counter = 0
         self.step_limit = 50
         
         self.seed()
         self.state = self.reset()
+        self._max_reward = 600
         
     def step(self, action):
         # Check that item will fit
@@ -294,8 +298,8 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
             self.item_weights,
             self.item_values,
             self.item_probs,
-            self.max_weight,
             np.array([
+                self.max_weight,
                 self.current_weight,
                 self.current_item
             ]))
