@@ -5,7 +5,6 @@ from gym.utils import seeding
 import copy
 
 class VehicleRouting(gym.Env):
-
 	'''
 	The Vehicle Routing Problem is a classic.....
 
@@ -30,13 +29,11 @@ class VehicleRouting(gym.Env):
 		"time period" (idx 6): current 15 minute time period in workday
 		"amount demand" (idx 7-106): amount of pick-up demand in each point in grid 
 
-
 	Action: 
 		Type: Box(3) 
 		"vehicle move direction" (idx 0 1 2): 0 - No movement; 1 - Up; 2 - Down; 3 - Left; 4 - Right;
 								For vehicles (v) [v1, v2, v3]
 		"vehicle pickup order" (idx 3, 4, 5): 0 - deny order; 1 - pickup order; for vehicles (v) [v1, v2, v3]
-
 
 	Reward: 
 		If order accepted keeps vehicle below/at capacity, the reward is the positive size of the order. Else, 
@@ -44,15 +41,12 @@ class VehicleRouting(gym.Env):
 		Failing to end the day at the depot incurs a negative reward based on distance to the depot. 
 		A negative reward is incurred for any unfulfilled demand outstanding (negative of the sum).
 
-
 	Starting State: 
 		All vehicles are located in spot self.depot_location, with an empty load, at the beginning of time period 0, with an initial set of orders
 		(i.e. non-zero demand). 
 
-
 	Episode Terimantion: 
 		Episode termination occurs when all time periods for the day have elapsed. 
-
 
 	'''
 
@@ -73,12 +67,8 @@ class VehicleRouting(gym.Env):
 		self.observation_space = spaces.Box(107)
 		self.action_space = spaces.Box(6)
 
-
-
 	def step(self, action): 
-
-		reward = 0 
-
+		reward = 0
 		#movement actions ('if' statement ensures movement off grid does not occur)
 		for idx, a in enumerate(action[0:self.num_vehicles]): 
 			#move up
@@ -114,7 +104,6 @@ class VehicleRouting(gym.Env):
 			if self.vehicle_locations[idx] == self.depot_location: 
 				self.vehicle_load[idx] = 0 
 
-
 		self.time_period += 1 
 		self._update_state()
 
@@ -147,7 +136,6 @@ class VehicleRouting(gym.Env):
 	def _get_obs(self): 
 		return self.state 
 
-
 def generate_initial_demand(): 
 	demand = np.zeros(100)
 	#Pick 10 random points in grid (excluding depot) to have random demand according to "random" choice of normal distribution 
@@ -156,7 +144,6 @@ def generate_initial_demand():
 	return demand 
 
 def update_demand(demand): 
-
 	if self.time_period in range(1,12): 
 		prob_new_order = 0.25
 	elif self.time_period in range(12, 24): 
@@ -175,5 +162,4 @@ def distance_from_depot(location):
 	depot_y = self.depot_location%10 
 	location_x = location//10 
 	location_y = location%10 
-	return abs(location_x-depot_x) + abs(location_y - depot_y) 
-
+	return abs(location_x-depot_x) + abs(location_y - depot_y)
