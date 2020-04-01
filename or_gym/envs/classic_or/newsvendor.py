@@ -74,7 +74,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
     seed = [integer] seed for random state.
     '''
     def __init__(self, *args, **kwargs):
-        self.seed(self.seed) 
+        # self.set_seed(self.seed)
         self.p = 1
         self.r = [0.2, 0.2, 0.2]
         self.k = [0.3, 0.3, 0]
@@ -129,7 +129,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         #observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
-    def seed(self,seed=None):
+    def set_seed(self,seed=None):
         '''
         Set random number generation seed
         '''
