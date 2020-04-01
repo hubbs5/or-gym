@@ -14,7 +14,7 @@ class VehicleRouting(gym.Env):
 	Each grid spot is numbered starting 0 to 99, left to right, up to bottom. 
 	The size of the order to be picked-up is variable and also revealed dynamically.
 	Each region in the grid is numbered and modeled as 15 minutes apart. 
-	The cars begin at the depot which is in spot 56. 
+	The cars begin at the depot which is in spot self.depot_location. 
 	Each step involves each car moving 1 spot in the grid (or not moving), 15 min elapsing, 
 	and chosing to pick up or leave the item. 
 	If >1 vehicles are in the same spot (and there is demand) and >1 has chosen to pick it up, 
@@ -35,7 +35,7 @@ class VehicleRouting(gym.Env):
 		Type: Box(3) 
 		"vehicle move direction" (idx 0 1 2): 0 - No movement; 1 - Up; 2 - Down; 3 - Left; 4 - Right;
 								For vehicles (v) [v1, v2, v3]
-		"vehicle pickup order" (idx 3): 0 - deny order; 1 - pickup order; for vehicles (v) [v1, v2, v3]
+		"vehicle pickup order" (idx 3, 4, 5): 0 - deny order; 1 - pickup order; for vehicles (v) [v1, v2, v3]
 
 
 	Reward: 
@@ -46,7 +46,7 @@ class VehicleRouting(gym.Env):
 
 
 	Starting State: 
-		All vehicles are located in spot 56, with an empty load, at the beginning of time period 0, with an initial set of orders
+		All vehicles are located in spot self.depot_location, with an empty load, at the beginning of time period 0, with an initial set of orders
 		(i.e. non-zero demand). 
 
 
@@ -71,7 +71,7 @@ class VehicleRouting(gym.Env):
 
 		#state and action space 
 		self.observation_space = spaces.Box(107)
-		self.action_space = spaces.Box(3)
+		self.action_space = spaces.Box(6)
 
 
 
@@ -79,30 +79,32 @@ class VehicleRouting(gym.Env):
 
 		reward = 0 
 
-		#movement actions 
+		#movement actions ('if' statement ensures movement off grid does not occur)
 		for idx, a in enumerate(action[0:self.num_vehicles]): 
+			#move up
 			if a == 1:
 				if self.vehicle_locations[idx] > 9: 
 					self.vehicle_locations[idx] -= 10
 					reward -= self.movement_cost
-
+			#down
 			if a == 2:
 				if self.vehicle_locations[idx] < 90:
 					self.vehicle_locations[idx] += 10
 					reward -= self.movement_cost 
-
+			#left 
 			if a == 3:
 				if self.vehicle_locations[idx] not in np.linspace(0,90,10): 
 					self.vehicle_locations[idx] -= 1
 					reward -= self.movement_cost 
-
+			#right
 			if a == 4: 
 				if self.vehicle_locations[idx] not in np.linspace(9,99,10):
 					self.vehicle_locations[idx] += 1 
 					reward -= self.movement_cost
 
 		#item loading (demand statisfaction) actions 
-		for idx, a in enumerate(action[self.num_vehicles:2*self.num_vehicles]): 
+		for idx, a in enumerate(action[self.num_vehicles:2*self.num_vehicles]):
+			#if car chooses to pick up item, make sure it fits; if so, demand is set to 0  
 			if a == 1:   
 				if self.demand[self.vehicle_locations[idx]] + \
 				self.vehicle_load[idx] <= self.vehicle_max_capacity: 
@@ -128,7 +130,7 @@ class VehicleRouting(gym.Env):
 		return self.state, reward, done, {}
 
 	def reset(self): 
-		self.vehicle_locations = np.array([56, 56, 56])
+		self.vehicle_locations = np.array([self.depot_location, self.depot_location, self.depot_location])
 		self.vehicle_load = np.array([0, 0, 0])
 		self.time_period = 0 
 		self.demand = generate_initial_demand()
@@ -136,8 +138,8 @@ class VehicleRouting(gym.Env):
 		return self.state 
 
 	def _update_state(self): 
-		self.state = np.array([self.vehicle_locations, 
-			self.vehicle_load, self.time_period, self.demand])
+		self.state = np.concatenate((self.vehicle_locations, 
+			self.vehicle_load, self.time_period, self.demand))
 
 	def sample_action(self):
 		return np.concatenate((np.random.choice(range(5), size=3), np.random.choice(range(2), size=3)),axis=0)
@@ -148,28 +150,29 @@ class VehicleRouting(gym.Env):
 
 def generate_initial_demand(): 
 	demand = np.zeros(100)
-	for point in np.random.choice(np.setdiff1d(np.arange(100), 56), size=10): 
+	#Pick 10 random points in grid (excluding depot) to have random demand according to "random" choice of normal distribution 
+	for point in np.random.choice(np.setdiff1d(np.arange(100), self.depot_location), size=10): 
 		demand[point] = max(0, np.random.normal(np.random.choice([4, 8, 10]), np.random.choice([1, 2, 3])))
 	return demand 
 
 def update_demand(demand): 
 
 	if self.time_period in range(1,12): 
-		prob_new_order = 0.5
+		prob_new_order = 0.25
 	elif self.time_period in range(12, 24): 
-		prob_new_order = 0.25 
+		prob_new_order = 0.15 
 	else: 
-		prob_new_order = 0.1
+		prob_new_order = 0.10
 
 	if np.random.choice([1,0], p=[prob_new_order, 1-prob_new_order]) == 1: 
-		for point in np.random.choice(np.setdiff1d(np.arange(100), 56), size=np.random.choice([1,2])): 
+		for point in np.random.choice(np.setdiff1d(np.arange(100), self.depot_location), size=np.random.choice([1,2])): 
 			demand[point] += max(0, np.random.normal(np.random.choice([4, 8, 10]), np.random.choice([1, 2, 3])))
 
 	return demand 
 
 def distance_from_depot(location): 
-	depot_x = 56//10
-	depot_y = 56%10 
+	depot_x = self.depot_location//10
+	depot_y = self.depot_location%10 
 	location_x = location//10 
 	location_y = location%10 
 	return abs(location_x-depot_x) + abs(location_y - depot_y) 
