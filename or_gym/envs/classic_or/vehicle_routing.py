@@ -4,7 +4,7 @@ from gym import spaces, logger
 from gym.utils import seeding
 import copy
 
-class VehicleRouting(gym.Env):
+class VehicleRoutingEnv(gym.Env):
 	'''
 	The Vehicle Routing Problem is a classic.....
 
