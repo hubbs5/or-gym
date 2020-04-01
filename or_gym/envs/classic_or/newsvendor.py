@@ -124,10 +124,10 @@ class MultiLevelNewsVendorEnv(gym.Env):
 
         self.reset()
         
-        action = [Spaces.Discrete(self.c[i] + 1) for i in range(len(c) - 1)]
-        self.action_space = Spaces.Tuple(tuple(action_tuple))
+        action = [spaces.Discrete(self.c[i] + 1) for i in range(len(c) - 1)]
+        self.action_space = spaces.Tuple(tuple(action_tuple))
         #observation space (Inventory position at each echelon, which is any integer value)
-        self.observation_space = Spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
+        self.observation_space = spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
     def seed(self,seed=None):
         '''
