@@ -69,7 +69,7 @@ class VehicleRoutingEnv(gym.Env):
     def step(self, action): 
         reward = 0
         # Movement actions ('if' statement ensures movement off grid does not occur)
-        for idx, a in enumerate(action[0:self.num_vehicles]): 
+        for idx, a in enumerate(action[:self.num_vehicles]): 
             # Move up
             if a == 1:
                 if self.vehicle_locations[idx] > 9: 
@@ -96,9 +96,10 @@ class VehicleRoutingEnv(gym.Env):
             # If car chooses to pick up item, make sure it fits; if so, demand is set to 0  
             if a == 1:   
                 if self.demand[self.vehicle_locations[idx]] + \
-                self.vehicle_load[idx] <= self.vehicle_max_capacity: 
+                    self.vehicle_load[idx] <= self.vehicle_max_capacity:
+                    
                     self.vehicle_load[idx] += self.demand[self.vehicle_locations[idx]]
-                    self.reward += self.demand[self.vehicle_locations[idx]]
+                    reward += self.demand[self.vehicle_locations[idx]]
                     self.demand[self.vehicle_locations[idx]] = 0
             if self.vehicle_locations[idx] == self.depot_location: 
                 self.vehicle_load[idx] = 0 
@@ -152,7 +153,7 @@ class VehicleRoutingEnv(gym.Env):
                 np.random.choice([1, 2, 3])))
         return demand 
 
-    def update_demand(demand): 
+    def update_demand(self): 
         if self.time_period in range(1,12): 
             prob_new_order = 0.25
         elif self.time_period in range(12, 24): 
@@ -166,11 +167,11 @@ class VehicleRoutingEnv(gym.Env):
                 np.setdiff1d(np.arange(100), 
                     self.depot_location), 
                 size=np.random.choice([1,2])): 
-                demand[point] += max(0, np.random.normal(
+                self.demand[point] += max(0, np.random.normal(
                     np.random.choice([4, 8, 10]), 
                     np.random.choice([1, 2, 3])))
 
-        return demand 
+        return self.demand 
 
     def distance_from_depot(self, location): 
         depot_x = self.depot_location//10
