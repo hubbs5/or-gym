@@ -36,8 +36,10 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'TSP-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.tsp import TSPEnv as env
-	elif env_name == 'VRP-v0':
+	elif env_name == 'VehicleRouting-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
+	elif env_name == 'VehicleRouting-v1':
+		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'NewsVendor-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 	else:
@@ -64,8 +66,8 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			},
 		"vf_clip_param": vf_clip_param,
 		"vf_share_layers": tune.grid_search([False]),
-		"lr": tune.grid_search([1e-4, 1e-5, 1e-6]),
-		"entropy_coeff": tune.grid_search([1e-2, 1e-3]),
+		"lr": tune.grid_search([1e-4]), # 1e-5, 1e-6]),
+		"entropy_coeff": tune.grid_search([1e-2]),# 1e-3]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
@@ -110,8 +112,8 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 		algo,
 		checkpoint_at_end=True,
 		stop={
-			"timesteps_total": 2000000,
-			"training_iteration": 20000 # Is this number of episodes?
+			"timesteps_total": 20000,
+			"training_iteration": 200 # Is this number of episodes?
 		},
 		config=rl_config
 	)

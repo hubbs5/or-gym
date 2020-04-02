@@ -23,7 +23,7 @@ class VehicleRoutingEnv(gym.Env):
     the depot.  
     
     Observation:
-        Type: Box(107) 
+        Type: Discrete(107)
         "vehicle locations" (idx 0 1 2): location 0-99 of vehicles (v) [v1, v2, v3]
         "vehicle load" (idx 3 4 5): current load (l) 0-C of vehicles [l1, l2, l3]
         "time period" (idx 6): current 15 minute time period in workday
@@ -56,9 +56,8 @@ class VehicleRoutingEnv(gym.Env):
         self.movement_cost  = 0.2
         self.after_hours_movement_multipler = 2
         self.max_time_period = 31 # Should this be 32?
-        self.num_vehicles = 3
-        self.num_directions = 5 # None, NSEW
-        self.num_actions = 2 # Pickup or nothing
+        self.num_vehicles = 2
+        self.num_actions = 5 # Pickup, NSEW
         self.depot_location = 56
         self.num_locs = 100
         self._max_reward = 500
@@ -71,52 +70,52 @@ class VehicleRoutingEnv(gym.Env):
 
         # State and action space definitions
         self.observation_space = spaces.Box(0, self.num_locs,
-        	shape=(self.num_locs+2*self.num_vehicles + 1,))
-        self.action_space = spaces.MultiDiscrete([
-        	self.num_directions if i < self.num_vehicles
-        	else self.num_actions for i in range(2*self.num_vehicles)])
-        # self.action_space = spaces.Tuple(
-        # 	[spaces.Discrete(self.num_directions) if i < self.num_vehicles
-        #     else spaces.Discrete(self.num_actions)
-        #     for i in range(2*self.num_vehicles)])
+            shape=(self.num_locs+2*self.num_vehicles + 1,))
+        self.action_space = spaces.Tuple(tuple(
+        	spaces.Discrete(self.num_actions)
+        	for i in range(self.num_vehicles)))
+
         self.seed()
         self.reset()
 
     def step(self, action):
+        action = np.array([action])
         reward = 0
         # Movement actions ('if' statement ensures movement off grid does not occur)
-        for idx, a in enumerate(action[:self.num_vehicles]):
+        for idx, a in enumerate(action):
+            # Pick up available item
+            if a == 0:
+                if self.demand[self.vehicle_locations[idx]] + \
+                    self.vehicle_load[idx] <= self.vehicle_max_capacity:
+                    self.vehicle_load[idx] += self.demand[self.vehicle_locations[idx]]
+                    reward += self.demand[self.vehicle_locations[idx]] # Should reward only be logged if/when vehicle returns to depot?
+                    self.demand[self.vehicle_locations[idx]] = 0
+                else:
+                	# Perhaps penalize if the item doesn't fit
+                	pass
+
             # Move up
-            if a == 1:
+            elif a == 1:
                 if self.vehicle_locations[idx] > 9:
                     self.vehicle_locations[idx] -= 10
                     reward -= self.movement_cost
             # Down
-            if a == 2:
+            elif a == 2:
                 if self.vehicle_locations[idx] < 90:
                     self.vehicle_locations[idx] += 10
                     reward -= self.movement_cost
             # Left
-            if a == 3:
+            elif a == 3:
                 if self.vehicle_locations[idx] not in np.linspace(0,90,10):
                     self.vehicle_locations[idx] -= 1
                     reward -= self.movement_cost
             # Right
-            if a == 4:
+            elif a == 4:
                 if self.vehicle_locations[idx] not in np.linspace(9,99,10):
                     self.vehicle_locations[idx] += 1
                     reward -= self.movement_cost
 
-        # Item loading (demand statisfaction) actions
-        for idx, a in enumerate(action[self.num_vehicles:2*self.num_vehicles]):
-            # If car chooses to pick up item, make sure it fits; if so, demand is set to 0  
-            if a == 1:
-                if self.demand[self.vehicle_locations[idx]] + \
-                    self.vehicle_load[idx] <= self.vehicle_max_capacity:
-                    
-                    self.vehicle_load[idx] += self.demand[self.vehicle_locations[idx]]
-                    reward += self.demand[self.vehicle_locations[idx]]
-                    self.demand[self.vehicle_locations[idx]] = 0
+            # Automatically drop-off any loads if at the depot
             if self.vehicle_locations[idx] == self.depot_location:
                 self.vehicle_load[idx] = 0
 
@@ -127,7 +126,7 @@ class VehicleRoutingEnv(gym.Env):
             done = True
             for location in self.vehicle_locations:
                 reward -= self.distance_from_depot(location) * \
-                    self.movement_cost * self.after_hours_movement_mult
+                    self.movement_cost * self.after_hours_movement_multipler
             reward -= np.sum(self.demand)
         else:
             self.demand = self.update_demand()
@@ -145,14 +144,14 @@ class VehicleRoutingEnv(gym.Env):
 
     def _update_state(self):
         self.state = np.concatenate([
-        	self.vehicle_locations,
+            self.vehicle_locations,
             self.vehicle_load,
             np.array([self.time_period]),
             self.demand])
 
     def sample_action(self):
-    	return self.action_space.sample()
-    	
+        return self.action_space.sample()
+
     def _get_obs(self):
         return self.state
 
