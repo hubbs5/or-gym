@@ -41,7 +41,7 @@ def test_env(env, n_episodes, print_output=True):
         eps_total.append(results['episodes_total'])
         batch += 1
         t_end = time.time()
-        if sum(eps) >= N_EPS:
+        if sum(eps) >= n_episodes:
             training = False
             break
         if batch % 10 == 0 and print_output:

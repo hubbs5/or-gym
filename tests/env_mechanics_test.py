@@ -30,12 +30,14 @@ def test_env(env, n_episodes, print_output=True):
 		env.reset()
 		rewards = 0
 		done = False
+		step_count = 0
 		while done == False:
 			action = env.action_space.sample()
 			s, r, done, _ = env.step(action)
 			rewards += r
+			step_count += 1
 			if done and ep % 100 == 0 and print_output:
-				print("Ep {}\t\tRewards={}".format(ep, rewards))
+				print("Ep {}\t\tRewards={}\t\t{}".format(ep, rewards, step_count))
 	print('Test Complete\n')
 
 if __name__ == "__main__":
