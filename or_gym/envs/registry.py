@@ -1,4 +1,5 @@
 from gym.envs.registration import EnvRegistry
+
 registry = EnvRegistry()
 
 def register(id, **kwargs):

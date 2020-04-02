@@ -72,14 +72,14 @@ class VehicleRoutingEnv(gym.Env):
         self.observation_space = spaces.Box(0, self.num_locs,
             shape=(self.num_locs+2*self.num_vehicles + 1,))
         self.action_space = spaces.Tuple(tuple(
-        	spaces.Discrete(self.num_actions)
-        	for i in range(self.num_vehicles)))
+            spaces.Discrete(self.num_actions)
+            for i in range(self.num_vehicles)))
 
         self.seed()
         self.reset()
 
     def step(self, action):
-        action = np.array([action])
+        action = np.array(action)
         reward = 0
         # Movement actions ('if' statement ensures movement off grid does not occur)
         for idx, a in enumerate(action):
@@ -91,8 +91,8 @@ class VehicleRoutingEnv(gym.Env):
                     reward += self.demand[self.vehicle_locations[idx]] # Should reward only be logged if/when vehicle returns to depot?
                     self.demand[self.vehicle_locations[idx]] = 0
                 else:
-                	# Perhaps penalize if the item doesn't fit
-                	pass
+                    # Perhaps penalize if the item doesn't fit
+                    pass
 
             # Move up
             elif a == 1:
