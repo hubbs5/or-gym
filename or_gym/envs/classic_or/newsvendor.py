@@ -2,6 +2,7 @@ import gym
 from gym import spaces, logger
 import itertools
 import numpy as np
+from scipy.stats import *
 
 class MultiLevelNewsVendorEnv(gym.Env):
     '''
@@ -85,6 +86,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         self.I0 = [0, 0]
         self.dist = 1
         self.num_periods = 200
+
         # Add env_config, if any
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -120,12 +122,12 @@ class MultiLevelNewsVendorEnv(gym.Env):
         assert self.dist in [1,2,3,4], "dist must be one of 1, 2, 3, 4."
         assert self.distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
 
-        self.demand_dist = self.distributions[dist]  
+        self.demand_dist = self.distributions[self.dist]
 
         self.reset()
         
-        action = [spaces.Discrete(self.c[i] + 1) for i in range(len(c) - 1)]
-        self.action_space = spaces.Tuple(tuple(action_tuple))
+        action = [spaces.Discrete(self.c[i] + 1) for i in range(len(self.c))]
+        self.action_space = spaces.Tuple(tuple(action))
         #observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
