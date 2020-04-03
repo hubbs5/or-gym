@@ -56,6 +56,7 @@ class NewsVendorEnv(gym.Env):
             2: binomial distribution
             3: uniform random integer
             4: geometric distribution
+            5: user supplied demand values
         dist_param = [dictionary] named values for parameters fed to statistical distribution.
             poisson: {'mu': <mean value>}
             binom: {'n': <mean value>, 'p': <probability between 0 and 1 of getting the mean value>}
@@ -63,6 +64,7 @@ class NewsVendorEnv(gym.Env):
             geom: {'p': <probability. Outcome is the number of trials to success>}
         alpha = [float in range (0,1]] discount factor to account for the time value of money
         seed_int = [integer] seed for random state.
+        user_D = [list] user specified demand for each time period in simulation
         '''
         #set default (arbitrary) values when creating environment (if no args or kwargs are given)
         self.periods = 1
@@ -78,11 +80,12 @@ class NewsVendorEnv(gym.Env):
         self.dist_param = {'mu': 1}
         self.alpha = 1
         self.seed_int = 0
+        self.user_D = np.zeros(self.periods)
         
         #add environment configuration dictionary and keyword arguments
         for key, value in kwargs.items():
             setattr(self, key, value)
-        keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int']
+        keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
         for i,value in enumerate(args):
             setattr(self,keys[i],value)
         if hasattr(self, 'env_config'):
@@ -109,6 +112,7 @@ class NewsVendorEnv(gym.Env):
             self.lead_time = np.array([self.L])
         self.backlog = self.backlog
         self.discount = self.alpha
+        self.user_D = np.array(list(self.user_D))
         
         #intermediate calculation
         m = len(self.init_inv) + 1 #number of stages
@@ -119,7 +123,8 @@ class NewsVendorEnv(gym.Env):
         distributions = {1:poisson,
                          2:binom,
                          3:randint,
-                         4:geom}
+                         4:geom,
+                         5:self.user_D}
         #distribution parameters
 #         self.dist_param = self.dist_param
         
@@ -130,12 +135,16 @@ class NewsVendorEnv(gym.Env):
         assert len(self.holding_cost) == m, "The length of h is not equal to the number of stages - 1."
         assert len(self.supply_capacity) == m-1, "The length of c is not equal to the number of stages - 1."
         assert len(self.lead_time) == m-1, "The length of L is not equal to the number of stages - 1."
-        assert self.dist in [1,2,3,4], "dist must be one of 1, 2, 3, 4."
-        assert distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
+        assert self.dist in [1,2,3,4,5], "dist must be one of 1, 2, 3, 4, 5."
+        if self.dist < 5:
+            assert distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
+        else:
+            assert len(self.user_D) == self.num_periods, "The length of the user specified distribution is not equal to the number of periods."
         assert (self.alpha>0) & (self.alpha<=1), "alpha must be in the range (0,1]."
         
-        #set random generation seed
-        self.seed(self.seed_int) 
+        #set random generation seed (unless using user demands)
+        if self.dist < 5:
+            self.seed(self.seed_int) 
         
         #select distribution
         self.demand_dist = distributions[self.dist]  
@@ -244,7 +253,10 @@ class NewsVendorEnv(gym.Env):
                 I[i] = I[i] + RnL[i]
             
         #demand is realized
-        D0 = self.demand_dist.rvs(**self.dist_param)
+        if self.dist < 5:
+            D0 = self.demand_dist.rvs(**self.dist_param)
+        else:
+            D0 = self.demand_dist[n] #user specified demand
         D = D0 #demand
         self.D[n] = D0 #store D[n]
         
