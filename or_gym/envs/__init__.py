@@ -24,6 +24,10 @@ register(id='VMPacking-v1',
 	entry_point='or_gym.envs.classic_or.vmpacking:TempVMPackingEnv'
 )
 
+register(id='VehicleRouting-v1',
+	entry_point='or_gym.envs.classic_or.vehicle_routing:VehicleRoutingEnv'
+)
+
 register(id='NewsVendor-v1',
 	entry_point='or_gym.envs.classic_or.newsvendor:MultiLevelNewsVendorEnv'
 )

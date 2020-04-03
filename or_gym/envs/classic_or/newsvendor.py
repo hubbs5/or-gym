@@ -2,6 +2,7 @@ import gym
 from gym import spaces, logger
 import itertools
 import numpy as np
+from scipy.stats import *
 
 class MultiLevelNewsVendorEnv(gym.Env):
     '''
@@ -43,39 +44,38 @@ class MultiLevelNewsVendorEnv(gym.Env):
         
     periods = [positive integer] number of periods in simulation.
     I0 = [non-negative integer; dimension |Stages|-1] initial inventories for 
-    	each stage.
+        each stage.
     p = [positive float] unit price for final product.
     r = [non-negative float; dimension |Stages|] unit cost for replenishment 
-    	orders at each stage.
+        orders at each stage.
     k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss 
-    	(per unit) for unfulfilled orders (demand or replenishment orders).
+        (per unit) for unfulfilled orders (demand or replenishment orders).
     h = [non-negative float; dimension |Stages|-1] unit holding cost for 
-    	excess on-hand inventory at each stage.
+        excess on-hand inventory at each stage.
         (Note: does not include pipeline inventory).
     c = [positive integer; dimension |Stages|-1] production capacities for 
-    	each suppliers (stages 1 through |Stage|).
+        each suppliers (stages 1 through |Stage|).
     L = [non-negative integer; dimension |Stages|-1] lead times in betwen 
-    	stages.
+        stages.
     backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, 
-    	False = lost sales.
+        False = lost sales.
     dist = [integer] value between 1 and 4. Specifies distribution for 
-    	customer demand.
+        customer demand.
         1: poisson distribution
         2: binomial distribution
         3: uniform random integer
         4: geometric distribution
     dist_param = [dictionary] named values for parameters fed to statistical 
-    	distribution.
+        distribution.
         poisson: {'mu': <mean value>}
         binom: {'n': <mean value>, 'p': <probability between 0 and 1 of 
-        	getting the mean value>}
+            getting the mean value>}
         raindint: {'low' = <lower bound>, 'high': <upper bound>}
         geom: {'p': <probability. Outcome is the number of trials to success>}
     seed = [integer] seed for random state.
     '''
     def __init__(self, *args, **kwargs):
-    	# periods, I0, p, r, k, h, c, L, backlog, dist, dist_param, seed=0):
-        self.seed(self.seed) 
+        # self.set_seed(self.seed)
         self.p = 1
         self.r = [0.2, 0.2, 0.2]
         self.k = [0.3, 0.3, 0]
@@ -86,6 +86,14 @@ class MultiLevelNewsVendorEnv(gym.Env):
         self.I0 = [0, 0]
         self.dist = 1
         self.num_periods = 200
+
+        # Add env_config, if any
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if hasattr(self, 'env_config'):
+            for key, value in self.env_config.items():
+                setattr(self, key, value)
+
         self.unit_price = np.append(self.p, self.r[:-1]) #cost to stage 1 is price to stage 2
         self.unit_cost = np.array(self.r)
         self.demand_cost = np.array(self.k)
@@ -97,10 +105,11 @@ class MultiLevelNewsVendorEnv(gym.Env):
         m = len(self.I0) + 1 #number of stages
         self.num_stages = m
         
-        self.distributions = {1:poisson,
-                         2:binom,
-                         3:randint,
-                         4:geom}
+        self.distributions = {
+            1:poisson,
+            2:binom,
+            3:randint,
+            4:geom}
         self.dist_param = {'mu': 5}
         
         # Check inputs
@@ -113,19 +122,16 @@ class MultiLevelNewsVendorEnv(gym.Env):
         assert self.dist in [1,2,3,4], "dist must be one of 1, 2, 3, 4."
         assert self.distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
 
-        self.demand_dist = self.distributions[dist]  
+        self.demand_dist = self.distributions[self.dist]
 
         self.reset()
         
-        # action space (reorder quantities for each stage; list)
-        action_i = Spaces.Discrete(2**31) #very large number (should be unbounded in reality)
-        action = [action_i for i in range(m-1)] #an action is defined for every stage (except last one)
-        action_tuple = tuple(action) #convert list to tuple
-        self.action_space = Spaces.Tuple(action_tuple) #(i.e. if 2 stages, then aciton space is (0 to 4294967295, 0 to 4294967295))
+        action = [spaces.Discrete(self.c[i] + 1) for i in range(len(self.c))]
+        self.action_space = spaces.Tuple(tuple(action))
         #observation space (Inventory position at each echelon, which is any integer value)
-        self.observation_space = Spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
+        self.observation_space = spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
-    def seed(self,seed=None):
+    def set_seed(self,seed=None):
         '''
         Set random number generation seed
         '''
@@ -133,7 +139,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         if seed != None:
             np.random.seed(seed=int(seed))
         else:
-        	np.random.seed(0)
+            np.random.seed(0)
         
     def reset(self):
         '''
@@ -186,7 +192,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
             IP = np.cumsum(self.I[n,:] + self.T[n,:])
         self.state = IP
     
-    def step(self,action):
+    def step(self, action):
         '''
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
@@ -205,11 +211,11 @@ class MultiLevelNewsVendorEnv(gym.Env):
         Im1 = np.append(I[1:], np.Inf) 
         
         # place replenishment order
-        R = action.astype(int)
+        R = np.array(action).astype(int)
         R[R<0] = 0 # force non-negativity
         if n>=1: # add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
-        Rcopy = R # copy oritignal replenishment quantity
+        Rcopy = R # copy orignal replenishment quantity
         R[R>=c] = c[R>=c] # enforce capacity constraint
         R[R>=Im1] = Im1[R>=Im1] #e nforce available inventory constraint
         self.R[n,:] = R #s tore R[n]
@@ -219,7 +225,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
         RnL = np.zeros(m-1) 
         for i in range(m-1):
             if n - L[i] >= 0:
-            	# replenishment placed at the end of period n-L-1
+                # replenishment placed at the end of period n-L-1
                 RnL[i] = self.R[n-L[i],i].copy() 
                 I[i] = I[i] + RnL[i]
             
@@ -285,9 +291,6 @@ class MultiLevelNewsVendorEnv(gym.Env):
         return self.state, reward, done, {}
     
     def sample_action(self):
-        '''
-        Generate an action by sampling from the action_space
-        '''
         return self.action_space.sample()
         
     def base_stock_action(self,z):

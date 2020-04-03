@@ -12,7 +12,7 @@ def create_env(config, *args, **kwargs):
 		env_name = config['env']
 	else:
 		env_name = config
-		print('Environment\t{}'.format(env_name))
+		# print('Environment\t{}'.format(env_name))
 	if env_name == 'Knapsack-v0':
 		from or_gym.envs.classic_or.knapsack import KnapsackEnv as env
 	elif env_name == 'Knapsack-v1':
@@ -36,8 +36,10 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'TSP-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.tsp import TSPEnv as env
-	elif env_name == 'VRP-v0':
+	elif env_name == 'VehicleRouting-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
+	elif env_name == 'VehicleRouting-v1':
+		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'NewsVendor-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 	else:
@@ -57,13 +59,17 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 	# TODO: Add grid search capabilities
 	rl_config = {
 		"env": env_name,
+		"num_workers": 2,
 		"env_config": {
 			# "version": env.spec.id.split('-')[-1]
 			"reuse_actors":True
 			},
 		"vf_clip_param": vf_clip_param,
-		"vf_share_layers": tune.grid_search([True, False]),
-		"lr": tune.grid_search([1e-2, 1e-3, 1e-4, 1e-5]),
+		"vf_share_layers": tune.grid_search([False]),
+		"lr": tune.grid_search([1e-4, 1e-5, 1e-6]),
+		"entropy_coeff": tune.grid_search([1e-2, 1e-3]),
+		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
+		# "train_batch_size": tune.grid_search([])
 		"model": {
 			"custom_model": model_name,
 			"fcnet_activation": "elu",
@@ -78,7 +84,7 @@ def register_env(env_name):
 	tune.register_env(env_name, lambda env_name: env(env_name))
 
 class FCModel(TFModelV2):
-
+	'''Fully Connected Model'''
 	def __init__(self, obs_space, action_space, num_outputs, model_config,
 				 name):
 		super(FCModel, self).__init__(
@@ -104,9 +110,10 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
 	results = tune.run(
 		algo,
+		checkpoint_at_end=True,
 		stop={
 			"timesteps_total": 1000000,
-			"training_iteration": 10000 # Is this number of episodes?
+			"training_iteration": 200000 # Is this number of episodes?
 		},
 		config=rl_config
 	)
