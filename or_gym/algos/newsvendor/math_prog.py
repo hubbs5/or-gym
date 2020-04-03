@@ -255,7 +255,7 @@ def build_onv_ip_model(env):
     mip.discount = env.discount
     mip.num_periods = env.period
     backlog = env.backlog
-    D = env.D
+    D = env.D[:env.period]
     mip.D = pe.Param(mip.n, initialize = {i:D[i] for i in mip.n}) #sample demands
     prob = env.demand_dist.pmf(D,**env.dist_param)
     mip.prob = pe.Param(mip.n, initialize = {i:prob[i] for i in mip.n}) #probability at each period

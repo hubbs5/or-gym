@@ -76,7 +76,7 @@ def onv_min_model(x,env):
                   'user_D': env.D[:env.period]}
     
     #build simulation environment
-    sim = NewsVendorEnv(**sim_kwargs) 
+    sim = or_gym.make("NewsVendor-v1",env_config=sim_kwargs) 
     
     #run simulation
     for t in range(sim.num_periods):

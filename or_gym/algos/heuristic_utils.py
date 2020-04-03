@@ -2,8 +2,9 @@ import gym
 import or_gym
 import numpy as np
 from scipy.optimize import minimize
+import itertools
 
-def solve_min_program(env, fun = min_model, local_search = False):
+def solve_min_program(env, fun, local_search = False):
     '''
     Optimize base stock level on a simulated sample path. Minimization is done by bisection.
     Bisection is used since objective function is not smooth.

@@ -20,43 +20,46 @@ def parse_arguments():
 	return parser.parse_args()
 
 def online_optimize_onv_ip(env):
-	raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
+	# raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
 
-	actions, items, rewards = [], [], []
+	actions, rewards = [], []
 	done = False
-	count = 0
+	action = env.base_stock_action(z=env.init_inv)
+	state, reward, done, _ = env.step(action)
+	actions.append(action)
+	rewards.append(reward)
 	while not done:
 		model = build_onv_ip_model(env)
-		model, results = solve_math_program(model)
-		# Extract base stock level
-        zopt = list(model.z.get_values().values())
-        # Extract action
-		action = env.base_stock_action(z=zopt)
+		model, results = solve_math_program(model,solver='gurobi')
+		zopt = list(model.z.get_values().values()) # Extract base stock level
+		action = env.base_stock_action(z=zopt) # Extract action
 		state, reward, done, _ = env.step(action)
 		actions.append(action)
-		items.append(env.current_item)
 		rewards.append(reward)
 
-	return actions, items, rewards
+	return actions, rewards
     
 def online_optimize_onv_min(env):
-	raise NotImplementedError('ONV (min) optimization not yet implemented.')
+	# raise NotImplementedError('ONV (min) optimization not yet implemented.')
 
-	actions, items, rewards = [], [], []
+	actions, rewards = [], []
 	done = False
-	count = 0
+	action = env.base_stock_action(z=env.init_inv)
+	state, reward, done, _ = env.step(action)
+	actions.append(action)
+	rewards.append(reward)
 	while not done:
 		results = solve_min_program(env, fun = onv_min_model, local_search = True)
+		print(results)
 		# Extract base stock level
-        zopt = results.zopt
-        # Extract action
+		zopt = results.zopt
+		# Extract action
 		action = env.base_stock_action(z=zopt)
 		state, reward, done, _ = env.step(action)
 		actions.append(action)
-		items.append(env.current_item)
 		rewards.append(reward)
 
-	return actions, items, rewards
+	return actions, rewards
 
 # def optimize_onv(env, print_results=False):
 	# model = build_onv_ip_model(env)
