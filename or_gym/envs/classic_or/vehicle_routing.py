@@ -56,7 +56,7 @@ class VehicleRoutingEnv(gym.Env):
         self.movement_cost  = 0.2
         self.after_hours_movement_multipler = 2
         self.max_time_period = 31 # Should this be 32?
-        self.num_vehicles = 2
+        self.num_vehicles = 3
         self.num_actions = 5 # Pickup, NSEW
         self.depot_location = 56
         self.num_locs = 100

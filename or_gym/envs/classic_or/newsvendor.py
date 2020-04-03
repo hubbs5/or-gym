@@ -192,7 +192,7 @@ class MultiLevelNewsVendorEnv(gym.Env):
             IP = np.cumsum(self.I[n,:] + self.T[n,:])
         self.state = IP
     
-    def step(self,action):
+    def step(self, action):
         '''
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
@@ -211,11 +211,11 @@ class MultiLevelNewsVendorEnv(gym.Env):
         Im1 = np.append(I[1:], np.Inf) 
         
         # place replenishment order
-        R = action.astype(int)
+        R = np.array(action).astype(int)
         R[R<0] = 0 # force non-negativity
         if n>=1: # add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
-        Rcopy = R # copy oritignal replenishment quantity
+        Rcopy = R # copy orignal replenishment quantity
         R[R>=c] = c[R>=c] # enforce capacity constraint
         R[R>=Im1] = Im1[R>=Im1] #e nforce available inventory constraint
         self.R[n,:] = R #s tore R[n]
@@ -291,9 +291,6 @@ class MultiLevelNewsVendorEnv(gym.Env):
         return self.state, reward, done, {}
     
     def sample_action(self):
-        '''
-        Generate an action by sampling from the action_space
-        '''
         return self.action_space.sample()
         
     def base_stock_action(self,z):
