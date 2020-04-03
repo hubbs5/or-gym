@@ -33,10 +33,10 @@ def nv_min_model(x,env):
         env.step(action=env.base_stock_action(z=z)) 
     
     #probability from past demands (from env)
-    prob = env.demand_dist.pmf(env.D,**env.dist_param) 
+    # prob = env.demand_dist.pmf(env.D,**env.dist_param) 
     
     #expected profit
-    return -1/env.num_periods*np.sum(prob*env.P)
+    return -np.mean(env.P)
 
 def onv_min_model(x,env):
     '''
@@ -84,7 +84,7 @@ def onv_min_model(x,env):
         sim.step(action=sim.base_stock_action(z=z)) 
     
     #probability from past demands (from env)
-    prob = env.demand_dist.pmf(sim.D,**env.dist_param) 
+    # prob = env.demand_dist.pmf(sim.D,**env.dist_param) 
     
     #expected profit
-    return -1/sim.num_periods*np.sum(prob*sim.P)
+    return -np.mean(sim.P)

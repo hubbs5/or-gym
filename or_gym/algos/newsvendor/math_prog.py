@@ -54,8 +54,8 @@ def build_nv_ip_model(env):
     backlog = env.backlog
     D = env.demand_dist.rvs(size=env.num_periods,**env.dist_param)
     mip.D = pe.Param(mip.n, initialize = {i:D[i] for i in mip.n}) #sample demands
-    prob = env.demand_dist.pmf(D,**env.dist_param)
-    mip.prob = pe.Param(mip.n, initialize = {i:prob[i] for i in mip.n}) #probability at each period
+    # prob = env.demand_dist.pmf(D,**env.dist_param)
+    # mip.prob = pe.Param(mip.n, initialize = {i:prob[i] for i in mip.n}) #probability at each period
     
     #define variables
     mip.I = pe.Var(mip.n1,mip.m0,domain=pe.NonNegativeReals)
@@ -201,7 +201,7 @@ def build_nv_ip_model(env):
 
     #objective function: maximize expected profit
     mip.obj = pe.Objective(
-        expr = 1/mip.num_periods * sum(mip.P[n]*mip.prob[n] for n in mip.n),
+        expr = 1/mip.num_periods * sum(mip.P[n] for n in mip.n),
         sense = pe.maximize)
     
     return mip
@@ -257,8 +257,8 @@ def build_onv_ip_model(env):
     backlog = env.backlog
     D = env.D[:env.period]
     mip.D = pe.Param(mip.n, initialize = {i:D[i] for i in mip.n}) #sample demands
-    prob = env.demand_dist.pmf(D,**env.dist_param)
-    mip.prob = pe.Param(mip.n, initialize = {i:prob[i] for i in mip.n}) #probability at each period
+    # prob = env.demand_dist.pmf(D,**env.dist_param)
+    # mip.prob = pe.Param(mip.n, initialize = {i:prob[i] for i in mip.n}) #probability at each period
     
     #define variables
     mip.I = pe.Var(mip.n1,mip.m0,domain=pe.NonNegativeReals)
@@ -404,7 +404,7 @@ def build_onv_ip_model(env):
 
     #objective function: maximize expected profit
     mip.obj = pe.Objective(
-        expr = 1/mip.num_periods * sum(mip.P[n]*mip.prob[n] for n in mip.n),
+        expr = 1/mip.num_periods * sum(mip.P[n] for n in mip.n),
         sense = pe.maximize)
     
     return mip
