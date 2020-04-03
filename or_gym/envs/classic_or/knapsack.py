@@ -253,11 +253,12 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     def __init__(self, *args, **kwargs):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Tuple((
-            spaces.Box(0, self.max_weight, shape=(self.N,)),
-            spaces.Box(0, self.max_weight, shape=(self.N,)),
-            spaces.Box(0, self.max_weight, shape=(self.N,)),
-            spaces.Box(0, self.max_weight, shape=(3,))))
+        # self.observation_space = spaces.Tuple((
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Weights
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Values
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Probs
+        #     spaces.Box(0, self.max_weight, shape=(3,))))
+        self.observation_space = spaces.Box(0, self.max_weight, shape=(4,))
 
         self.step_counter = 0
         self.step_limit = 50
@@ -295,13 +296,15 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     def _update_state(self):
         self.current_item = np.random.choice(self.item_numbers, p=self.item_probs)
         self.state = (
-            self.item_weights,
-            self.item_values,
-            self.item_probs,
+            # self.item_weights,
+            # self.item_values,
+            # self.item_probs,
             np.array([
-                self.max_weight,
+                # self.max_weight,
                 self.current_weight,
-                self.current_item
+                self.current_item,
+                self.item_weights[self.current_item],
+                self.item_values[self.current_item]
             ]))
         
     def sample_action(self):
