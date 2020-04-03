@@ -6,7 +6,7 @@
 import gym
 import or_gym
 from argparse import ArgumentParser
-import string
+import time
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
@@ -26,6 +26,8 @@ def parse_arguments():
     return parser.parse_args()
 
 def test_env(env, n_episodes, print_output=True):
+	t0 = time.time()
+	steps = []
 	for ep in range(n_episodes):
 		env.reset()
 		rewards = 0
@@ -37,8 +39,10 @@ def test_env(env, n_episodes, print_output=True):
 			rewards += r
 			step_count += 1
 			if done and ep % 100 == 0 and print_output:
-				print("Ep {}\t\tRewards={}\t\t{}".format(ep, rewards, step_count))
-	print('Test Complete\n')
+				print("Ep {}\t\tRewards={:.1f}\t\t{}".format(ep, rewards, step_count))
+				steps.append(step_count)
+	t1 = time.time()
+	print('Test Complete\t{:.04f}s/100 steps\n'.format((t1-t0)/sum(steps)*100))
 
 if __name__ == "__main__":
 	args = parse_arguments()
