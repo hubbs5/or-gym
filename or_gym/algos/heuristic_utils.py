@@ -24,6 +24,7 @@ def solve_min_program(env, fun, local_search = False):
     
     #local search to get integer solution
     if local_search:
+        xopt = np.max(np.column_stack((np.zeros(env.num_stages - 1),xopt)),axis=1) #correct negative values to 0
         xopt_f = np.floor(xopt)
         xopt_c = np.ceil(xopt)
         X = np.column_stack((xopt_f,xopt_c))

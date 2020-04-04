@@ -245,7 +245,7 @@ def build_onv_ip_model(env):
     mip.m0 = pe.RangeSet(0,env.num_stages-2)
     
     #define parameters
-    mip.init_inv = pe.Param(mip.m, initialize = {i:env.init_inv[i] for i in mip.m0})
+    # mip.init_inv = pe.Param(mip.m, initialize = {i:env.init_inv[i] for i in mip.m0})
     mip.unit_price = pe.Param(mip.m, initialize = {i:env.unit_price[i] for i in mip.m})
     mip.unit_cost = pe.Param(mip.m, initialize = {i:env.unit_cost[i] for i in mip.m})
     mip.demand_cost = pe.Param(mip.m, initialize = {i:env.demand_cost[i] for i in mip.m})
@@ -282,7 +282,7 @@ def build_onv_ip_model(env):
     
     #initialize
     for m in mip.m0:
-        mip.I[0,m] = mip.init_inv[m]
+        # mip.I[0,m] = mip.init_inv[m]
         mip.T[0,m].fix(0)
     
     #define constraints
@@ -306,14 +306,14 @@ def build_onv_ip_model(env):
     mip.unfulfilled = pe.ConstraintList()
     mip.profit = pe.ConstraintList()
     mip.basestock = pe.ConstraintList()
-#     mip.init_inv= pe.ConstraintList()
+    mip.init_inv= pe.ConstraintList()
     
     #build constraints
     for m in mip.m0:
         #relate base stock levels to inventory levels
         mip.basestock.add(mip.z[m] == sum(mip.x[i] for i in range(m+1)))
         #initialize inventory levels to being full
-#         mip.init_inv.add(mip.I[0,m] == mip.x[m])
+        mip.init_inv.add(mip.I[0,m] == mip.x[m])
     
     for n in mip.n:
         #calculate profit

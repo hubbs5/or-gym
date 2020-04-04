@@ -14,12 +14,12 @@ def nv_min_model(x,env):
     
     assert env.spec.id == 'NewsVendor-v1', \
         '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
-    env.reset() #reset environment
     
     x = np.array(x) #inventory level at each node
     z = np.cumsum(x) #base stock levels
     
-#     env = env[0]
+    env.init_inv = x #set initial inventory to full base stock
+    env.reset() #reset environment
     m = env.num_stages
     try:
         dimz = len(z)
@@ -63,7 +63,7 @@ def onv_min_model(x,env):
     
     #extract args to pass to re-simulation
     sim_kwargs = {'periods': env.period,
-                  'I0': env.I0,
+                  'I0': x, #set initial inventory to full base stock
                   'p': env.p,
                   'r': env.r,
                   'k': env.k,
