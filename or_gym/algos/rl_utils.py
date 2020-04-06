@@ -56,7 +56,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 	try:
 		vf_clip_param = env._max_rewards
 	except AttributeError:
-		vf_clip_param = 5000
+		vf_clip_param = 10
 
 	# TODO: Add grid search capabilities
 	rl_config = {

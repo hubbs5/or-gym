@@ -56,6 +56,7 @@ class VMPackingEnv(gym.Env):
             high=np.ones((self.n_pms, 3), dtype=np.float32),
             dtype=np.float32)
         self.action_space = spaces.Discrete(self.n_pms)
+        self.action_list = []
         
         self.state = self.reset()
         
@@ -149,8 +150,8 @@ class TempVMPackingEnv(VMPackingEnv):
             for process in self.durations.keys():
                 # Remove process from PM
                 if self.durations[process] == self.step_count:
-                    pm = alist[process]
-                    pm_state[pm, self.load_idx] -= env.demand[process]
+                    pm = self.assignments[process] # Find PM where process was assigned
+                    pm_state[pm, self.load_idx] -= self.demand[process]
                     # Shut down PM's if state is 0
                     if pm_state[pm, self.load_idx].sum() == 0:
                         pm_state[pm, 0] = 0
@@ -176,26 +177,24 @@ class TempVMPackingEnv(VMPackingEnv):
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
 
-# Placeholder demand generation function
 def generate_demand():
-    t_int = 15
-    n_steps = int(1440 / t_int) # 1 day, 15 minute intervals
-    steps = np.arange(n_steps)
-    level = np.abs(np.sin(steps) + 5)
-    noise = np.random.normal(size=n_steps)
-    trend = np.sin(steps / n_steps * 2*np.pi + np.pi)
-    cpu_demand = level + noise + trend
-    cpu_demand /= cpu_demand.max()
-    
-    ram_levels = np.array([2, 4, 8, 16, 32, 64, 128])
-    # Assume levels are poisson distributed around 3 with each 
-    # value mapping to one of the levels
-    ram_sample = np.random.poisson(lam=3, size=n_steps)
-    ram_demand = np.array([ram_levels[i] 
-        if i < len(ram_levels) else max(ram_levels) 
-        for i in ram_sample]) / max(ram_levels)
-    return np.vstack([cpu_demand, ram_demand]).T
+    t_int = 5
+    n = int(1440 / t_int) # 1 day, 5 minute intervals
+    # From Azure data
+    mem_probs = np.array([0.12 , 0.165, 0.328, 0.287, 0.064, 0.036])
+    mem_bins = np.array([0.02857143, 0.05714286, 0.11428571, 0.45714286, 0.91428571,
+       1.]) # Normalized bin sizes
+    mu_cpu = 16.08
+    sigma_cpu = 1.26
+    cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
+    cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
+    mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
+    return np.vstack([cpu_demand/100, mem_demand]).T
 
 def generate_durations(demand):
+    # duration_params = np.array([ 6.53563303e-02,  5.16222242e+01,  4.05028032e+06, -4.04960880e+06])
     return {i: np.random.randint(low=i+1, high=len(demand)+1)
         for i, j in enumerate(demand)}
+
+def gaussian_model(params, x):
+    return params[2] * np.exp(-0.5*((x - params[0]) / params[1]) ** 2) + params[3]
