@@ -42,6 +42,8 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'NewsVendor-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
+	elif env_name == 'NewsVendor-v1':
+		from or_gym.envs.classic_or.newsvendor import NewsVendorEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env
