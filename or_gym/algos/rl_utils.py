@@ -27,7 +27,7 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'BinPacking-v2':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
-	elif env_name == 'VMPackgin-v0':
+	elif env_name == 'VMPacking-v0':
 		from or_gym.envs.classic_or.vm_packing import VMPackingEnv as env
 	elif env_name == 'VMPacking-v1':
 		from or_gym.envs.classic_or.vm_packing import TempVMPackingEnv as env
