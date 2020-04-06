@@ -60,7 +60,7 @@ class VehicleRoutingEnv(gym.Env):
         self.num_actions = 5 # Pickup, NSEW
         self.depot_location = 56
         self.num_locs = 100
-        self._max_reward = 500
+        self._max_reward = 10
         # Add env_config, if any
         for key, value in kwargs.items():
             setattr(self, key, value)
