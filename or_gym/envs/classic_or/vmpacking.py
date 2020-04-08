@@ -40,7 +40,8 @@ class VMPackingEnv(gym.Env):
     def __init__(self, *args, **kwargs):
         # Normalized Capacities
         self.cpu_capacity = 1
-        self.ram_capacity = 1
+        self.mem_capacity = 1
+        self.tol = 1e-5 # Tolerance to avoid errors with floating point > 1
         self.step_limit = int(60 * 24 / 5)
         self.n_pms = 100 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
@@ -65,7 +66,7 @@ class VMPackingEnv(gym.Env):
         pm_state = self.state[0] # Physical machine state
         if action < 0 or action >= self.n_pms:
             raise ValueError('Invalid Action')
-        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1):
+        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
             # Demand doesn't fit into PM
             reward = -100
             done = True
@@ -80,7 +81,9 @@ class VMPackingEnv(gym.Env):
         self.step_count += 1
         if self.step_count >= self.step_limit:
             done = True
-            reward = 0
+            reward = np.sum(pm_state[:, 0] * 
+                (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
+            print('Step Count Reached')
         else:
             self.state = (pm_state, self.demand[self.step_count])
         
@@ -89,9 +92,22 @@ class VMPackingEnv(gym.Env):
     def reset(self):
         self.step_count = 0
         self.assignments = {}
-        self.demand = generate_demand()
+        self.demand = self.generate_demand()
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
+
+    def generate_demand(self):
+        n = self.step_limit
+        # From Azure data
+        mem_probs = np.array([0.12 , 0.165, 0.328, 0.287, 0.064, 0.036])
+        mem_bins = np.array([0.02857143, 0.05714286, 0.11428571, 0.45714286, 0.91428571,
+           1.]) # Normalized bin sizes
+        mu_cpu = 16.08
+        sigma_cpu = 1.26
+        cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
+        cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
+        mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
+        return np.vstack([cpu_demand/100, mem_demand]).T
 
 class TempVMPackingEnv(VMPackingEnv):
     '''
@@ -174,24 +190,10 @@ class TempVMPackingEnv(VMPackingEnv):
     def reset(self):
         self.step_count = 0
         self.assignments = {}
-        self.demand = generate_demand()
+        self.demand = self.generate_demand()
         self.durations = generate_durations(self.demand)
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
-
-def generate_demand():
-    t_int = 5
-    n = int(1440 / t_int) # 1 day, 5 minute intervals
-    # From Azure data
-    mem_probs = np.array([0.12 , 0.165, 0.328, 0.287, 0.064, 0.036])
-    mem_bins = np.array([0.02857143, 0.05714286, 0.11428571, 0.45714286, 0.91428571,
-       1.]) # Normalized bin sizes
-    mu_cpu = 16.08
-    sigma_cpu = 1.26
-    cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
-    cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
-    mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
-    return np.vstack([cpu_demand/100, mem_demand]).T
 
 def generate_durations(demand):
     # duration_params = np.array([ 6.53563303e-02,  5.16222242e+01,  4.05028032e+06, -4.04960880e+06])

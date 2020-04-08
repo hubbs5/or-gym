@@ -58,7 +58,7 @@ if __name__ == "__main__":
     n_episodes = args.episodes
     print_output = args.print
     ray.init(ignore_reinit_error=True)
-    trainer = ppo.PPOTrainer(env=create_env(env_name), 
+    trainer = ppo.PPOTrainer(env=create_env(env_name),
         config={
         "env_config": {
             "reuse_actors":True},
