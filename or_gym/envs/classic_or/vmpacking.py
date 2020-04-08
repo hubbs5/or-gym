@@ -51,13 +51,13 @@ class VMPackingEnv(gym.Env):
             for key, value in self.env_config.items():
                 setattr(self, key, value)
 
-        self.observation_space = spaces.Box(
-            low=np.zeros((self.n_pms, 3), dtype=np.float32),
-            high=np.ones((self.n_pms, 3), dtype=np.float32),
-            dtype=np.float32)
-        self.action_space = spaces.Discrete(self.n_pms)
-        self.action_list = []
-        
+        self.observation_space = spaces.Tuple((
+            spaces.Box(
+                low=-0.1, high=1, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
+            spaces.Box(
+                low=0, high=1, shape=(2,), dtype=np.float32)
+            ))
+        self.action_space = spaces.Discrete(self.n_pms)        
         self.state = self.reset()
         
     def step(self, action):
@@ -88,6 +88,7 @@ class VMPackingEnv(gym.Env):
     
     def reset(self):
         self.step_count = 0
+        self.assignments = {}
         self.demand = generate_demand()
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
@@ -159,12 +160,13 @@ class TempVMPackingEnv(VMPackingEnv):
         if self.step_count >= self.step_limit:
             done = True
             reward = 0
+        else:
+            self.state = (pm_state, self.demand[self.step_count])
             
         if not done:
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
         
-        self.state = (pm_state, self.demand[self.step_count])
         self.step_count += 1
         
         return self.state, reward, done, {}
