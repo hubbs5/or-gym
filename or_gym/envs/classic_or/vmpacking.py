@@ -41,7 +41,7 @@ class VMPackingEnv(gym.Env):
         # Normalized Capacities
         self.cpu_capacity = 1
         self.ram_capacity = 1
-        self.step_limit = 60 * 24 / 15
+        self.step_limit = int(60 * 24 / 5)
         self.n_pms = 100 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
         # Add env_config, if any
