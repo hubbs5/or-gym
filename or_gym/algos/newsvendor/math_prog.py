@@ -147,15 +147,15 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
                 mip.pip_bal.add(mip.T[n+1,m] == mip.T[n,m] - mip.R[n - mip.lead_time[m],m] + mip.R[n,m])
             else:
                 mip.pip_bal.add(mip.T[n+1,m] == mip.T[n,m] + mip.R[n,m])
-            #reorder quantity constraints: R1 = max(0, z - sum(I + T - B))
+            #reorder quantity constraints: R1 = max(0, z - sum(I + T - B) + B[m+1])
                 # reorder based on base_stock level = z - sum(I + T - B)
                 # Note: R1 = max(A,B) <-> A <= R1 <= A + M*(1-y) ;  B <= R1 <= B + M*y
                 # y = 1 means that the reorder level is positive
                 # y = 0 means that no reorder necessary (already above base stock level)
                 # Disjunction: [y -> R1 = z - sum(I + T - B)] OR [not y -> R1 = 0]
             if (backlog) & (n-1>=0):
-                mip.reorder1.add(mip.R1[n,m] <= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] - mip.B[n-1,i] for i in range(m+1)) + BigM1 * (1 - mip.y[n,m]))
-                mip.reorder2.add(mip.R1[n,m] >= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] - mip.B[n-1,i] for i in range(m+1)))
+                mip.reorder1.add(mip.R1[n,m] <= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] - mip.B[n-1,i] for i in range(m+1)) + mip.B[n-1,m+1] + BigM1 * (1 - mip.y[n,m]))
+                mip.reorder2.add(mip.R1[n,m] >= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] - mip.B[n-1,i] for i in range(m+1)) + mip.B[n-1,m+1])
             else:
                 mip.reorder1.add(mip.R1[n,m] <= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] for i in range(m+1)) + BigM1 * (1 - mip.y[n,m]))
                 mip.reorder2.add(mip.R1[n,m] >= mip.z[m] - sum(mip.I[n,i] + mip.T[n,i] for i in range(m+1)))
@@ -167,7 +167,9 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
             mip.reorder5.add(mip.R[n,m] >= mip.R1[n,m] + BigM3 * (1 - mip.y1[n,m]))
             mip.reorder6.add(mip.R[n,m] <= mip.supply_capacity[m])
             mip.reorder7.add(mip.R[n,m] >= mip.supply_capacity[m] * mip.y2[n,m])
-            if (m < mip.m0[-1]) & (env.num_stages > 2): #if number of stages = 2, then there is no inventory constraint since the last level has unlimited inventory
+            if (m < mip.m0[-1]) & (env.num_stages > 2): 
+                #if number of stages = 2, then there is no inventory constraint since the last level has unlimited inventory
+                #also, last stage has unlimited inventory
                 mip.reorder8.add(mip.R[n,m] <= mip.I[n,m+1])
                 mip.reorder9.add(mip.R[n,m] >= mip.I[n,m+1] + BigM4 * (1 - mip.y3[n,m]))
                 mip.reorder10.add(mip.y1[n,m] + mip.y2[n,m] + mip.y3[n,m] == 1)
@@ -176,7 +178,7 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
                 
         for m in mip.m:            
             if m == 0:
-            #sales constraints: S = min(I,D) at stage 0
+            #sales constraints: S = min(I + R[n-L], D + B[n-1]) at stage 0
                 if n - mip.lead_time[m] >= 0:
                     mip.sales1.add(mip.S[n,m] <= mip.I[n,m] + mip.R[n - mip.lead_time[m],m])
                     mip.sales2.add(mip.S[n,m] >= mip.I[n,m] + mip.R[n - mip.lead_time[m],m] + BigM5 * (1 - mip.y4[n,m]))
@@ -191,11 +193,8 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
                     mip.sales3.add(mip.S[n,m] <= mip.D[n])
                     mip.sales4.add(mip.S[n,m] >= mip.D[n] + BigM6 * mip.y4[n,m])
             else:
-            #sales constraints: S = R[n,m-1] + B[n-1,m] at higher level stages
-                if (backlog) & (n-1>=0):
-                    mip.sales5.add(mip.S[n,m] == mip.R[n,m-1] + mip.B[n-1,m])
-                else:
-                    mip.sales5.add(mip.S[n,m] == mip.R[n,m-1])
+            #sales constraints: S = R[n,m-1] at higher level stages
+            mip.sales5.add(mip.S[n,m] == mip.R[n,m-1])
                     
             if m == 0:
             #unfulfilled orders at stage 0: U = D + B[n-1] - S
