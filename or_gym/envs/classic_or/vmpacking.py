@@ -54,7 +54,7 @@ class VMPackingEnv(gym.Env):
 
         self.observation_space = spaces.Tuple((
             spaces.Box(
-                low=-0.1, high=1, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
+                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
             spaces.Box(
                 low=0, high=1, shape=(2,), dtype=np.float32)
             ))
