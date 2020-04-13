@@ -1,9 +1,9 @@
 #!usr/bin/env python
 
 from or_gym.algos.newsvendor.math_prog import *
-from or_gym.algos.newsvendor.heuristics import *
+# from or_gym.algos.newsvendor.heuristics import *
 from or_gym.algos.math_prog_utils import *
-from or_gym.algos.heuristic_utils import *
+# from or_gym.algos.heuristic_utils import *
 import gym
 import or_gym
 import numpy as np
@@ -20,8 +20,9 @@ def parse_arguments():
 	return parser.parse_args()
 
 def online_optimize_onv_ip(env):
-	# raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
-
+    # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
+    env.reset() #reset env
+    
 	actions, rewards = [], []
 	done = False
 	action = env.base_stock_action(z=env.init_inv)
@@ -29,7 +30,7 @@ def online_optimize_onv_ip(env):
 	actions.append(action)
 	rewards.append(reward)
 	while not done:
-		model = build_onv_ip_model(env)
+		model = build_nv_ip_model(env,online=True)
 		model, results = solve_math_program(model,solver='gurobi')
 		zopt = list(model.z.get_values().values()) # Extract base stock level
 		action = env.base_stock_action(z=zopt) # Extract action
@@ -41,7 +42,8 @@ def online_optimize_onv_ip(env):
     
 def online_optimize_onv_min(env):
 	# raise NotImplementedError('ONV (min) optimization not yet implemented.')
-
+    env.reset() #reset env
+    
 	actions, rewards = [], []
 	done = False
 	action = env.base_stock_action(z=env.init_inv)
@@ -49,7 +51,7 @@ def online_optimize_onv_min(env):
 	actions.append(action)
 	rewards.append(reward)
 	while not done:
-		results = solve_min_program(env, fun = onv_min_model, local_search = True)
+		results = solve_min_program(env, fun = nv_min_model, online=True, local_search = True)
 		print(results)
 		# Extract base stock level
 		zopt = results.zopt
