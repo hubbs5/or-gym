@@ -24,7 +24,7 @@ class NewsVendorEnv(gym.Env):
     (i.e. m = 0 is the retailer). Production at each stage is bounded by the stage's production capacity and the available
     inventory.
         
-    At the each time period, the following sequence of events occurs:
+    At the beginning of each time period, the following sequence of events occurs:
     
     0) Stages 0 through M-1 place replinishment orders to their respective suppliers. Replenishment orders are filled
         according to available production capacity and available inventory at the respective suppliers.
