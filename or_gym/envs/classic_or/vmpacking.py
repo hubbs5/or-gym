@@ -41,11 +41,11 @@ class VMPackingEnv(gym.Env):
         # Normalized Capacities
         self.cpu_capacity = 1
         self.mem_capacity = 1
-        self.t_interval = 15 # Time interval
+        self.t_interval = 20 # Time interval
         self.tol = 1e-5 # Tolerance to avoid errors with floating point > 1
-        # self.step_limit = int(60 * 24 / self.t_interval)
-        self.step_limit = 20
-        self.n_pms = 100 # Number of physical machines to choose from
+        self.step_limit = int(60 * 24 / self.t_interval)
+        # self.step_limit = 20
+        self.n_pms = 50 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
         # Add env_config, if any
         for key, value in kwargs.items():
