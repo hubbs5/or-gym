@@ -41,8 +41,10 @@ class VMPackingEnv(gym.Env):
         # Normalized Capacities
         self.cpu_capacity = 1
         self.mem_capacity = 1
+        self.t_interval = 15 # Time interval
         self.tol = 1e-5 # Tolerance to avoid errors with floating point > 1
-        self.step_limit = int(60 * 24 / 5)
+        # self.step_limit = int(60 * 24 / self.t_interval)
+        self.step_limit = 20
         self.n_pms = 100 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
         # Add env_config, if any
@@ -68,7 +70,7 @@ class VMPackingEnv(gym.Env):
             raise ValueError('Invalid Action')
         elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
             # Demand doesn't fit into PM
-            reward = -100
+            reward = -1000
             done = True
         else:
             if pm_state[action, 0] == 0:
@@ -77,13 +79,14 @@ class VMPackingEnv(gym.Env):
             pm_state[action, self.load_idx] += self.demand[self.step_count]
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-            
+            self.assignments[self.step_count] = action
+
         self.step_count += 1
         if self.step_count >= self.step_limit:
             done = True
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-            print('Step Count Reached')
+            # print('Step Count Reached')
         else:
             self.state = (pm_state, self.demand[self.step_count])
         
@@ -95,6 +98,9 @@ class VMPackingEnv(gym.Env):
         self.demand = self.generate_demand()
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
+
+    def sample_action(self):
+        return self.action_space.sample()
 
     def generate_demand(self):
         n = self.step_limit

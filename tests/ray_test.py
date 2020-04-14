@@ -47,7 +47,7 @@ def test_env(env, n_episodes, print_output=True):
         if batch % 10 == 0 and print_output:
             t = t_end - t_batch
             t_tot = t_end - t_start
-            print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}s\tTotal Time: {:.1f}s".format(
+            print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}\tTotal Time: {:.1f}s".format(
                 eps_total[-1], rewards[-1], eps[-1]/t, t_tot), end="")
             
     print("Total Training Time: {:.1f}s\t".format(t_end - t_start))
