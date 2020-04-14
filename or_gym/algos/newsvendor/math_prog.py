@@ -194,7 +194,7 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
                     mip.sales4.add(mip.S[n,m] >= mip.D[n] + BigM6 * mip.y4[n,m])
             else:
             #sales constraints: S = R[n,m-1] at higher level stages
-            mip.sales5.add(mip.S[n,m] == mip.R[n,m-1])
+                mip.sales5.add(mip.S[n,m] == mip.R[n,m-1])
                     
             if m == 0:
             #unfulfilled orders at stage 0: U = D + B[n-1] - S
