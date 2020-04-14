@@ -19,8 +19,8 @@ def solve_math_program(model, solver='glpk', print_results=True):
     
 def solve_min_program(env, fun, online = False, local_search = False):
     '''
-    Optimize base stock level on a simulated sample path. Minimization is done by bisection (Powell's method).
-    Bisection is used since objective function is not smooth.
+    Optimize base stock level on a simulated sample path. Minimization is done by Powell's method.
+    Powell's method is used since the objective function is not smooth.
     
     env_args = [list] arguments for simulation environment on which to perform SPA.
     fun = [function] function over which to optimize (i.e. nv_min_model or onv_min_model)
