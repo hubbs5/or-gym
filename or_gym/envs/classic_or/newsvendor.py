@@ -127,7 +127,7 @@ class NewsVendorMasterEnv(gym.Env):
 #         self.dist_param = self.dist_param
         
         #check inputs
-        assert self.init_inv >=0, "The initial inventory cannot be negative"
+        assert np.all(self.init_inv) >=0, "The initial inventory cannot be negative"
         assert self.num_periods > 0, "The number of periods must be positive."
         assert np.all(self.unit_price >= 0), "The sales prices cannot be negative."
         assert np.all(self.unit_cost >= 0), "The procurement costs cannot be negative."
