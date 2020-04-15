@@ -67,7 +67,7 @@ class NewsVendorMasterEnv(gym.Env):
         '''
         #set default (arbitrary) values when creating environment (if no args or kwargs are given)
         self.periods = 365
-        self.I0 = 20
+        self.I0 = [20,15,10]
         self.p = 1
         self.r = [0.20,0.15,0.10,0.05]
         self.k = [0.30,0.25,0.20,0.15]
