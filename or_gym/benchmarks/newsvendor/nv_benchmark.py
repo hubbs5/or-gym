@@ -16,15 +16,22 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def optimize_nv_ip(env):
+def optimize_nv_mip(env,warmstart=False,mapping_env=None,mapping_z=None):
     env.reset() #reset env
-    model = build_nv_ip_model(env)
-    model, results = solve_math_program(model, solver = 'gurobi')
+    model = build_nv_mip_model(env)
+    model, results = solve_math_program(model, solver = 'gurobi', warmstart=warmstart,
+                                        mapping_env=mapping_env,mapping_z=mapping_z)
     return model, results
     
 def optimize_nv_dfo(env):
     env.reset() #reset env
     results = solve_dfo_program(env, fun = nv_dfo_model, local_search = True)
+    env.init_inv = results.xopt
+    env.reset() #reset env to run simulation with base stock levels found
+    #run simulation
+    for t in range(env.num_periods):
+        #take a step in the simulation using critical ratio base stock
+        env.step(action=env.base_stock_action(z=results.zopt)) 
     return results
 
 # if __name__ == '__main__':

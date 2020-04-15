@@ -66,13 +66,13 @@ class NewsVendorMasterEnv(gym.Env):
         user_D = [list] user specified demand for each time period in simulation
         '''
         #set default (arbitrary) values when creating environment (if no args or kwargs are given)
-        self.periods = 365
+        self.periods = 90
         self.I0 = [20,15,10]
-        self.p = 1
-        self.r = [0.20,0.15,0.10,0.05]
-        self.k = [0.30,0.25,0.20,0.15]
-        self.h = [0.25,0.20,0.15]
-        self.c = [15,10,5]
+        self.p = 2
+        self.r = [1.5,1.0,0.75,0.5]
+        self.k = [0.10,0.075,0.05,0.025]
+        self.h = [0.15,0.10,0.05]
+        self.c = [100,90,80]
         self.L = [3,5,10]
         self.backlog = True
         self.dist = 1
@@ -357,9 +357,9 @@ class NewsVendorMasterEnv(gym.Env):
         
 class NewsVendorBacklogEnv(NewsVendorMasterEnv):
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         
 class NewsVendorLostSalesEnv(NewsVendorMasterEnv):
     def __init__(self, *args, **kwargs):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.backlog = False

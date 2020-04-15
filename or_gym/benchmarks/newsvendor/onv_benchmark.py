@@ -19,40 +19,42 @@ def parse_arguments():
 
 	return parser.parse_args()
 
-def online_optimize_onv_ip(env):
+def online_optimize_nv_mip(env):
     # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
 	env.reset() #reset env
     
-	actions, rewards = [], []
+	actions, rewards, basestock = [], [], []
 	done = False
 	action = env.base_stock_action(z=env.init_inv)
 	state, reward, done, _ = env.step(action)
 	actions.append(action)
 	rewards.append(reward)
+
 	while not done:
-		model = build_nv_ip_model(env,online=True)
+		model = build_nv_mip_model(env,online=True)
 		model, results = solve_math_program(model,solver='gurobi')
 		zopt = list(model.z.get_values().values()) # Extract base stock level
 		action = env.base_stock_action(z=zopt) # Extract action
 		state, reward, done, _ = env.step(action)
 		actions.append(action)
 		rewards.append(reward)
+		basestock.append(zopt)
 
-	return actions, rewards
+	return actions, rewards, basestock
     
-def online_optimize_onv_dfo(env):
+def online_optimize_nv_dfo(env):
 	# raise NotImplementedError('ONV (min) optimization not yet implemented.')
 	env.reset() #reset env
     
-	actions, rewards = [], []
+	actions, rewards, basestock = [], [], []
 	done = False
 	action = env.base_stock_action(z=env.init_inv)
 	state, reward, done, _ = env.step(action)
 	actions.append(action)
 	rewards.append(reward)
+
 	while not done:
 		results = solve_dfo_program(env, fun = nv_dfo_model, online=True, local_search = True)
-		print(results)
 		# Extract base stock level
 		zopt = results.zopt
 		# Extract action
@@ -60,8 +62,9 @@ def online_optimize_onv_dfo(env):
 		state, reward, done, _ = env.step(action)
 		actions.append(action)
 		rewards.append(reward)
-
-	return actions, rewards
+		basestock.append(zopt)
+		
+	return actions, rewards, basestock
 
 # def optimize_onv(env, print_results=False):
 	# model = build_onv_ip_model(env)

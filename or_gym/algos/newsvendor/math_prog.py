@@ -5,7 +5,7 @@ import or_gym
 import pyomo.environ as pe
 import numpy as np
 
-def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
+def build_nv_mip_model(env,bigm=10000,epsilon=0.001,online=False):
     '''
     Optimize base stock level (z variable) on a simulated sample path using an MILP. The existing
     sample path (historical demands) is used when running online.
@@ -23,8 +23,8 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
     online = [Boolean] should the optimization be run online?
     ''' 
     
-    assert env.spec.id == 'NewsVendor-v1', \
-        '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'NewsVendor-v1', \
+        # '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
     #do not reset environment
     
     #big m values
@@ -80,12 +80,12 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
     else:
         mip.LS = pe.Var(mip.n,mip.m,domain=pe.NonNegativeReals) #lost sales at each stage
     mip.P = pe.Var(mip.n,domain=pe.Reals) #profit at each stage
-    mip.y = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable
-    mip.y1 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable
-    mip.y2 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable
+    mip.y = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y = 0: inventory level is above the base stock level (no reorder))
+    mip.y1 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y1 = 1: unconstrained reorder quantity accepted)
+    mip.y2 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y2 = 1: reorder quantity is capacity constrained)
     if env.num_stages > 2:
-        mip.y3 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable
-    mip.y4 = pe.Var(mip.n,mip.m,domain=pe.Binary) #auxiliary variable
+        mip.y3 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y3 = 1: reorder quantity is inventory constrained)
+    mip.y4 = pe.Var(mip.n,mip.m,domain=pe.Binary) #auxiliary variable (y4 = 1: demand + backlog satisfied)
     mip.x = pe.Var(mip.m0,domain=pe.PositiveIntegers) #inventory level at each stage
     mip.z = pe.Var(mip.m0,domain=pe.PositiveIntegers) #base stock level at each stage
     
@@ -232,8 +232,8 @@ def nv_dfo_model(x,env,online):
     online = [Boolean] should the optimization be run online?
     '''
     
-    assert env.spec.id == 'NewsVendor-v1', \
-        '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'NewsVendor-v1', \
+        # '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
     
     x = np.array(x) #inventory level at each node
     z = np.cumsum(x) #base stock levels
