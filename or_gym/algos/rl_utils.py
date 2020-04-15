@@ -113,6 +113,7 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 	results = tune.run(
 		algo,
 		checkpoint_at_end=True,
+		queue_trials=True,
 		stop={
 			"timesteps_total": 1000000,
 			"training_iteration": 200000 # Is this number of episodes?
