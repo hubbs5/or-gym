@@ -17,7 +17,7 @@ def solve_math_program(model, solver='glpk', print_results=True):
     results = solver.solve(model, tee=print_results)
     return model, results
     
-def solve_min_program(env, fun, online = False, local_search = False):
+def solve_dfo_program(env, fun, online = False, local_search = False):
     '''
     Optimize base stock level on a simulated sample path. Minimization is done by Powell's method.
     Powell's method is used since the objective function is not smooth.

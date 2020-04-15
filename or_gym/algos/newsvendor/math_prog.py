@@ -222,7 +222,7 @@ def build_nv_ip_model(env,bigm=10000,epsilon=0.001,online=False):
     
     return mip
 
-def nv_min_model(x,env,online):
+def nv_dfo_model(x,env,online):
     '''
     Compute negative of the expected profit for a sample path.
     This function is used in an unconstrained optimization algorithm (scipy.optimize.minimize).

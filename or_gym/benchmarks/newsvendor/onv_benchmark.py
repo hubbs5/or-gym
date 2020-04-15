@@ -21,7 +21,7 @@ def parse_arguments():
 
 def online_optimize_onv_ip(env):
     # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
-    env.reset() #reset env
+	env.reset() #reset env
     
 	actions, rewards = [], []
 	done = False
@@ -40,9 +40,9 @@ def online_optimize_onv_ip(env):
 
 	return actions, rewards
     
-def online_optimize_onv_min(env):
+def online_optimize_onv_dfo(env):
 	# raise NotImplementedError('ONV (min) optimization not yet implemented.')
-    env.reset() #reset env
+	env.reset() #reset env
     
 	actions, rewards = [], []
 	done = False
@@ -51,7 +51,7 @@ def online_optimize_onv_min(env):
 	actions.append(action)
 	rewards.append(reward)
 	while not done:
-		results = solve_min_program(env, fun = nv_min_model, online=True, local_search = True)
+		results = solve_dfo_program(env, fun = nv_dfo_model, online=True, local_search = True)
 		print(results)
 		# Extract base stock level
 		zopt = results.zopt

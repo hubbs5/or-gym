@@ -149,10 +149,6 @@ class NewsVendorMasterEnv(gym.Env):
             assert len(self.user_D) == self.num_periods, "The length of the user specified distribution is not equal to the number of periods."
         assert (self.alpha>0) & (self.alpha<=1), "alpha must be in the range (0,1]."
         
-        #set random generation seed (unless using user demands)
-        if self.dist < 5:
-            self.seed(self.seed_int) 
-        
         #select distribution
         self.demand_dist = distributions[self.dist]  
         
@@ -204,6 +200,10 @@ class NewsVendorMasterEnv(gym.Env):
         self.period = 0 #initialize time
         self.I[0,:]=np.array(I0) #initial inventory
         self.T[0,:]=np.zeros(m-1) #initial pipeline inventory
+        
+        #set random generation seed (unless using user demands)
+        if self.dist < 5:
+            self.seed(self.seed_int) 
         
         #set state
         self._update_state()

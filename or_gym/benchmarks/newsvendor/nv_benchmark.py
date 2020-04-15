@@ -22,9 +22,9 @@ def optimize_nv_ip(env):
     model, results = solve_math_program(model, solver = 'gurobi')
     return model, results
     
-def optimize_nv_min(env):
+def optimize_nv_dfo(env):
     env.reset() #reset env
-    results = solve_min_program(env, fun = nv_min_model, local_search = True)
+    results = solve_dfo_program(env, fun = nv_dfo_model, local_search = True)
     return results
 
 # if __name__ == '__main__':
