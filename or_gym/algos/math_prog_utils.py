@@ -1,28 +1,36 @@
-from pyomo.environ import *
+import pyomo.environ as pe
 from pyomo.opt import SolverFactory
 import numpy as np
 from scipy.optimize import minimize
 import itertools
+import or_gym
 
-def solve_math_program(model, solver='glpk', print_results=True, 
-                        warmstart = False, mapping_env = None, mapping_z = None):
+def solve_math_program(model, solver='glpk', print_results=True,
+                        warmstart = False, **warmstart_kwargs):
     '''
     Solves mathematical program using pyomo
     
     model = [Pyomo model]
     solver = [String] optimization solver to use
     print_results = [Boolean] should the results of the optimization be printed?
+    warmstart = [Boolean] should math program be warm started?
+    **warmstart_kwargs:
+        'mapping_env' = [NewsVendor Environment] that has been run until completion
+            NOTE: the mapping environment must have the same demand profile as the MIP model
+        'mapping_z' = [list] base_stock used in mapping_env
+        'online' = [Boolean] is the optimization being done online?
     '''
     
     solver = SolverFactory(solver)
     if warmstart:
-        model = warm_start_nv(model, mapping_env, mapping_z)
+        model = warm_start_nv(model, **warmstart_kwargs)
         results = solver.solve(model, tee=print_results, warmstart=warmstart)
+        return model, results
     else:
         results = solver.solve(model, tee=print_results)
         return model, results
 
-def warm_start_nv(model, mapping_env, mapping_z):
+def warm_start_nv(model, mapping_env, mapping_z, online=False, perfect_information = False):
     '''
     For NewsVendor
     
@@ -30,27 +38,63 @@ def warm_start_nv(model, mapping_env, mapping_z):
     the base stock MIP.
     
     model = [Pyomo model]
-    mapping_env = [NewsVendor Environment] that has been run until completion
+    mapping_env = [NewsVendor Environment]
         NOTE: the mapping environment must have the same demand profile as the MIP model
     mapping_z = [list] base_stock used in mapping_env
+    online = [Boolean] is the optimization being done online?
+    perfect_information = [Boolean] is the optimization being run a perfect information model (no policy)?
     '''
     
-    #extract solution from mapping_env
-    I = mapping_env.I
-    T = mapping_env.T
-    R = mapping_env.R 
-    S = mapping_env.S
-    B = mapping_env.B 
-    LS = mapping_env.LS
-    P = mapping_env.P
-    N = mapping_env.num_periods
-    M = mapping_env.num_stages
-    backlog = mapping_env.backlog
+    #extract base stock levels (z) and determine stage inventory levels (x)
     z = np.array(list(mapping_z))
     x = np.diff(z, prepend = [0])
-    c = mapping_env.supply_capacity
-    D = mapping_env.D
     
+    #extract arguments for env (copy of mapping_env)
+    env_kwargs = {'periods': mapping_env.periods,
+                  'I0': x,
+                  'p': mapping_env.p,
+                  'r': mapping_env.r,
+                  'k': mapping_env.k,
+                  'h': mapping_env.h,
+                  'c': mapping_env.c,
+                  'L': mapping_env.L,
+                  'backlog': mapping_env.backlog,
+                  'dist': mapping_env.dist,
+                  'dist_param': mapping_env.dist_param,
+                  'alpha': mapping_env.alpha,
+                  'seed_int': mapping_env.seed_int}
+    
+    if online:
+        #copy will only run until the last period
+        env_kwargs['periods'] = mapping_env.period
+
+    #create env
+    if mapping_env.backlog:
+        env = or_gym.make("NewsVendor-v1",env_config=env_kwargs)
+    else:
+        env = or_gym.make("NewsVendor-v2",env_config=env_kwargs)
+        
+    #run simulation    
+    for t in range(env.num_periods):
+        #take a step in the simulation using base stock policy
+        env.step(action=env.base_stock_action(z=z)) 
+        
+    #extract solution to create warm start
+    N = env.num_periods
+    M = env.num_stages
+    backlog = env.backlog
+    c = env.supply_capacity
+    
+    I = env.I
+    T = env.T
+    R = env.R 
+    S = env.S
+    B = env.B 
+    LS = env.LS
+    P = env.P
+    
+    D = env.D
+        
     #populate model
     for n in range(N+1): #mip.n1
         for m in range(M): #mip.m
@@ -65,10 +109,11 @@ def warm_start_nv(model, mapping_env, mapping_z):
                     else:
                         R1 = max(0, z[m] - np.sum(I[n,:m+1] + T[n,:m+1]))
                         model.R1[n,m] = R1
-                    if R1 == 0:
-                        model.y[n,m] = 0
-                    else:
-                        model.y[n,m] = 1
+                    if not perfect_information: #y doesn't exist in the pi model
+                        if R1 == 0:
+                            model.y[n,m] = 0
+                        else:
+                            model.y[n,m] = 1
                     if R[n,m] == R1:
                         model.y1[n,m] = 1
                         model.y2[n,m] = 0

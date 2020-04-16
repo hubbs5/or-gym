@@ -16,23 +16,52 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def optimize_nv_mip(env,warmstart=False,mapping_env=None,mapping_z=None):
-    env.reset() #reset env
+def optimize_nv_mip(env,solver='gurobi',warmstart=False,warmstart_kwargs={}):
+    #run optimization
+    env.reset()
     model = build_nv_mip_model(env)
-    model, results = solve_math_program(model, solver = 'gurobi', warmstart=warmstart,
-                                        mapping_env=mapping_env,mapping_z=mapping_z)
+    model, results = solve_math_program(model, solver = solver, warmstart=warmstart,
+                                        **warmstart_kwargs)
+    zopt = list(model.z.get_values().values()) #extract optimal base stock levels
+    
+    #reset env to run simulation with base stock levels found
+    env.reset() 
+    #run simulation
+    for t in range(env.num_periods):
+        #take a step in the simulation using base stock policy
+        env.step(action=env.base_stock_action(z=zopt)) 
     return model, results
     
 def optimize_nv_dfo(env):
-    env.reset() #reset env
+    #run optimization
+    env.reset()
     results = solve_dfo_program(env, fun = nv_dfo_model, local_search = True)
-    env.init_inv = results.xopt
-    env.reset() #reset env to run simulation with base stock levels found
+    
+    #reset env to run simulation with base stock levels found
+    env.reset() 
     #run simulation
     for t in range(env.num_periods):
-        #take a step in the simulation using critical ratio base stock
+        #take a step in the simulation using base stock policy
         env.step(action=env.base_stock_action(z=results.zopt)) 
     return results
+    
+def optimize_nv_pi_mip(env,solver='gurobi',warmstart=False,warmstart_kwargs={}):
+    #run optimization
+    env.reset()
+    model = build_nv_pi_mip_model(env)
+    model, results = solve_math_program(model, solver = solver, warmstart=warmstart,
+                                        **warmstart_kwargs)
+    N = env.num_periods
+    M = env.num_stages
+    Ropt = np.reshape(list(model.R.get_values().values()),(N,M-1)) #extract optimal reorder quantities
+    
+    #reset env to run simulation with base stock levels found
+    env.reset() 
+    #run simulation
+    for t in range(env.num_periods):
+        #take a step in the simulation using base stock policy
+        env.step(action=Ropt[t,:]) 
+    return model, results
 
 # if __name__ == '__main__':
     #parser = parse_arguments()
