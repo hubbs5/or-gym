@@ -5,30 +5,30 @@ def first_fit_heuristic(env):
         '{} received. Heuristic designed for VMPacking-v0/v1.'.format(env.spec.id)
 
     state = env.reset()
-	done = False
-	rewards, actions = [], []
-	while done == False:
-	    action = first_fit_step(state)
-	    state, reward, done, _ = env.step(action)
-	    actions.append(action)
-	    rewards.append(reward)
+    done = False
+    rewards, actions = [], []
+    while done == False:
+        action = first_fit_step(state)
+        state, reward, done, _ = env.step(action)
+        actions.append(action)
+        rewards.append(reward)
 
-	return actions, rewards
+    return actions, rewards
 
 def next_fit_heuristic(env):
     assert env.spec.id == ('VMPacking-v0' or 'VMPacking-v1'), \
         '{} received. Heuristic designed for VMPacking-v0/v1.'.format(env.spec.id)
 
     state = env.reset()
-	done = False
-	rewards, actions = [], []
-	while done == False:
-	    action = next_fit_step(state)
-	    state, reward, done, _ = env.step(action)
-	    actions.append(action)
-	    rewards.append(reward)
+    done = False
+    rewards, actions = [], []
+    while done == False:
+        action = next_fit_step(state)
+        state, reward, done, _ = env.step(action)
+        actions.append(action)
+        rewards.append(reward)
 
-	return actions, rewards
+    return actions, rewards
 
 # First fit: Pack item into lowest current bin where it fits, else into a new bin
 def first_fit_step(state):

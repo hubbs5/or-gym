@@ -71,7 +71,6 @@ class VMPackingEnv(gym.Env):
         elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
             # Demand doesn't fit into PM
             reward = -1000
-            done = True
         else:
             if pm_state[action, 0] == 0:
                 # Open PM if closed
@@ -86,7 +85,6 @@ class VMPackingEnv(gym.Env):
             done = True
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-            # print('Step Count Reached')
         else:
             self.state = (pm_state, self.demand[self.step_count])
         

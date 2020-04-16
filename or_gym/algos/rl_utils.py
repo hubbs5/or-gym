@@ -63,13 +63,12 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 		"env": env_name,
 		"num_workers": 2,
 		"env_config": {
-			# "version": env.spec.id.split('-')[-1]
-			"reuse_actors":True
 			},
 		"vf_clip_param": vf_clip_param,
 		"vf_share_layers": tune.grid_search([False]),
-		"lr": tune.grid_search([1e-4, 1e-5, 1e-6]),
+		"lr": tune.grid_search([1e-5, 1e-6]),
 		"entropy_coeff": tune.grid_search([1e-2, 1e-3]),
+		"lambda": tune.grid_search([1, 0.5]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
@@ -118,6 +117,7 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 			"timesteps_total": 1000000,
 			"training_iteration": 200000 # Is this number of episodes?
 		},
-		config=rl_config
+		config=rl_config,
+		reuse_actors=True
 	)
 	return results
