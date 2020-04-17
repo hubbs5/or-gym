@@ -1,7 +1,6 @@
 from pyomo.environ import *
 
 def build_online_vm_opt(env):
-#     print("Solving from t={}".format(env.step_count))
     m = ConcreteModel()
     
     t0 = env.step_count # Current time
