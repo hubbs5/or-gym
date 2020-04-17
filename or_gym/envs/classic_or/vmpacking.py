@@ -70,7 +70,8 @@ class VMPackingEnv(gym.Env):
             raise ValueError('Invalid Action')
         elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
             # Demand doesn't fit into PM
-            reward = -1000
+            reward = -10000
+            done = True
         else:
             if pm_state[action, 0] == 0:
                 # Open PM if closed
