@@ -67,7 +67,10 @@ def warm_start_nv(model, mapping_env, mapping_z, online=False, perfect_informati
     if online:
         #copy will only run until the last period
         env_kwargs['periods'] = mapping_env.period
-
+    if perfect_information:
+        #use initial inventory
+        env_kwargs['I0'] = mapping_env.init_inv
+        
     #create env
     if mapping_env.backlog:
         env = or_gym.make("NewsVendor-v1",env_config=env_kwargs)
@@ -103,54 +106,56 @@ def warm_start_nv(model, mapping_env, mapping_z, online=False, perfect_informati
                 model.T[n,m] = T[n,m]
                 if n < N: #mip.n
                     model.R[n,m] = R[n,m]
-                    if n>0:
-                        R1 = max(0, z[m] - np.sum(I[n,:m+1] + T[n,:m+1] - B[n-1,:m+1]) + B[n-1,m+1])
-                        model.R1[n,m] = R1
-                    else:
-                        R1 = max(0, z[m] - np.sum(I[n,:m+1] + T[n,:m+1]))
-                        model.R1[n,m] = R1
-                    if not perfect_information: #y doesn't exist in the pi model
+                    if not perfect_information:
+                        if n>0:
+                            R1 = max(0, z[m] - np.sum(I[n,:m+1] + T[n,:m+1] - B[n-1,:m+1]) + B[n-1,m+1])
+                            model.R1[n,m] = R1
+                        else:
+                            R1 = max(0, z[m] - np.sum(I[n,:m+1] + T[n,:m+1]))
+                            model.R1[n,m] = R1
                         if R1 == 0:
                             model.y[n,m] = 0
                         else:
                             model.y[n,m] = 1
-                    if R[n,m] == R1:
-                        model.y1[n,m] = 1
-                        model.y2[n,m] = 0
-                        if M > 2:
-                            model.y3[n,m] = 0
-                    elif R[n,m] == c[m]:
-                        model.y1[n,m] = 0
-                        model.y2[n,m] = 1
-                        if M > 2:
-                            model.y3[n,m] = 0
-                    else:
-                        model.y1[n,m] = 0
-                        model.y2[n,m] = 0
-                        if M > 2:
-                            model.y3[n,m] = 1
+                        if R[n,m] == R1:
+                            model.y1[n,m] = 1
+                            model.y2[n,m] = 0
+                            if M > 2:
+                                model.y3[n,m] = 0
+                        elif R[n,m] == c[m]:
+                            model.y1[n,m] = 0
+                            model.y2[n,m] = 1
+                            if M > 2:
+                                model.y3[n,m] = 0
+                        else:
+                            model.y1[n,m] = 0
+                            model.y2[n,m] = 0
+                            if M > 2:
+                                model.y3[n,m] = 1
             if n < N: #mip.n
                 model.S[n,m] = S[n,m]
                 if backlog:
                     model.B[n,m] = B[n,m]
                 else:
                     model.LS[n,m] = LS[n,m]
-                if n>0:
-                    if S[n,m] == D[n] + B[n-1,m]:
-                        model.y4[n,m] = 0
+                if not perfect_information:
+                    if n>0:
+                        if S[n,m] == D[n] + B[n-1,m]:
+                            model.y4[n,m] = 0
+                        else:
+                            model.y4[n,m] = 1
                     else:
-                        model.y4[n,m] = 1
-                else:
-                    if S[n,m] == D[n]:
-                        model.y4[n,m] = 0
-                    else:
-                        model.y4[n,m] = 1
+                        if S[n,m] == D[n]:
+                            model.y4[n,m] = 0
+                        else:
+                            model.y4[n,m] = 1
         if n < N: #mip.n
             model.P[n] = P[n]
-    
-    for m in range(M-1):
-        model.z[m] = int(z[m])
-        model.x[m] = int(x[m])
+            
+    if not perfect_information:
+        for m in range(M-1):
+            model.z[m] = int(z[m])
+            model.x[m] = int(x[m])
     
     return model
     

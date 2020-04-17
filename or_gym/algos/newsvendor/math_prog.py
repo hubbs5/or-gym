@@ -281,19 +281,19 @@ def nv_dfo_model(x,env,online):
     #expected profit
     return -1/sim.num_periods*np.sum(prob*sim.P)
     
-def build_nv_pi_mip_model(env,bigm=10000):
+def build_nv_pi_mip_model(env):#,bigm=10000):
     '''
     Build a perfect information MILP model for the newsvendor problem. No policy is used for the reorder.
     This will give you the optimal reorder quantities if you knew the demand before hand.
     
     Notes: 
-        -Using the hull reformulation instead of big-M could speed things up. Using tighter 
-            big-M could also be helpful.
+        # -Using the hull reformulation instead of big-M could speed things up. Using tighter 
+            # big-M could also be helpful.
         -All parameters to the simulation environment must have been defined 
             previously when making the environment.
     
     env = [NewsVendorEnv] current simulation environment. 
-    bigm = [Float] big-M value for BM reformulation
+    # bigm = [Float] big-M value for BM reformulation
     ''' 
     
     # assert env.spec.id == 'NewsVendor-v1', \
@@ -301,13 +301,13 @@ def build_nv_pi_mip_model(env,bigm=10000):
     #do not reset environment
     
     #big m values
-    M = bigm
+    # M = bigm
     # BigM1 = M
     # BigM2 = M
-    BigM3 = -M
-    BigM4 = -M
-    BigM5 = -M
-    BigM6 = -M
+    # BigM3 = -M
+    # BigM4 = -M
+    # BigM5 = -M
+    # BigM6 = -M
     
     #create model
     mip = pe.ConcreteModel()
@@ -337,7 +337,7 @@ def build_nv_pi_mip_model(env,bigm=10000):
     mip.I = pe.Var(mip.n1,mip.m0,domain=pe.NonNegativeReals) #on hand inventory at each stage
     mip.T = pe.Var(mip.n1,mip.m0,domain=pe.NonNegativeReals) #pipeline inventory in between each stage
     mip.R = pe.Var(mip.n,mip.m0,domain=pe.NonNegativeReals) #reorder quantities for each stage
-    mip.R1 = pe.Var(mip.n,mip.m0,domain=pe.NonNegativeReals) #unconstrained reorder quantity
+    # mip.R1 = pe.Var(mip.n,mip.m0,domain=pe.NonNegativeReals) #unconstrained reorder quantity
     mip.S = pe.Var(mip.n,mip.m,domain=pe.NonNegativeReals) #sales at each stage
     if backlog:
         mip.B = pe.Var(mip.n,mip.m,domain=pe.NonNegativeReals) #backlogs at each stage
@@ -345,47 +345,48 @@ def build_nv_pi_mip_model(env,bigm=10000):
         mip.LS = pe.Var(mip.n,mip.m,domain=pe.NonNegativeReals) #lost sales at each stage
     mip.P = pe.Var(mip.n,domain=pe.Reals) #profit at each stage
     # mip.y = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y = 0: inventory level is above the base stock level (no reorder))
-    mip.y1 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y1 = 1: unconstrained reorder quantity accepted)
-    mip.y2 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y2 = 1: reorder quantity is capacity constrained)
-    if env.num_stages > 2:
-        mip.y3 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y3 = 1: reorder quantity is inventory constrained)
-    mip.y4 = pe.Var(mip.n,mip.m,domain=pe.Binary) #auxiliary variable (y4 = 1: demand + backlog satisfied)
-    mip.x = pe.Var(mip.m0,domain=pe.NonNegativeReals) #inventory level at each stage
-    mip.z = pe.Var(mip.m0,domain=pe.PositiveIntegers) #base stock level at each stage
+    # mip.y1 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y1 = 1: unconstrained reorder quantity accepted)
+    # mip.y2 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y2 = 1: reorder quantity is capacity constrained)
+    # if env.num_stages > 2:
+        # mip.y3 = pe.Var(mip.n,mip.m0,domain=pe.Binary) #auxiliary variable (y3 = 1: reorder quantity is inventory constrained)
+    # mip.y4 = pe.Var(mip.n,mip.m,domain=pe.Binary) #auxiliary variable (y4 = 1: demand + backlog satisfied)
+    # mip.x = pe.Var(mip.m0,domain=pe.NonNegativeReals) #inventory level at each stage
+    # mip.z = pe.Var(mip.m0,domain=pe.PositiveIntegers) #base stock level at each stage
     
     #initialize
     for m in mip.m0:
+        mip.I[0,m].fix(env.init_inv[m])
         mip.T[0,m].fix(0)
     
     #define constraints
     mip.inv_bal = pe.ConstraintList()
     mip.sales1 = pe.ConstraintList()
-    mip.sales2 = pe.ConstraintList()
+    # mip.sales2 = pe.ConstraintList()
     mip.sales3 = pe.ConstraintList()
-    mip.sales4 = pe.ConstraintList()
+    # mip.sales4 = pe.ConstraintList()
     mip.sales5 = pe.ConstraintList()
     # mip.reorder1 = pe.ConstraintList()
     # mip.reorder2 = pe.ConstraintList()
     # mip.reorder3 = pe.ConstraintList()
-    mip.reorder4 = pe.ConstraintList()
-    mip.reorder5 = pe.ConstraintList()
+    # mip.reorder4 = pe.ConstraintList()
+    # mip.reorder5 = pe.ConstraintList()
     mip.reorder6= pe.ConstraintList()
-    mip.reorder7= pe.ConstraintList()
+    # mip.reorder7= pe.ConstraintList()
     mip.reorder8= pe.ConstraintList()
-    mip.reorder9= pe.ConstraintList()
-    mip.reorder10 =  pe.ConstraintList()
+    # mip.reorder9= pe.ConstraintList()
+    # mip.reorder10 =  pe.ConstraintList()
     mip.pip_bal = pe.ConstraintList()
     mip.unfulfilled = pe.ConstraintList()
     mip.profit = pe.ConstraintList()
-    mip.basestock = pe.ConstraintList()
-    mip.init_inv= pe.ConstraintList()
+    # mip.basestock = pe.ConstraintList()
+    # mip.init_inv= pe.ConstraintList()
     
     #build constraints
-    for m in mip.m0:
+    # for m in mip.m0:
         #relate base stock levels to inventory levels: base stock level = total inventory up to that echelon
-        mip.basestock.add(mip.z[m] == sum(mip.x[i] for i in range(m+1)))
+        # mip.basestock.add(mip.z[m] == sum(mip.x[i] for i in range(m+1)))
         #initialize inventory levels to being full (this would be ideal)
-        mip.init_inv.add(mip.I[0,m] == mip.x[m])
+        # mip.init_inv.add(mip.I[0,m] == mip.x[m])
     
     for n in mip.n:
         #calculate profit: apply time value discount to sales revenue - purchasing costs - unfulfilled demand cost - holding cost
@@ -414,35 +415,35 @@ def build_nv_pi_mip_model(env,bigm=10000):
             #reorder quantity constraints: R = min(c, I[m+1], R1)
                 #last constraint ensures that only one of the 3 options is chosen
                 # Note: R = min(A,B,C) <-> A + M*(1-y1) <= R <= A  ;  B + M*(1-y2) <= R <= B  ;  C + M*(1-y3) <= R <= C  ;  y1+y2+y3==1
-            mip.reorder4.add(mip.R[n,m] <= mip.R1[n,m])
-            mip.reorder5.add(mip.R[n,m] >= mip.R1[n,m] + BigM3 * (1 - mip.y1[n,m]))
+            # mip.reorder4.add(mip.R[n,m] <= mip.R1[n,m])
+            # mip.reorder5.add(mip.R[n,m] >= mip.R1[n,m] + BigM3 * (1 - mip.y1[n,m]))
             mip.reorder6.add(mip.R[n,m] <= mip.supply_capacity[m])
-            mip.reorder7.add(mip.R[n,m] >= mip.supply_capacity[m] * mip.y2[n,m])
+            # mip.reorder7.add(mip.R[n,m] >= mip.supply_capacity[m] * mip.y2[n,m])
             if (m < mip.m0[-1]) & (env.num_stages > 2): 
                 #if number of stages = 2, then there is no inventory constraint since the last level has unlimited inventory
                 #also, last stage has unlimited inventory
                 mip.reorder8.add(mip.R[n,m] <= mip.I[n,m+1])
-                mip.reorder9.add(mip.R[n,m] >= mip.I[n,m+1] + BigM4 * (1 - mip.y3[n,m]))
-                mip.reorder10.add(mip.y1[n,m] + mip.y2[n,m] + mip.y3[n,m] == 1)
-            else:
-                mip.reorder10.add(mip.y1[n,m] + mip.y2[n,m] == 1)
+                # mip.reorder9.add(mip.R[n,m] >= mip.I[n,m+1] + BigM4 * (1 - mip.y3[n,m]))
+                # mip.reorder10.add(mip.y1[n,m] + mip.y2[n,m] + mip.y3[n,m] == 1)
+            # else:
+                # mip.reorder10.add(mip.y1[n,m] + mip.y2[n,m] == 1)
                 
         for m in mip.m:            
             if m == 0:
             #sales constraints: S = min(I + R[n-L], D + B[n-1]) at stage 0
                 if n - mip.lead_time[m] >= 0:
                     mip.sales1.add(mip.S[n,m] <= mip.I[n,m] + mip.R[n - mip.lead_time[m],m])
-                    mip.sales2.add(mip.S[n,m] >= mip.I[n,m] + mip.R[n - mip.lead_time[m],m] + BigM5 * (1 - mip.y4[n,m]))
+                    # mip.sales2.add(mip.S[n,m] >= mip.I[n,m] + mip.R[n - mip.lead_time[m],m] + BigM5 * (1 - mip.y4[n,m]))
                 else:
                     mip.sales1.add(mip.S[n,m] <= mip.I[n,m])
-                    mip.sales2.add(mip.S[n,m] >= mip.I[n,m] + BigM5 * (1 - mip.y4[n,m]))
+                    # mip.sales2.add(mip.S[n,m] >= mip.I[n,m] + BigM5 * (1 - mip.y4[n,m]))
                 
                 if (backlog) & (n-1>=0):
                     mip.sales3.add(mip.S[n,m] <= mip.D[n] + mip.B[n-1,m])
-                    mip.sales4.add(mip.S[n,m] >= mip.D[n] + mip.B[n-1,m] + BigM6 * mip.y4[n,m])
+                    # mip.sales4.add(mip.S[n,m] >= mip.D[n] + mip.B[n-1,m] + BigM6 * mip.y4[n,m])
                 else:
                     mip.sales3.add(mip.S[n,m] <= mip.D[n])
-                    mip.sales4.add(mip.S[n,m] >= mip.D[n] + BigM6 * mip.y4[n,m])
+                    # mip.sales4.add(mip.S[n,m] >= mip.D[n] + BigM6 * mip.y4[n,m])
             else:
             #sales constraints: S = R[n,m-1] at higher level stages
                 mip.sales5.add(mip.S[n,m] == mip.R[n,m-1])
