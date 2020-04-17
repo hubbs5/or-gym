@@ -1,9 +1,7 @@
 #!usr/bin/env python
 
 from or_gym.algos.newsvendor.math_prog import *
-# from or_gym.algos.newsvendor.heuristics import *
 from or_gym.algos.math_prog_utils import *
-# from or_gym.algos.heuristic_utils import *
 import gym
 import or_gym
 import sys
@@ -16,12 +14,12 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def optimize_nv_mip(env,solver='gurobi',warmstart=False,warmstart_kwargs={}):
+def optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     #run optimization
     env.reset()
     model = build_nv_mip_model(env)
-    model, results = solve_math_program(model, solver = solver, warmstart=warmstart,
-                                        **warmstart_kwargs)
+    model, results = solve_math_program(model, solver = solver, solver_kwargs = solver_kwargs,
+                                        warmstart=warmstart, warmstart_kwargs=warmstart_kwargs)
     zopt = list(model.z.get_values().values()) #extract optimal base stock levels
     
     #reset env to run simulation with base stock levels found
@@ -45,12 +43,12 @@ def optimize_nv_dfo(env):
         env.step(action=env.base_stock_action(z=results.zopt)) 
     return results
     
-def optimize_nv_pi_mip(env,solver='gurobi',warmstart=False,warmstart_kwargs={}):
+def optimize_nv_pi_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     #run optimization
     env.reset()
     model = build_nv_pi_mip_model(env)
-    model, results = solve_math_program(model, solver = solver, warmstart=warmstart,
-                                        **warmstart_kwargs)
+    model, results = solve_math_program(model, solver = solver, solver_kwargs = solver_kwargs,
+                                        warmstart=warmstart, warmstart_kwargs=warmstart_kwargs)
     N = env.num_periods
     M = env.num_stages
     Ropt = np.reshape(list(model.R.get_values().values()),(N,M-1)) #extract optimal reorder quantities

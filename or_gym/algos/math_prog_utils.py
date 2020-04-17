@@ -5,28 +5,31 @@ from scipy.optimize import minimize
 import itertools
 import or_gym
 
-def solve_math_program(model, solver='glpk', print_results=True,
-                        warmstart = False, **warmstart_kwargs):
+def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=True,
+                        warmstart = False, warmstart_kwargs={}):
     '''
     Solves mathematical program using pyomo
     
     model = [Pyomo model]
     solver = [String] optimization solver to use
+    solver_kwargs: [Dict] solver specific options (i.e. TimeLimit, MIPGap)
     print_results = [Boolean] should the results of the optimization be printed?
     warmstart = [Boolean] should math program be warm started?
-    **warmstart_kwargs:
+    warmstart_kwargs:
         'mapping_env' = [NewsVendor Environment] that has been run until completion
             NOTE: the mapping environment must have the same demand profile as the MIP model
         'mapping_z' = [list] base_stock used in mapping_env
         'online' = [Boolean] is the optimization being done online?
     '''
     
-    solver = SolverFactory(solver)
-    if warmstart:
+    solver = SolverFactory(solver) #create solver
+    if len(solver_kwargs) > 0: #set solver keyword args
+        solver.options = solver_kwargs
+    if warmstart: #run warmstart
         model = warm_start_nv(model, **warmstart_kwargs)
         results = solver.solve(model, tee=print_results, warmstart=warmstart)
         return model, results
-    else:
+    else: #run regular solve
         results = solver.solve(model, tee=print_results)
         return model, results
 

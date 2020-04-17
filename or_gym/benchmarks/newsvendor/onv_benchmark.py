@@ -1,14 +1,14 @@
 #!usr/bin/env python
 
 from or_gym.algos.newsvendor.math_prog import *
-# from or_gym.algos.newsvendor.heuristics import *
 from or_gym.algos.math_prog_utils import *
-# from or_gym.algos.heuristic_utils import *
 import gym
 import or_gym
 import numpy as np
 import sys
 from argparse import ArgumentParser
+import pyomo.environ as pe
+from pyomo.opt import SolverStatus, TerminationCondition
 
 np.random.seed(0)
 
@@ -19,7 +19,7 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def online_optimize_nv_mip(env,solver='gurobi',warmstart=False):
+def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
     env.reset() #reset env
     
@@ -40,17 +40,18 @@ def online_optimize_nv_mip(env,solver='gurobi',warmstart=False):
         model = build_nv_mip_model(env,online=True) 
         #solve model
         if warmstart & (len(basestock) > 0):
-            model, results = solve_math_program(model,solver=solver,
+            model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs,
                                                 warmstart=True,
-                                                **{'mapping_env':env,
-                                                   'mapping_z':basestock[-1],
-                                                   'online':True})
+                                                warmstart_kwargs={'mapping_env':env,
+                                                                  'mapping_z':basestock[-1],
+                                                                  'online':True})
         else:
-            model, results = solve_math_program(model,solver=solver)
-        #store old model
-        old_model = model 
+            model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs)
         #Extract base stock level
-        zopt = list(model.z.get_values().values()) 
+        try:
+            zopt = list(model.z.get_values().values()) 
+        except:
+            zopt = basestock[-1]
         #Extract action
         action = env.base_stock_action(z=zopt) 
         #Take a step in the simulation
