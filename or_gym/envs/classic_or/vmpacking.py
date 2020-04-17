@@ -39,7 +39,6 @@ class VMPackingEnv(gym.Env):
         limit is reached.
     '''
     def __init__(self, *args, **kwargs):
-        self.seed = 0
         # Normalized Capacities
         self.cpu_capacity = 1
         self.mem_capacity = 1
@@ -48,6 +47,7 @@ class VMPackingEnv(gym.Env):
         self.step_limit = int(60 * 24 / self.t_interval)
         self.n_pms = 50 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
+        self.seed = 0
         assign_env_config(self, kwargs) # Add env_config, if any
 
         self.observation_space = spaces.Tuple((
@@ -57,8 +57,12 @@ class VMPackingEnv(gym.Env):
                 low=0, high=1, shape=(2,), dtype=np.float32)
             ))
         self.action_space = spaces.Discrete(self.n_pms)
-        np.random.seed(int(self.seed))
+        self.set_seed(self.seed)
         self.state = self.reset()
+
+    def set_seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
         
     def step(self, action):
         done = False

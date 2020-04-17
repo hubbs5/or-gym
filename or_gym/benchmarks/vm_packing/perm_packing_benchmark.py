@@ -30,7 +30,6 @@ if __name__ == '__main__':
     env_config = {re.sub('--', '', unknown[i]): unknown[i+1] 
         for i in range(len(unknown)) if i % 2 == 0}
     env_config.update(args.__dict__)
-    print(env_config)
     env = or_gym.make(env_name, env_config=env_config)
     # opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
     heur_actions, heur_rewards = first_fit_heuristic(env)
