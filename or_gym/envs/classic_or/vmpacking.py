@@ -2,6 +2,7 @@ import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
+from or_gym.utils.env_config import *
 import copy
 
 class VMPackingEnv(gym.Env):
@@ -38,21 +39,16 @@ class VMPackingEnv(gym.Env):
         limit is reached.
     '''
     def __init__(self, *args, **kwargs):
+        self.seed = 0
         # Normalized Capacities
         self.cpu_capacity = 1
         self.mem_capacity = 1
         self.t_interval = 20 # Time interval
         self.tol = 1e-5 # Tolerance to avoid errors with floating point > 1
         self.step_limit = int(60 * 24 / self.t_interval)
-        # self.step_limit = 20
         self.n_pms = 50 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
-        # Add env_config, if any
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
+        assign_env_config(self, kwargs) # Add env_config, if any
 
         self.observation_space = spaces.Tuple((
             spaces.Box(
@@ -60,7 +56,8 @@ class VMPackingEnv(gym.Env):
             spaces.Box(
                 low=0, high=1, shape=(2,), dtype=np.float32)
             ))
-        self.action_space = spaces.Discrete(self.n_pms)        
+        self.action_space = spaces.Discrete(self.n_pms)
+        np.random.seed(int(self.seed))
         self.state = self.reset()
         
     def step(self, action):
