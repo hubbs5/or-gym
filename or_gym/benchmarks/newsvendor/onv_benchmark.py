@@ -32,6 +32,7 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
     #store results
     actions.append(action)
     rewards.append(reward)
+    basestock.append(env.init_inv)
     
     while not done:
         #print period
@@ -76,6 +77,7 @@ def online_optimize_nv_dfo(env):
     #store results
     actions.append(action)
     rewards.append(reward)
+    basestock.append(env.init_inv)
 
     while not done:
         #print period
