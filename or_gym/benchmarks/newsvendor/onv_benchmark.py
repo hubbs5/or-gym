@@ -32,7 +32,7 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
     #store results
     actions.append(action)
     rewards.append(reward)
-    basestock.append(env.init_inv)
+    basestock.append(list(env.init_inv))
     
     while not done:
         #print period
@@ -60,9 +60,9 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
         #store results
         actions.append(action)
         rewards.append(reward)
-        basestock.append(zopt)
+        basestock.append(list(zopt))
 
-    return actions, rewards, basestock
+    return actions, rewards, np.array(basestock)
     
 def online_optimize_nv_dfo(env):
     # raise NotImplementedError('ONV (min) optimization not yet implemented.')
@@ -77,7 +77,7 @@ def online_optimize_nv_dfo(env):
     #store results
     actions.append(action)
     rewards.append(reward)
-    basestock.append(env.init_inv)
+    basestock.append(list(env.init_inv))
 
     while not done:
         #print period
@@ -95,9 +95,9 @@ def online_optimize_nv_dfo(env):
         state, reward, done, _ = env.step(action)
         actions.append(action)
         rewards.append(reward)
-        basestock.append(zopt)
+        basestock.append(list(zopt))
         
-    return actions, rewards, basestock
+    return actions, rewards, np.array(basestock)
 
 # def optimize_onv(env, print_results=False):
     # model = build_onv_ip_model(env)
