@@ -67,8 +67,8 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 		"vf_clip_param": vf_clip_param,
 		"vf_share_layers": tune.grid_search([False]),
 		"lr": tune.grid_search([1e-5, 1e-6]),
-		"entropy_coeff": tune.grid_search([1e-2, 1e-3]),
-		"lambda": tune.grid_search([1, 0.5]),
+		"entropy_coeff": tune.grid_search([1e-3]),
+		"lambda": tune.grid_search([0.95, 0.9]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
@@ -76,7 +76,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			"fcnet_activation": "elu",
 			"fcnet_hiddens": [128, 128, 128]
 			}
-		}
+	}
 	
 	return rl_config
 
@@ -114,8 +114,8 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 		checkpoint_at_end=True,
 		queue_trials=True,
 		stop={
-			"timesteps_total": 1000000,
-			"training_iteration": 200000 # Is this number of episodes?
+			# "timesteps_total": 1000000,
+			"training_iteration": 1000
 		},
 		config=rl_config,
 		reuse_actors=True

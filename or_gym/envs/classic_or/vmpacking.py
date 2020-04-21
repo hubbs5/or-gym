@@ -48,14 +48,31 @@ class VMPackingEnv(gym.Env):
         self.n_pms = 50 # Number of physical machines to choose from
         self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
         self.seed = 0
+        self._max_reward = 10000
+        self.mask = True
         assign_env_config(self, kwargs) # Add env_config, if any
 
-        self.observation_space = spaces.Tuple((
-            spaces.Box(
-                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
-            spaces.Box(
-                low=0, high=1, shape=(2,), dtype=np.float32)
-            ))
+        if self.mask:
+        	self.observation_space = spaces.Dict({
+	        	'action_mask': spaces.Box(low=0, high=1, shape=(self.n_pms,)),
+	        	'pm_state': spaces.Box(
+	                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
+	            'vm_demand': spaces.Box(
+	                low=0, high=1, shape=(2,), dtype=np.float32)
+        	})
+        else:
+        	self.observation_space = spaces.Dict({
+	        	'pm_state': spaces.Box(
+	                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
+	            'vm_demand': spaces.Box(
+	                low=0, high=1, shape=(2,), dtype=np.float32)
+        	})
+	        # self.observation_space = spaces.Tuple((
+	        #     spaces.Box(
+	        #         low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
+	        #     spaces.Box(
+	        #         low=0, high=1, shape=(2,), dtype=np.float32)
+         #    ))
         self.action_space = spaces.Discrete(self.n_pms)
         self.set_seed(self.seed)
         self.state = self.reset()
@@ -66,7 +83,7 @@ class VMPackingEnv(gym.Env):
         
     def step(self, action):
         done = False
-        pm_state = self.state[0] # Physical machine state
+        pm_state = self.state['pm_state'] # Physical machine state
         if action < 0 or action >= self.n_pms:
             raise ValueError('Invalid Action')
         elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
@@ -88,15 +105,28 @@ class VMPackingEnv(gym.Env):
             reward = np.sum(pm_state[:, 0] * 
                 (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
         else:
-            self.state = (pm_state, self.demand[self.step_count])
+            self.state = {'pm_state': pm_state,
+            			'vm_demand': self.demand[self.step_count]}
+            if self.mask:
+            	self.update_available_actions()
         
         return self.state, reward, done, {}
-    
+
+    def update_available_actions(self):
+    	pm_state = self.state['pm_state']
+    	demand = self.state['vm_demand']
+    	action_mask = (pm_state[:,1:] + demand) < 1
+    	self.state['action_mask'] = (action_mask.sum(axis=1)!=2).astype(int)
+
     def reset(self):
         self.step_count = 0
         self.assignments = {}
         self.demand = self.generate_demand()
-        self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
+        self.state = {'pm_state': np.zeros((self.n_pms, 3)),
+        		'vm_demand': self.demand[0]}
+        if self.mask:
+        	self.state['action_mask'] = np.ones(self.n_pms)
+
         return self.state
 
     def sample_action(self):
