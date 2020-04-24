@@ -4,18 +4,19 @@ from pyomo.opt import SolverFactory
 
 po = ConcreteModel()
 
-num_investment_periods = 10
+investment_horizon = 10
 
 assets = [a for a in range(3)]
-periods = [p for p in range(num_investment_periods+1)]
+periods = [p for p in range(investment_horizon+1)]
 
 #Parameters 
 initial_cash = 150
 initial_assets = [0, 0, 0]
 buy_cost = [0.045, 0.025, 0.035]
 sell_cost = [0.040, 0.020, 0.030]
-asset_prices_means = [1, 2, 3]
-asset_prices_variance = [1, 1, 1] #could use covariance matrix here instead 
+asset_prices_means = np.random.rand(len(assets), investment_horizon+1)+0.5
+print(asset_prices_means)
+asset_prices_variance = np.ones(3)*0.25 #could use covariance matrix here instead 
 
 #Variables 
 po.Cash_Quantity = Var(periods, domain=NonNegativeReals)
@@ -29,14 +30,14 @@ po.T = Var()
 
 #Constraints 
 def PortfolioValueConstraint(po): 
-	return po.T <= po.Cash_Quantity[num_investment_periods] + \
-	sum(asset_prices_means[a]*po.Asset_Quantities[a,num_investment_periods] for a in assets) \
-	- 3*(sum(po.Asset_Quantities[a,num_investment_periods]*asset_prices_variance[a]*\
-	po.Asset_Quantities[a,num_investment_periods] for a in assets))**0.5
+	return po.T <= po.Cash_Quantity[investment_horizon] + \
+	sum(asset_prices_means[a][-1]*po.Asset_Quantities[a,investment_horizon] for a in assets) \
+	- 3*(sum(po.Asset_Quantities[a,investment_horizon]*asset_prices_variance[a]*\
+	po.Asset_Quantities[a,investment_horizon] for a in assets))**0.5
 
 def CashAccounting(po, p): 
 	return po.Cash_Quantity[p] - po.Cash_Quantity[p-1] <= \
-	sum(asset_prices_means[a]*((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p]) \
+	sum(asset_prices_means[a][p]*((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p]) \
 		for a in assets) \
 	- 3*(sum((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p] for a in assets)**2 \
 		)**0.5

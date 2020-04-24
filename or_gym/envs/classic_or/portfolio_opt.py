@@ -53,16 +53,19 @@ class PortfoliOptEnv(gym.Env):
     def __init__(self, *args, **kwargs): 
     	
     	#Immutable Parameters 
+    	self.num_assets = 3 
     	self.max_transaction_size = 25
     	self.cash_price = 1 
     	self.initial_cash = 150
-    	self.initial_assets = np.array([0,0,0])
+    	self.initial_assets = np.zeros(3)
     	self.buy_cost = np.array([0.045, 0.025, 0.035])
     	self.sell_cost = np.array([0.040, 0.020, 0.030])
         self._max_reward = 400
+        self.asset_prices_means = np.random.rand(self.investment_horizon+1, len(self.num_assets))+0.5
+        self.asset_price_variance = np.ones(self.num_assets)*0.25
 
     	self.investment_horizon = 10 
-    	self.max_steps = copy(self.investment_hoirzon)
+    	self.max_steps = copy(self.investment_horizon)
 
     	#Define observation and action spaces
     	self.observation_space = spaces.Box(7) 
@@ -73,7 +76,8 @@ class PortfoliOptEnv(gym.Env):
     	self.state = self.reset()
 
 	def reset(self): 
-		self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], self.initial_assets[2]])
+		self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
+			self.initial_assets[2]])
 		self.total_wealth = self.initial_cash*self.cash_price
 
 		self.step_counter = 0 
@@ -85,7 +89,8 @@ class PortfoliOptEnv(gym.Env):
         return self.state
 
 	def _update_state(self): 
-		self.asset_prices = np.concatenate((np.array([self.cash_price]), np.random.normal([1,2,3],[1,1,1])))
+		self.asset_prices = np.concatenate((np.array([self.cash_price]), \
+		 np.random.normal(self.asset_prices_means,self.asset_prices_variance)))
 		self.total_wealth = self.current_total_wealth
 		self.state = np.array([
 			self.asset_prices, 

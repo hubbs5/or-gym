@@ -4,17 +4,17 @@ from pyomo.opt import SolverFactory
 
 po = ConcreteModel()
 
-num_investment_periods = 10
+investment_horizon = 10
 
 assets = [a for a in range(3)]
-periods = [p for p in range(num_investment_periods+1)]
+periods = [p for p in range(investment_horizon+1)]
 
 #Parameters 
 initial_cash = 150
 initial_assets = [0, 0, 0]
 buy_cost = [0.045, 0.025, 0.035]
 sell_cost = [0.040, 0.020, 0.030]
-asset_prices = np.random.rand(len(assets), num_investment_periods+1)*5
+asset_prices = np.random.rand(len(assets), investment_horizon+1)+0.5
 
 #Variables 
 po.Cash_Quantity = Var(periods, domain=NonNegativeReals)
@@ -40,11 +40,15 @@ po.AssetBalance = Constraint(assets, periods[1:], rule=AssetBalance)
 
 #Objective
 def PortfolioValue(po): 
-	return po.Cash_Quantity[num_investment_periods] + \
-	sum(asset_prices[a][-1]*po.Asset_Quantities[a,num_investment_periods] for a in assets)
+	return po.Cash_Quantity[investment_horizon] + \
+	sum(asset_prices[a][-1]*po.Asset_Quantities[a,investment_horizon] for a in assets)
 
 po.PortfolioValue = Objective(rule=PortfolioValue, sense=maximize)
 
 opt = SolverFactory('gurobi')
 results = opt.solve(po, tee=False, keepfiles=False)
+
+# print(results)
+# po.Cash_Quantity.pprint()
+# po.Asset_Quantities.pprint()
 
