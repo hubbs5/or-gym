@@ -8,6 +8,7 @@ import gym
 import itertools
 import numpy as np
 from scipy.stats import *
+from or_gym.utils.env_config import *
 
 class NewsVendorMasterEnv(gym.Env):
     '''
@@ -87,9 +88,7 @@ class NewsVendorMasterEnv(gym.Env):
         keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
         for i,value in enumerate(args):
             setattr(self,keys[i],value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
+        assign_env_config(self, kwargs)
         
         #input parameters
         try:
