@@ -38,12 +38,21 @@ if __name__ == '__main__':
     print('N Machines:\t{}'.format(env.n_pms))
     print('N Steps:\t{}'.format(env.step_limit))
     test_results = np.zeros((2, args.n_tests))
+
+    print("\nRunning optimization:\n")
     for i in range(args.n_tests):
         opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
-        heur_actions, heur_rewards = first_fit_heuristic(env)
         test_results[0, i] = sum(opt_rewards)
-        test_results[1, i] = sum(heur_rewards)
+        if (i+1) % 10 == 0:
+            print("Episodes Complete: {}\tMean:\t{:.1f}".format(i+1, test_results[0, :i].mean()))
 
+    print("\nRunning heuristic:\n")
+    for i in range(args.n_tests):
+        heur_actions, heur_rewards = first_fit_heuristic(env)
+        test_results[1, i] = sum(heur_rewards)
+        if (i+1) % 10 == 0:
+            print("Episodes Complete: {}\tMean:\t{:.1f}".format(i+1, test_results[1, :i].mean()))
+    print("")
     print("Optimization Results\n\tMean Rewards\t=\t{:.1f}\n\tStd Rewards\t=\t{:.1f}".format(
         test_results[0].mean(), np.std(test_results[0])))
     print("Heuristic Results\n\tMean Rewards\t=\t{:.1f}\n\tStd Rewards\t=\t{:.1f}".format(
