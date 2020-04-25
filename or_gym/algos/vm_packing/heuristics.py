@@ -1,8 +1,8 @@
 import numpy as np
 
 def first_fit_heuristic(env):
-    assert env.spec.id == ('VMPacking-v0' or 'VMPacking-v1'), \
-        '{} received. Heuristic designed for VMPacking-v0/v1.'.format(env.spec.id)
+    # assert env.spec.id == ('VMPacking-v0' or 'VMPacking-v1'), \
+        # '{} received. Heuristic designed for VMPacking-v0/v1.'.format(env.spec.id)
 
     state = env.reset()
     done = False

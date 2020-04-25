@@ -39,95 +39,74 @@ class VMPackingEnv(gym.Env):
         limit is reached.
     '''
     def __init__(self, *args, **kwargs):
-        # Normalized Capacities
         self.cpu_capacity = 1
         self.mem_capacity = 1
-        self.t_interval = 20 # Time interval
-        self.tol = 1e-5 # Tolerance to avoid errors with floating point > 1
+        self.t_interval = 20
+        self.tol = 1e-5
         self.step_limit = int(60 * 24 / self.t_interval)
-        self.n_pms = 50 # Number of physical machines to choose from
-        self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
+        self.n_pms = 50
+        self.load_idx = np.array([1, 2])
         self.seed = 0
-        self._max_reward = 10000
         self.mask = True
-        assign_env_config(self, kwargs) # Add env_config, if any
-
-        if self.mask:
-        	self.observation_space = spaces.Dict({
-	        	'action_mask': spaces.Box(low=0, high=1, shape=(self.n_pms,)),
-	        	'pm_state': spaces.Box(
-	                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
-	            'vm_demand': spaces.Box(
-	                low=0, high=1, shape=(2,), dtype=np.float32)
-        	})
-        else:
-        	self.observation_space = spaces.Dict({
-	        	'pm_state': spaces.Box(
-	                low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
-	            'vm_demand': spaces.Box(
-	                low=0, high=1, shape=(2,), dtype=np.float32)
-        	})
-	        # self.observation_space = spaces.Tuple((
-	        #     spaces.Box(
-	        #         low=-0.1, high=1+self.tol, shape=(self.n_pms, 3), dtype=np.float32), # Imprecision causes some errors
-	        #     spaces.Box(
-	        #         low=0, high=1, shape=(2,), dtype=np.float32)
-         #    ))
+        assign_env_config(self, kwargs)
         self.action_space = spaces.Discrete(self.n_pms)
-        self.set_seed(self.seed)
-        self.state = self.reset()
-
-    def set_seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+        self.observation_space = spaces.Dict({
+            "action_mask": spaces.Box(0, 1, shape=(self.n_pms,)),
+            "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,)),
+            "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+        })
+        self.reset()
         
+    def reset(self):
+        self.demand = self.generate_demand()
+        self.current_step = 0
+        self.state = {
+            "action_mask": np.ones(self.n_pms),
+            "avail_actions": np.ones(self.n_pms),
+            "state": np.vstack([
+                np.zeros((self.n_pms, 3)),
+                self.demand[self.current_step]])
+        }
+        self.assignment = {}
+        return self.state
+    
     def step(self, action):
         done = False
-        pm_state = self.state['pm_state'] # Physical machine state
+        pm_state = self.state["state"][:-1]
+        demand = self.state["state"][-1, 1:]
+        
         if action < 0 or action >= self.n_pms:
-            raise ValueError('Invalid Action')
-        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1 + self.tol):
+            raise ValueError("Invalid action: {}".format(action))
+            
+        elif any(pm_state[action, 1:] + demand > 1 + self.tol):
             # Demand doesn't fit into PM
-            reward = -10000
+            reward = -1000
             done = True
         else:
             if pm_state[action, 0] == 0:
                 # Open PM if closed
                 pm_state[action, 0] = 1
-            pm_state[action, self.load_idx] += self.demand[self.step_count]
-            reward = np.sum(pm_state[:, 0] * 
-                (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-            self.assignments[self.step_count] = action
-
-        self.step_count += 1
-        if self.step_count >= self.step_limit:
+            pm_state[action, self.load_idx] += demand
+            reward = np.sum(pm_state[:, 0] * (pm_state[:,1:].sum(axis=1) - 2))
+            self.assignment[self.current_step] = action
+            
+        self.current_step += 1
+        if self.current_step >= self.step_limit:
             done = True
-            reward = np.sum(pm_state[:, 0] * 
-                (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-        else:
-            self.state = {'pm_state': pm_state,
-            			'vm_demand': self.demand[self.step_count]}
-            if self.mask:
-            	self.update_available_actions()
-        
+        self.update_state(pm_state)
         return self.state, reward, done, {}
-
-    def update_available_actions(self):
-    	pm_state = self.state['pm_state']
-    	demand = self.state['vm_demand']
-    	action_mask = (pm_state[:,1:] + demand) < 1
-    	self.state['action_mask'] = (action_mask.sum(axis=1)!=2).astype(int)
-
-    def reset(self):
-        self.step_count = 0
-        self.assignments = {}
-        self.demand = self.generate_demand()
-        self.state = {'pm_state': np.zeros((self.n_pms, 3)),
-        		'vm_demand': self.demand[0]}
+    
+    def update_state(self, pm_state):
+        # Make action selection impossible if the PM would exceed capacity
+        step = self.current_step if self.current_step < self.step_limit else self.step_limit-1
+        data_center = np.vstack([pm_state, self.demand[step]])
+        data_center = np.where(data_center>1,1,data_center) # Fix rounding errors
+        self.state["state"] = data_center
+        self.state["action_mask"] = np.ones(self.n_pms)
+        self.state["avail_actions"] = np.ones(self.n_pms)
         if self.mask:
-        	self.state['action_mask'] = np.ones(self.n_pms)
-
-        return self.state
+            action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
+            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
 
     def sample_action(self):
         return self.action_space.sample()
@@ -143,7 +122,7 @@ class VMPackingEnv(gym.Env):
         cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
         cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
         mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
-        return np.vstack([cpu_demand/100, mem_demand]).T
+        return np.vstack([np.zeros(n), cpu_demand/100, mem_demand]).T
 
 class TempVMPackingEnv(VMPackingEnv):
     '''
