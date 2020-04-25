@@ -35,11 +35,13 @@ if __name__ == '__main__':
     env_config.update(args.__dict__)
 
     env = or_gym.make(env_name, env_config=env_config)
+    print('N Machines:\t{}'.format(env.n_pms))
+    print('N Steps:\t{}'.format(env.step_limit))
     test_results = np.zeros((2, args.n_tests))
     for i in range(args.n_tests):
-        # opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
+        opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
         heur_actions, heur_rewards = first_fit_heuristic(env)
-        # test_results[0, i] = sum(opt_rewards)
+        test_results[0, i] = sum(opt_rewards)
         test_results[1, i] = sum(heur_rewards)
 
     print("Optimization Results\n\tMean Rewards\t=\t{:.1f}\n\tStd Rewards\t=\t{:.1f}".format(
