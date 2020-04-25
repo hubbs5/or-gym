@@ -8,6 +8,7 @@ import sys
 from argparse import ArgumentParser
 from str2bool import str2bool
 import re
+import pandas as pd
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -57,3 +58,6 @@ if __name__ == '__main__':
         test_results[0].mean(), np.std(test_results[0])))
     print("Heuristic Results\n\tMean Rewards\t=\t{:.1f}\n\tStd Rewards\t=\t{:.1f}".format(
         test_results[1].mean(), np.std(test_results[1])))
+    # Save results
+    df = pd.DataFrame(test_results.T, columns=['optimization', 'heuristic'])
+    df.to_csv('temp_packing_results.csv', index=False)
