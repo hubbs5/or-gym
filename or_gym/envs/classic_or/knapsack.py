@@ -2,9 +2,8 @@ import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
+from or_gym.utils.env_config import *
 import copy
-
-np.random.seed(0)
 
 class KnapsackEnv(gym.Env):
     '''
@@ -51,12 +50,9 @@ class KnapsackEnv(gym.Env):
         self.max_weight = 200
         self.current_weight = 0
         self._max_reward = 4800
+        self.seed = 0
         # Add env_config, if any
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
+        assign_env_config(self, kwargs)
         
         self.N = len(self.item_weights)
         self.action_space = spaces.Discrete(self.N)
@@ -64,8 +60,12 @@ class KnapsackEnv(gym.Env):
             0, self.max_weight, shape=(2, self.N + 1), 
             dtype=np.int16)
         
-        self.seed()
+        self.set_seed(self.seed)
         self.reset()
+        # Generate data with consistent random seed to ensure reproducibility
+        values = np.random.randint(30, size=200)
+        weights = np.random.randint(1, 20, size=200)
+        limits = np.random.randint(1, 10, size=200)
         
     def step(self, item):
         # Check that item will fit
@@ -105,6 +105,11 @@ class KnapsackEnv(gym.Env):
     
     def sample_action(self):
         return np.random.choice(self.item_numbers)
+
+    def set_seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
 
 class BoundedKnapsackEnv(KnapsackEnv):
     '''
@@ -150,7 +155,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         super().__init__()
         self.observation_space = spaces.Box(
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
-        self._max_reward = 1900
+        self._max_reward = 1900 # Used for VF clipping
         
     def step(self, item):
         # Check item limit
@@ -190,17 +195,6 @@ class BoundedKnapsackEnv(KnapsackEnv):
                       [0] # Serves as place holder
                 ])
         ])
-        
-    # def _update_state(self, item=None):
-    #     if item is not None:
-    #         self.item_limits[item] -= 1
-            
-    #     self.state = (
-    #         self.item_weights,
-    #         self.item_values,
-    #         self.item_limits,
-    #         self.max_weight,
-    #         self.current_weight)
         
     def sample_action(self):
         return np.random.choice(
@@ -263,7 +257,6 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self.step_counter = 0
         self.step_limit = 50
         
-        self.seed()
         self.state = self.reset()
         self._max_reward = 600
         
@@ -319,7 +312,3 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self._update_state()
         return self.state
 
-# Generate data with consistent random seed to ensure reproducibility
-values = np.random.randint(30, size=200)
-weights = np.random.randint(1, 20, size=200)
-limits = np.random.randint(1, 10, size=200)

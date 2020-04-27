@@ -2,9 +2,14 @@ import ray
 from ray import tune
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
+from ray.rllib.utils import try_import_tf
 import gym
+from gym import spaces
 import or_gym
 from datetime import datetime
+
+
+tf = try_import_tf()
 
 # Get Ray to work with gym registry
 def create_env(config, *args, **kwargs):
@@ -64,11 +69,11 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 		"num_workers": 2,
 		"env_config": {
 			},
-		"vf_clip_param": vf_clip_param,
-		"vf_share_layers": tune.grid_search([False]),
+		# "vf_clip_param": vf_clip_param,
+		# "vf_share_layers": tune.grid_search([True, False]),
 		"lr": tune.grid_search([1e-5, 1e-6]),
-		"entropy_coeff": tune.grid_search([1e-2, 1e-3]),
-		"lambda": tune.grid_search([1, 0.5]),
+		"entropy_coeff": tune.grid_search([1e-3]),
+		# "lambda": tune.grid_search([0.95, 0.9]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
@@ -76,7 +81,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			"fcnet_activation": "elu",
 			"fcnet_hiddens": [128, 128, 128]
 			}
-		}
+	}
 	
 	return rl_config
 
@@ -102,20 +107,49 @@ class FCModel(TFModelV2):
 	def value_function(self):
 		return self.model.value_function()
 
-def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
+class VMActionMaskModel(TFModelV2):
+    
+    def __init__(self, obs_space, action_space, num_outputs,
+        model_config, name, true_obs_shape=(51,3), action_embed_size=50,
+        *args, **kwargs):
+        super(VMActionMaskModel, self).__init__(obs_space,
+            action_space, num_outputs, model_config, name, *args, **kwargs)
+        self.action_embed_model = FullyConnectedNetwork(
+            spaces.Box(0, 1, shape=true_obs_shape), action_space, action_embed_size,
+            model_config, name + "_action_embedding")
+        self.register_variables(self.action_embed_model.variables())
+        
+    def forward(self, input_dict, state, seq_lens):
+        avail_actions = input_dict["obs"]["avail_actions"]
+        action_mask = input_dict["obs"]["action_mask"]
+        action_embedding, _ = self.action_embed_model({
+            "obs": input_dict["obs"]["state"]
+        })
+        intent_vector = tf.expand_dims(action_embedding, 1)
+        action_logits = tf.reduce_sum(avail_actions * intent_vector, axis=1)
+        inf_mask = tf.maximum(tf.log(action_mask), tf.float32.min)
+        return action_logits + inf_mask, state
+    
+    def value_function(self):
+        return self.action_embed_model.value_function()
+
+def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
 	if model_name is None:
 		model_name = 'or_gym_tune'
 	register_env(env_name)
 	ray.init()
-	ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
+	if "VMPacking" in rl_config["env"]:
+		ray.rllib.models.ModelCatalog.register_custom_model(model_name, VMActionMaskModel)
+	else:
+		ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
 	results = tune.run(
 		algo,
 		checkpoint_at_end=True,
 		queue_trials=True,
 		stop={
-			"timesteps_total": 1000000,
-			"training_iteration": 200000 # Is this number of episodes?
+			# "timesteps_total": 1000000,
+			"training_iteration": 1000
 		},
 		config=rl_config,
 		reuse_actors=True

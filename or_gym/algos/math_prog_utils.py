@@ -35,7 +35,6 @@ def solve_shrinking_horizon_mp(env, build_opt_model, action_func,
         model = build_opt_model(env)
         model, results = solve_math_program(model, solver, print_results)
         action = action_func(model)
-        print(action)
         s, r, done, info = env.step(action)
         actions.append(action)
         rewards.append(r)

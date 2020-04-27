@@ -61,7 +61,9 @@ if __name__ == "__main__":
     trainer = ppo.PPOTrainer(env=create_env(env_name),
         config={
         "env_config": {
-            "reuse_actors":True},
+            "mask": True
+            },
+        "vf_share_layers": True,
         "vf_clip_param": 10000, # Set to high number to avoid any warnings
         "model": {
             "fcnet_activation": "elu",
