@@ -63,11 +63,11 @@ if __name__ == "__main__":
         "env_config": {
             "mask": True
             },
+        "vf_share_layers": True,
         "vf_clip_param": 10000, # Set to high number to avoid any warnings
         "model": {
             "fcnet_activation": "elu",
-            "fcnet_hiddens": [128, 128, 128]},
-        reuse_actors = True
+            "fcnet_hiddens": [128, 128, 128]}
         })
 
     if env_name.lower() == 'all':

@@ -3,16 +3,16 @@ from pyomo.environ import *
 def build_online_vm_opt(env):
     m = ConcreteModel()
     
-    t0 = env.step_count # Current time
+    t0 = env.current_step
     m.n = Set(initialize=[i for i in range(env.n_pms)]) # Num Physical Machines
     # One new VM at each time step
-    m.v = Set(initialize=[v for v in range(env.step_count+1)])
+    m.v = Set(initialize=[v for v in range(t0+1)])
     m.t = Set(initialize=[t for t in range(env.step_limit)])
     
     m.cpu_demand = Param(m.v,
-        initialize={i: j[0] for i, j in enumerate(env.demand[:t0+1])})
-    m.mem_demand = Param(m.v,
         initialize={i: j[1] for i, j in enumerate(env.demand[:t0+1])})
+    m.mem_demand = Param(m.v,
+        initialize={i: j[2] for i, j in enumerate(env.demand[:t0+1])})
     m.durations = Param(m.v,
         initialize={v: env.step_limit - v for v in m.v})
     m.cpu_limit = env.cpu_capacity
@@ -23,9 +23,9 @@ def build_online_vm_opt(env):
     m.z = Var(m.n, m.t, within=Binary) # Number of Machine
     
     # Fix variables for pre-existing values
-    if env.step_count > 0:
-        for k in env.assignments:
-            n = env.assignments[k]
+    if t0 > 0:
+        for k in env.assignment:
+            n = env.assignment[k]
             for t in m.t:
                 if t >= k:
                     m.x[n, k, t].fix(1)

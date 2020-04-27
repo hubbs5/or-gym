@@ -8,6 +8,8 @@ def first_fit_heuristic(env):
     done = False
     rewards, actions = [], []
     while done == False:
+        if type(state) == dict:
+            state = state['state'].copy()
         action = first_fit_step(state)
         state, reward, done, _ = env.step(action)
         actions.append(action)
@@ -23,6 +25,8 @@ def next_fit_heuristic(env):
     done = False
     rewards, actions = [], []
     while done == False:
+        if type(state) == dict:
+            state = state['state'].copy()
         action = next_fit_step(state)
         state, reward, done, _ = env.step(action)
         actions.append(action)
@@ -32,7 +36,7 @@ def next_fit_heuristic(env):
 
 # First fit: Pack item into lowest current bin where it fits, else into a new bin
 def first_fit_step(state):
-    s_bins, s_item = state
+    s_bins, s_item = state[:-1], state[-1, 1:]
     action = None
     open_bins = np.where(s_bins[:,0]==1)[0]
     if len(open_bins) < 1:
@@ -49,7 +53,7 @@ def first_fit_step(state):
 
 # Next fit: Pack item into current bin, else into a new bin
 def next_fit_step(state):
-    s_bins, s_items = state
+    s_bins, s_item = state[:-1], state[-1, 1:]
     action = None
     current_bin = np.where(s_bins[:,0]==1)[0]
     if len(current_bin) < 1:
