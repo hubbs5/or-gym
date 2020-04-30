@@ -41,11 +41,16 @@ if __name__ == '__main__':
     test_results = np.zeros((2, args.n_tests))
 
     print("\nRunning optimization:\n")
+    count = 0
     for i in range(args.n_tests):
-        opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
-        test_results[0, i] = sum(opt_rewards)
-        if (i+1) % 10 == 0:
-            print("Episodes Complete: {}\tMean:\t{:.1f}".format(i+1, test_results[0, :i].mean()))
+        try:
+            opt_model, opt_actions, opt_rewards = optimize_vmp_perm(env, solver=args.solver, print_output=args.print)
+            test_results[0, count] = sum(opt_rewards)
+            if (count+1) % 10 == 0:
+                print("Episodes Complete: {}\tMean:\t{:.1f}".format(count+1, test_results[0, :count].mean()))
+            count += 1
+        except Exception as e:
+            pass
 
     print("\nRunning heuristic:\n")
     for i in range(args.n_tests):
