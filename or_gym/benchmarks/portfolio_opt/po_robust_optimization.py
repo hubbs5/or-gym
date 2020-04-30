@@ -32,14 +32,14 @@ po.T = Var()
 def PortfolioValueConstraint(po): 
 	return po.T <= po.Cash_Quantity[investment_horizon] + \
 	sum(asset_prices_means[a][-1]*po.Asset_Quantities[a,investment_horizon] for a in assets) \
-	- 3*(sum(po.Asset_Quantities[a,investment_horizon]*asset_prices_variance[a]*\
+	- 1.5*(sum(po.Asset_Quantities[a,investment_horizon]*asset_prices_variance[a]*\
 	po.Asset_Quantities[a,investment_horizon] for a in assets))**0.5
 
 def CashAccounting(po, p): 
 	return po.Cash_Quantity[p] - po.Cash_Quantity[p-1] <= \
 	sum(asset_prices_means[a][p]*((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p]) \
 		for a in assets) \
-	- 3*(sum((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p] for a in assets)**2 \
+	- 1.5*(sum((1-sell_cost[a])*po.Asset_Sell[a,p] - (1+buy_cost[a])*po.Asset_Buy[a,p] for a in assets)**2 \
 		)**0.5
 
 def AssetBalance(po, a, p): 
