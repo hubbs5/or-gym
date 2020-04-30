@@ -37,7 +37,7 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'VMPacking-v1':
 		from or_gym.envs.classic_or.vmpacking import TempVMPackingEnv as env
 	elif env_name == 'PortfolioOpt-v0':
-		from or_gym.envs.classic_or.portfolio_opt import PortfolioOptEnv as env
+		from or_gym.envs.finance.portfolio_opt import PortfolioOptEnv as env
 	elif env_name == 'TSP-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.tsp import TSPEnv as env

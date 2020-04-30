@@ -7,6 +7,7 @@ import gym
 import or_gym
 from argparse import ArgumentParser
 import time
+import numpy as np
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
@@ -27,7 +28,7 @@ def parse_arguments():
 
 def test_env(env, n_episodes, print_output=True):
 	t0 = time.time()
-	steps = []
+	total_steps, steps = [], []
 	for ep in range(n_episodes):
 		env.reset()
 		rewards = 0
@@ -36,11 +37,21 @@ def test_env(env, n_episodes, print_output=True):
 		while done == False:
 			action = env.action_space.sample()
 			s, r, done, _ = env.step(action)
+			# Check env vals
+			valid_state = env.observation_space.contains(s)
+			if valid_state == False:
+				raise ValueError(
+					'Observation Space does not match:\nobservation_space: {}'.format(s))
 			rewards += r
 			step_count += 1
-			if done and ep % 100 == 0 and print_output:
-				print("Ep {}\t\tRewards={:.1f}\t\t{}".format(ep, rewards, step_count))
+			if done:
+				total_steps.append(step_count)
 				steps.append(step_count)
+				if ep % 100 == 0 and print_output:
+					print("Ep {}\t\tRewards={:.1f}\tMean Steps={:.1f}\t".format(
+						ep, rewards, np.mean(step_count)))
+					step_count = []
+
 	t1 = time.time()
 	print('Test Complete\t{:.04f}s/100 steps\n'.format((t1-t0)/sum(steps)*100))
 

@@ -67,8 +67,9 @@ class PortfolioOptEnv(gym.Env):
         self.max_steps = copy(self.investment_horizon)
 
         #Define observation and action spaces
-        self.observation_space = spaces.Box(-1000, 1000, shape=(7,)) 
-        self.action_space = spaces.Box(-self.max_transaction_size, self.max_transaction_size, shape=(self.num_assets,))
+        self.observation_space = spaces.Box(-10000, 10000, shape=(9,)) 
+        self.action_space = spaces.Box(-self.max_transaction_size, self.max_transaction_size, 
+            shape=(self.num_assets,))
         #set seed 
         self.seed()
         #reset state 
@@ -91,7 +92,7 @@ class PortfolioOptEnv(gym.Env):
     	self.asset_prices = np.concatenate((np.array([self.cash_price]), \
             np.random.normal(self.asset_prices_means, self.asset_price_variance)))
     	self.total_wealth = self.current_total_wealth
-    	self.state = np.array([
+    	self.state = np.hstack([
             self.asset_prices, 
             self.asset_quantities, 
             self.total_wealth])
