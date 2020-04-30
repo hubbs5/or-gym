@@ -1,145 +1,172 @@
+'''
+Multi-period inventory management
+Hector Perez, Christian Hubbs, Owais Sarwar
+4/14/2020
+'''
+
 import gym
-from gym import spaces, logger
 import itertools
 import numpy as np
 from scipy.stats import *
+from or_gym.utils.env_config import *
 
-class MultiLevelNewsVendorEnv(gym.Env):
+class NewsVendorMasterEnv(gym.Env):
     '''
     The supply chain environment is structured as follows:
     
-    It is a multiperiod multiechelon production-inventory system for a single 
-    non-perishable product that is sold only in discrete quantities. Each 
-    stage in the supply chain consists of an inventory holding area and a 
-    production area. The exceptions are the first stage (retailer: only 
-    inventory area) and the last stage (raw material transformation plant: 
-    only production area, with unlimited raw material availability). The 
-    inventory holding area holds the inventory necessary to produce the 
-    material at that stage. One unit of inventory produces one unit of product
-    at each stage. There are lead times between the transfer of material from
-    one stage to the next. The outgoing material from stage i is the feed 
-    material for production at stage i-1. Stages are numbered in ascending 
-    order: Stages = {0, 1, ..., M} (i.e. m = 0 is the retailer). Production at
-    each stage is bounded by the stage's production capacity and the available
+    It is a multi-period multi-echelon production-inventory system for a single non-perishable product that is sold only
+    in discrete quantities. Each stage in the supply chain consists of an inventory holding area and a production area.
+    The exception are the first stage (retailer: only inventory area) and the last stage (raw material transformation
+    plant: only production area, with unlimited raw material availability). The inventory holding area holds the inventory
+    necessary to produce the material at that stage. One unit of inventory produces one unit of product at each stage.
+    There are lead times between the transfer of material from one stage to the next. The outgoing material from stage i 
+    is the feed material for production at stage i-1. Stages are numbered in ascending order: Stages = {0, 1, ..., M} 
+    (i.e. m = 0 is the retailer). Production at each stage is bounded by the stage's production capacity and the available
     inventory.
         
-    At the each time period, the following sequence of events occurs:
+    At the beginning of each time period, the following sequence of events occurs:
     
-    0) Stages 0 through M-1 place replinishment orders to their respective 
-       suppliers. Replenishment orders are filled according to available 
-       production capacity and current inventory at the respective suppliers.
-    1) Stages 0 through M-1 receive incoming inventory replenishment shipments
-       that have made it down the product pipeline after the stage's 
-       respective lead time.
-    2) Customer demand occurs at stage 0 (retailer). It is sampled from a 
-       specified discrete probability distribution.
+    0) Stages 0 through M-1 place replenishment orders to their respective suppliers. Replenishment orders are filled
+        according to available production capacity and available inventory at the respective suppliers.
+    1) Stages 0 through M-1 receive incoming inventory replenishment shipments that have made it down the product pipeline
+        after the stage's respective lead time.
+    2) Customer demand occurs at stage 0 (retailer). It is sampled from a specified discrete probability distribution.
     3) Demand is filled according to available inventory at stage 0.
     4) Option: one of the following occurs,
-       a) Unfulfilled sales and replenishment orders are backlogged at a 
-          penalty. 
-          Note: Backlogged sales take priority in the following period.
-       b) Unfulfilled sales and replenishment orders are lost with a goodwill 
-          loss penalty. 
-    5) Surplus inventory is held at each stage at a holding cost.
+        a) Unfulfilled sales and replenishment orders are backlogged at a penalty. 
+            Note: Backlogged sales take priority in the following period.
+        b) Unfulfilled sales and replenishment orders are lost with a goodwill loss penalty. 
+    5) Surpluss inventory is held at each stage at a holding cost.
         
-    periods = [positive integer] number of periods in simulation.
-    I0 = [non-negative integer; dimension |Stages|-1] initial inventories for 
-        each stage.
-    p = [positive float] unit price for final product.
-    r = [non-negative float; dimension |Stages|] unit cost for replenishment 
-        orders at each stage.
-    k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss 
-        (per unit) for unfulfilled orders (demand or replenishment orders).
-    h = [non-negative float; dimension |Stages|-1] unit holding cost for 
-        excess on-hand inventory at each stage.
-        (Note: does not include pipeline inventory).
-    c = [positive integer; dimension |Stages|-1] production capacities for 
-        each suppliers (stages 1 through |Stage|).
-    L = [non-negative integer; dimension |Stages|-1] lead times in betwen 
-        stages.
-    backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, 
-        False = lost sales.
-    dist = [integer] value between 1 and 4. Specifies distribution for 
-        customer demand.
-        1: poisson distribution
-        2: binomial distribution
-        3: uniform random integer
-        4: geometric distribution
-    dist_param = [dictionary] named values for parameters fed to statistical 
-        distribution.
-        poisson: {'mu': <mean value>}
-        binom: {'n': <mean value>, 'p': <probability between 0 and 1 of 
-            getting the mean value>}
-        raindint: {'low' = <lower bound>, 'high': <upper bound>}
-        geom: {'p': <probability. Outcome is the number of trials to success>}
-    seed = [integer] seed for random state.
     '''
     def __init__(self, *args, **kwargs):
-        # self.set_seed(self.seed)
-        self.p = 1
-        self.r = [0.2, 0.2, 0.2]
-        self.k = [0.3, 0.3, 0]
-        self.h = [0.1, 0.1]
-        self.L = [0, 0]
-        self.c = [100, 100]
-        self.init_inv = [0, 0]
-        self.I0 = [0, 0]
+        '''
+        periods = [positive integer] number of periods in simulation.
+        I0 = [non-negative integer; dimension |Stages|-1] initial inventories for each stage.
+        p = [positive float] unit price for final product.
+        r = [non-negative float; dimension |Stages|] unit cost for replenishment orders at each stage.
+        k = [non-negative float; dimension |Stages|] backlog cost or goodwill loss (per unit) for unfulfilled orders (demand or replenishment orders).
+        h = [non-negative float; dimension |Stages|-1] unit holding cost for excess on-hand inventory at each stage.
+            (Note: does not include pipeline inventory).
+        c = [positive integer; dimension |Stages|-1] production capacities for each suppliers (stages 1 through |Stage|).
+        L = [non-negative integer; dimension |Stages|-1] lead times in betwen stages.
+        backlog = [boolean] are unfulfilled orders backlogged? True = backlogged, False = lost sales.
+        dist = [integer] value between 1 and 4. Specifies distribution for customer demand.
+            1: poisson distribution
+            2: binomial distribution
+            3: uniform random integer
+            4: geometric distribution
+            5: user supplied demand values
+        dist_param = [dictionary] named values for parameters fed to statistical distribution.
+            poisson: {'mu': <mean value>}
+            binom: {'n': <mean value>, 'p': <probability between 0 and 1 of getting the mean value>}
+            raindint: {'low' = <lower bound>, 'high': <upper bound>}
+            geom: {'p': <probability. Outcome is the number of trials to success>}
+        alpha = [float in range (0,1]] discount factor to account for the time value of money
+        seed_int = [integer] seed for random state.
+        user_D = [list] user specified demand for each time period in simulation
+        '''
+        #set default (arbitrary) values when creating environment (if no args or kwargs are given)
+        self.periods = 90
+        self.I0 = [100,100,200]
+        self.p = 2
+        self.r = [1.5,1.0,0.75,0.5]
+        self.k = [0.10,0.075,0.05,0.025]
+        self.h = [0.15,0.10,0.05]
+        self.c = [100,90,80]
+        self.L = [3,5,10]
+        self.backlog = True
         self.dist = 1
-        self.num_periods = 200
-
-        # Add env_config, if any
+        self.dist_param = {'mu': 20}
+        self.alpha = 0.97
+        self.seed_int = 0
+        self.user_D = np.zeros(self.periods)
+        
+        #add environment configuration dictionary and keyword arguments
         for key, value in kwargs.items():
             setattr(self, key, value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
-
-        self.unit_price = np.append(self.p, self.r[:-1]) #cost to stage 1 is price to stage 2
+        keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
+        for i,value in enumerate(args):
+            setattr(self,keys[i],value)
+        assign_env_config(self, kwargs)
+        
+        #input parameters
+        try:
+            self.init_inv = np.array(list(self.I0))
+        except:
+            self.init_inv = np.array([self.I0])
+        self.num_periods = self.periods
+        self.unit_price = np.append(self.p,self.r[:-1]) #cost to stage 1 is price to stage 2
         self.unit_cost = np.array(self.r)
         self.demand_cost = np.array(self.k)
-        self.holding_cost = np.append(self.h, 0) #holding cost at last stage is 0
-        self.supply_capacity = np.array(self.c)
-        self.lead_time = np.array(self.L)
-        self.backlog = True
-
-        m = len(self.I0) + 1 #number of stages
+        self.holding_cost = np.append(self.h,0) #holding cost at last stage is 0
+        try:
+            self.supply_capacity = np.array(list(self.c))
+        except:
+            self.supply_capacity = np.array([self.c])
+        try:
+            self.lead_time = np.array(list(self.L))
+        except:
+            self.lead_time = np.array([self.L])
+        self.discount = self.alpha
+        self.user_D = np.array(list(self.user_D))
+        
+        #intermediate calculation
+        m = len(self.init_inv) + 1 #number of stages
         self.num_stages = m
         
-        self.distributions = {
-            1:poisson,
-            2:binom,
-            3:randint,
-            4:geom}
-        self.dist_param = {'mu': 5}
+        #parameters
+        #dictionary with options for demand distributions
+        distributions = {1:poisson,
+                         2:binom,
+                         3:randint,
+                         4:geom,
+                         5:self.user_D}
+        #distribution parameters
+#         self.dist_param = self.dist_param
         
-        # Check inputs
+        #check inputs
+        assert np.all(self.init_inv) >=0, "The initial inventory cannot be negative"
+        assert self.num_periods > 0, "The number of periods must be positive."
+        assert np.all(self.unit_price >= 0), "The sales prices cannot be negative."
+        assert np.all(self.unit_cost >= 0), "The procurement costs cannot be negative."
+        assert np.all(self.demand_cost >= 0), "The unfulfilled demand costs cannot be negative."
+        assert np.all(self.holding_cost >= 0), "The inventory holding costs cannot be negative."
+        assert np.all(self.supply_capacity > 0), "The supply capacities must be positive."
+        assert np.all(self.lead_time >= 0), "The lead times cannot be negative."
+        assert (self.backlog == False) | (self.backlog == True), "The backlog parameter must be a boolean."
         assert m >= 2, "The minimum number of stages is 2. Please try again"
-        assert len(self.r) == m, "The length of r is not equal to the number of stages."
-        assert len(self.k) == m, "The length of k is not equal to the number of stages."
-        assert len(self.h) == m-1, "The length of h is not equal to the number of stages - 1."
-        assert len(self.c) == m-1, "The length of c is not equal to the number of stages - 1."
-        assert len(self.L) == m-1, "The length of L is not equal to the number of stages - 1."
-        assert self.dist in [1,2,3,4], "dist must be one of 1, 2, 3, 4."
-        assert self.distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
-
-        self.demand_dist = self.distributions[self.dist]
-
+        assert len(self.unit_cost) == m, "The length of r is not equal to the number of stages."
+        assert len(self.demand_cost) == m, "The length of k is not equal to the number of stages."
+        assert len(self.holding_cost) == m, "The length of h is not equal to the number of stages - 1."
+        assert len(self.supply_capacity) == m-1, "The length of c is not equal to the number of stages - 1."
+        assert len(self.lead_time) == m-1, "The length of L is not equal to the number of stages - 1."
+        assert self.dist in [1,2,3,4,5], "dist must be one of 1, 2, 3, 4, 5."
+        if self.dist < 5:
+            assert distributions[self.dist].cdf(0,**self.dist_param), "Wrong parameters given for distribution."
+        else:
+            assert len(self.user_D) == self.num_periods, "The length of the user specified distribution is not equal to the number of periods."
+        assert (self.alpha>0) & (self.alpha<=1), "alpha must be in the range (0,1]."
+        
+        #select distribution
+        self.demand_dist = distributions[self.dist]  
+        
+        #intialize
         self.reset()
         
-        action = [spaces.Discrete(self.c[i] + 1) for i in range(len(self.c))]
-        self.action_space = spaces.Tuple(tuple(action))
+        #define spaces
+        #action space (reorder quantities for each stage; list)
+        self.action_space = gym.spaces.Box(low=0, high=np.max(self.supply_capacity), shape = (m-1,)) #an action is defined for every stage (except last one)
         #observation space (Inventory position at each echelon, which is any integer value)
-        self.observation_space = spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
+        self.observation_space = gym.spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
         
-    def set_seed(self,seed=None):
+    def seed(self,seed=None):
         '''
         Set random number generation seed
         '''
         #seed random state
         if seed != None:
             np.random.seed(seed=int(seed))
-        else:
-            np.random.seed(0)
         
     def reset(self):
         '''
@@ -158,22 +185,26 @@ class MultiLevelNewsVendorEnv(gym.Env):
         m = self.num_stages
         I0 = self.init_inv
         
-        # simulation result lists
-        self.I = np.zeros([self.num_periods + 1, m - 1]) # inventory at the beginning of each period (last stage not included since iventory is infinite)
-        self.T = np.zeros([self.num_periods + 1, m - 1]) # pipeline inventory at the beginning of each period (no pipeline inventory for last stage)
-        self.R = np.zeros([self.num_periods, m - 1]) # replenishment order (last stage places no replenishment orders)
-        self.D = np.zeros(self.num_periods) # demand at retailer
-        self.S = np.zeros([self.num_periods, m]) # units sold
-        self.B = np.zeros([self.num_periods, m]) # backlog (includes top most production site in supply chain)
-        self.LS = np.zeros([self.num_periods, m]) # lost sales
-        self.P = np.zeros(self.num_periods) # profit
+        #simulation result lists
+        self.I=np.zeros([periods + 1, m - 1]) #inventory at the beginning of each period (last stage not included since iventory is infinite)
+        self.T=np.zeros([periods + 1, m - 1]) #pipeline inventory at the beginning of each period (no pipeline inventory for last stage)
+        self.R=np.zeros([periods, m - 1]) #replenishment order (last stage places no replenishment orders)
+        self.D=np.zeros(periods) #demand at retailer
+        self.S=np.zeros([periods, m]) #units sold
+        self.B=np.zeros([periods, m]) #backlog (includes top most production site in supply chain)
+        self.LS=np.zeros([periods, m]) #lost sales
+        self.P=np.zeros(periods) #profit
         
-        # Initialize time and inventories
-        self.period = 0 
-        self.I[0,:] = np.array(I0) 
-        self.T[0,:] = np.zeros(m-1)
+        #initializetion
+        self.period = 0 #initialize time
+        self.I[0,:]=np.array(I0) #initial inventory
+        self.T[0,:]=np.zeros(m-1) #initial pipeline inventory
         
-        # set state
+        #set random generation seed (unless using user demands)
+        if self.dist < 5:
+            self.seed(self.seed_int) 
+        
+        #set state
         self._update_state()
         
         return self.state
@@ -192,98 +223,96 @@ class MultiLevelNewsVendorEnv(gym.Env):
             IP = np.cumsum(self.I[n,:] + self.T[n,:])
         self.state = IP
     
-    def step(self, action):
+    def step(self,action):
         '''
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
         '''
-        # get inventory at hand and pipeline inventory at beginning of the period
+        #get inventory at hand and pipeline inventory at beginning of the period
         n = self.period
         L = self.lead_time
-        I = self.I[n,:].copy() # inventory at start of period n
-        T = self.T[n,:].copy() # pipeline inventory at start of period n
-        m = self.num_stages # number of stages
+        I = self.I[n,:].copy() #inventory at start of period n
+        T = self.T[n,:].copy() #pipeline inventory at start of period n
+        m = self.num_stages #number of stages
         
-        # get production capacities
-        c = self.supply_capacity # capacity
+        #get production capacities
+        c = self.supply_capacity #capacity
         
-        # available inventory at the m+1 stage (note: last stage has unlimited supply)
+        #available inventory at the m+1 stage (note: last stage has unlimited supply)
         Im1 = np.append(I[1:], np.Inf) 
         
-        # place replenishment order
-        R = np.array(action).astype(int)
-        R[R<0] = 0 # force non-negativity
-        if n>=1: # add backlogged replenishment orders to current request
+        #place replenishment order
+        R = action.astype(int)
+        R[R<0] = 0 #force non-negativity
+        if n>=1: #add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
-        Rcopy = R # copy orignal replenishment quantity
-        R[R>=c] = c[R>=c] # enforce capacity constraint
-        R[R>=Im1] = Im1[R>=Im1] #e nforce available inventory constraint
-        self.R[n,:] = R #s tore R[n]
+        Rcopy = R #copy oritignal replenishment quantity
+        R[R>=c] = c[R>=c] #enforce capacity constraint
+        R[R>=Im1] = Im1[R>=Im1] #enforce available inventory constraint
+        self.R[n,:] = R #store R[n]
         
-        # receive inventory replenishment placed L periods ago
-        # initialize
-        RnL = np.zeros(m-1) 
+        #receive inventory replenishment placed L periods ago
+        RnL = np.zeros(m-1) #initialize
         for i in range(m-1):
             if n - L[i] >= 0:
-                # replenishment placed at the end of period n-L-1
-                RnL[i] = self.R[n-L[i],i].copy() 
+                RnL[i] = self.R[n-L[i],i].copy() #replenishment placed at the end of period n-L-1
                 I[i] = I[i] + RnL[i]
             
-        # demand is realized
-        try:
+        #demand is realized
+        if self.dist < 5:
             D0 = self.demand_dist.rvs(**self.dist_param)
-        except:
-            print("Distribution parameters incorrect. Try again.")
-            raise   
-        D = D0 # demand
-        self.D[n] = D0 # store D[n]
+        else:
+            D0 = self.demand_dist[n] #user specified demand
+        D = D0 #demand
+        self.D[n] = D0 #store D[n]
         
-        # add previous backlog to demand
+        #add previous backlog to demand
         if n >= 1:
-            D = D0 + self.B[n-1,0].copy() # add backlogs to demand
+            D = D0 + self.B[n-1,0].copy() #add backlogs to demand
         
-        # units sold
-        S0 = min(I[0],D) # at retailer
-        S = np.append(S0,R) # at each stage
-        self.S[n,:] = S # store S[n]
+        #units sold
+        S0 = min(I[0],D) #at retailer
+        S = np.append(S0,R) #at each stage
+        self.S[n,:] = S #store S[n]
         
-        # update inventory at hand and pipeline inventory
-        I = I - S[:-1] # updated inventory at all stages (exclude last stage)
-        T = T - RnL + R # updated pipeline inventory at all stages (exclude last one)
-        self.I[n+1,:] = I # store inventory available at start of period n + 1 (exclude last stage)
-        self.T[n+1,:] = T # store pipeline inventory at start of period n + 1
+        #update inventory at hand and pipeline inventory
+        I = I - S[:-1] #updated inventory at all stages (exclude last stage)
+        T = T - RnL + R #updated pipeline inventory at all stages (exclude last one)
+        self.I[n+1,:] = I #store inventory available at start of period n + 1 (exclude last stage)
+        self.T[n+1,:] = T #store pipeline inventory at start of period n + 1
         
-        # unfulfilled orders
-        U = np.append(D,Rcopy) - S # unfulfilled demand and replenishment orders
+        #unfulfilled orders
+        U = np.append(D,Rcopy) - S #unfulfilled demand and replenishment orders
         
-        # backlog and lost sales
+        #backlog and lost sales
         if self.backlog:
             B = U
             LS = np.zeros(m) 
         else:
-            LS = U # lost sales
+            LS = U #lost sales
             B = np.zeros(m)
-        self.B[n,:] = B # store B[n]
-        self.LS[n,:] = LS # store LS[n]
+        self.B[n,:] = B #store B[n]
+        self.LS[n,:] = LS #store LS[n]
 
-        # calculate profit
+        #calculate profit
         p = self.unit_price 
         r = self.unit_cost 
         k = self.demand_cost
         h = self.holding_cost
-        II = np.append(I,0) # augment inventory so that last has no onsite inventory
-        RR = np.append(R,S[-1]) # augment replenishment orders to include production cost at last stage
-        P = np.sum(p*S - (r*RR + k*U + h*II)) # profit in period n
-        self.P[n] = P # store P
+        a = self.discount
+        II = np.append(I,0) #augment inventory so that last has no onsite inventory
+        RR = np.append(R,S[-1]) #augment replenishment orders to include production cost at last stage
+        P = a**n*np.sum(p*S - (r*RR + k*U + h*II)) #discounted profit in period n
+        self.P[n] = P #store P
         
-        # update period
+        #update period
         self.period += 1  
         
-        # update stae
+        #update stae
         self._update_state()
         
-        # return values
-        reward = P # profit at current period
+        #return values
+        reward = P #profit at current period
         if self.period >= self.num_periods:
             done = True
         else:
@@ -291,6 +320,9 @@ class MultiLevelNewsVendorEnv(gym.Env):
         return self.state, reward, done, {}
     
     def sample_action(self):
+        '''
+        Generate an action by sampling from the action_space
+        '''
         return self.action_space.sample()
         
     def base_stock_action(self,z):
@@ -303,17 +335,30 @@ class MultiLevelNewsVendorEnv(gym.Env):
         m = self.num_stages
         IP = self.state #extract inventory position (current state)
         
-        assert len(z) == m-1, "Wrong dimension on base stock level vector. Should be #Stages - 1."
+        try:
+            dimz = len(z)
+        except:
+            dimz = 1
+        assert dimz == m-1, "Wrong dimension on base stock level vector. Should be #Stages - 1."
         
-        # calculate total inventory position at the beginning of period n
+        #calculate total inventory position at the beginning of period n
         R = z - IP #replenishmet order to reach zopt
 
-        # check if R can actually be fulfilled (capacity and inventory constraints)
-        Im1 = np.append(self.I[n,1:], np.Inf) 
-        # NOTE: last stage has unlimited raw materials
-        Rpos = np.column_stack((np.zeros(len(R)),R)) # augmented matrix to get replenishment only if positive
-        A = np.column_stack((c, np.max(Rpos,axis=1), Im1)) # augmented matrix with c, R, and I_m+1 as columns
+        #check if R can actually be fulfilled (capacity and inventory constraints)
+        Im1 = np.append(self.I[n,1:], np.Inf) #available inventory at the m+1 stage
+                                            #NOTE: last stage has unlimited raw materials
+        Rpos = np.column_stack((np.zeros(len(R)),R)) #augmented materix to get replenishment only if positive
+        A = np.column_stack((c, np.max(Rpos,axis=1), Im1)) #augmented matrix with c, R, and I_m+1 as columns
         
-        R = np.min(A, axis = 1) # replenishmet order to reach zopt (capacity constrained)
+        R = np.min(A, axis = 1) #replenishmet order to reach zopt (capacity constrained)
         
         return R
+        
+class NewsVendorBacklogEnv(NewsVendorMasterEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+class NewsVendorLostSalesEnv(NewsVendorMasterEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.backlog = False

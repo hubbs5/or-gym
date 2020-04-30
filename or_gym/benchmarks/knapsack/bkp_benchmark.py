@@ -22,11 +22,11 @@ def optimize_bkp(env, print_results=False):
     return model, results
 
 if __name__ == '__main__':
-    # parser = parse_arguments()
-    # args = parser(sys.argv)
+    parser = parse_arguments()
+    args = parser(sys.argv)
     env = gym.make('Knapsack-v1')
     model, results = optimize_bkp(env)
     print("Optimal reward\t\t=\t{}".format(model.obj.expr()))
     actions, rewards = bkp_heuristic(env)
     print("Heuristic reward\t=\t{}".format(sum(rewards)))
-    # print("RL reward\t\t=\t{}".format())
+    print("RL reward\t\t=\t{}".format())

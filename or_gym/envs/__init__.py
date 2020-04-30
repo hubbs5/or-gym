@@ -29,5 +29,9 @@ register(id='VehicleRouting-v1',
 )
 
 register(id='NewsVendor-v1',
-	entry_point='or_gym.envs.classic_or.newsvendor:MultiLevelNewsVendorEnv'
+	entry_point='or_gym.envs.classic_or.newsvendor:NewsVendorBacklogEnv'
+)
+
+register(id='NewsVendor-v2',
+	entry_point='or_gym.envs.classic_or.newsvendor:NewsVendorLostSalesEnv'
 )
