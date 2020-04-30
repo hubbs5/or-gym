@@ -35,3 +35,7 @@ register(id='NewsVendor-v1',
 register(id='NewsVendor-v2',
 	entry_point='or_gym.envs.classic_or.newsvendor:NewsVendorLostSalesEnv'
 )
+
+register(id='PortfolioOpt-v0',
+	entry_point='or_gym.envs.finance.portfolio_opt:PortfolioOptEnv'
+)
