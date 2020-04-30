@@ -26,7 +26,7 @@ class PortfolioOptEnv(gym.Env):
     if the amount of any given asset held becomes negative.  
 
     Observation:
-        Type: Box(7)
+        Type: Box(9)
         "asset prices" (idx 0,1,2): array of asset prices [cash, asset1, asset2, asset3]
         "asset quantities" (idx 3,4,5): array of asset quantities [cash, asset1, asset2, asset3]
         "total wealth" (idx 6): current total wealth (sum of price*quantity for each asset)
@@ -62,7 +62,7 @@ class PortfolioOptEnv(gym.Env):
         self.sell_cost = np.array([0.040, 0.020, 0.030])
         self._max_reward = 400
         self.investment_horizon = 10 
-        self.asset_prices_means = np.random.rand(self.num_assets) + 0.5
+        self.asset_prices_means = asset_prices_means
         self.asset_price_variance = np.ones(self.num_assets) * 0.25
         self.max_steps = copy(self.investment_horizon)
 
@@ -90,7 +90,7 @@ class PortfolioOptEnv(gym.Env):
 
     def _update_state(self): 
     	self.asset_prices = np.concatenate((np.array([self.cash_price]), \
-            np.random.normal(self.asset_prices_means, self.asset_price_variance)))
+            np.random.normal(self.asset_prices_means[self.step_counter], self.asset_price_variance)))
     	self.total_wealth = self.current_total_wealth
     	self.state = np.hstack([
             self.asset_prices, 
@@ -126,10 +126,26 @@ class PortfolioOptEnv(gym.Env):
         if self.step_counter > self.max_steps: 
             done = True
             Termination = "Termination Condition: End of Horizon"
-
-        self._update_state()
+        else: 
+            self._update_state()
 
         return self.state, reward, done, {"Status": Termination}
 
     def sample_action(self): 
         return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.asset_prices-1))
+
+
+#num_assets = 3
+#investment_horizon = 10 
+#asset_price_means = np.random.rand(investment_horizon + 1, num_assets) + 0.5
+asset_prices_means = np.array([[0.729104  , 0.70066482, 1.33728305],
+       [0.71028955, 1.15127388, 0.65365377],
+       [0.83731888, 0.78674174, 1.14186928],
+       [0.83644462, 0.97910886, 0.94767697],
+       [0.69826764, 1.14386794, 0.94392694],
+       [0.69017948, 0.86546669, 0.82813273],
+       [0.61135848, 0.72119583, 0.70126934],
+       [0.58991467, 0.86416669, 1.18881049],
+       [1.48227405, 1.41814408, 0.96752138],
+       [0.5027847 , 0.5380547 , 0.62442277],
+       [0.56073499, 1.27841103, 1.18236989]])
