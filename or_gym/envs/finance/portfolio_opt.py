@@ -34,9 +34,9 @@ class PortfolioOptEnv(gym.Env):
 
     Actions:
         Type: Box (3)
-        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 0: no transaction
-        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 1-n: Sell j "in" [1,n] amt of asset
-        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; n+1-2n: Buy j "in" [1,n] amt of asset
+        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 
+        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 
+        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; 
 
     Reward:
         Change in total wealth from previous period or [-max(asset price of all assets) *  maximum transaction size]
@@ -99,13 +99,13 @@ class PortfolioOptEnv(gym.Env):
     def step(self, action):        
         #Update asset and cash quantities 
         for idx, a in enumerate(action): 
-            if a in range(self.max_transaction_size): 
-                self.asset_quantities[idx+1] -= a 
-                self.asset_quantities[0] += (1-self.sell_cost[idx])*self.asset_prices[idx]*a 
+            if a < 0: 
+                self.asset_quantities[idx+1] += a 
+                self.asset_quantities[0] -= (1-self.sell_cost[idx])*self.asset_prices[idx]*a 
 
             else: 
-                self.asset_quantities[idx+1] += a-self.max_transaction_size
-                self.asset_quantities[0] -= (1+self.buy_cost[idx])*self.asset_prices[idx]*(a-self.max_transaction_size)
+                self.asset_quantities[idx+1] += a
+                self.asset_quantities[0] -= (1+self.buy_cost[idx])*self.asset_prices[idx]*a
 
         #Calculate reward 
         self.current_total_wealth = 0 
@@ -131,4 +131,4 @@ class PortfolioOptEnv(gym.Env):
         return self.state, reward, done, {"Status": Termination}
 
     def sample_action(self): 
-        return np.array(np.random.choice(range(2*self.max_transaction_size+1), size=len(self.asset_prices-1)))
+        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.asset_prices-1))
