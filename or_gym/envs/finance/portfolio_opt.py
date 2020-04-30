@@ -68,8 +68,8 @@ class PortfolioOptEnv(gym.Env):
         self.max_steps = copy(self.investment_horizon)
 
         #Define observation and action spaces
-        self.observation_space = spaces.Box(7) 
-        self.action_space = spaces.Box(3)
+        self.observation_space = spaces.Box(-1000, 1000, shape=(7,)) 
+        self.action_space = spaces.Box(-10, 10, shape=(self.num_assets,))
         #set seed 
         self.seed()
         #reset state 
@@ -89,17 +89,16 @@ class PortfolioOptEnv(gym.Env):
         return self.state
 
     def _update_state(self): 
-        self.asset_prices = np.concatenate((np.array([self.cash_price]), \
-         np.random.normal(self.asset_prices_means,self.asset_prices_variance)))
+        self.asset_prices = np.concatenate(
+            (np.array([self.cash_price]), \
+            np.random.normal(self.asset_prices_means, self.asset_price_variance)))
         self.total_wealth = self.current_total_wealth
         self.state = np.array([
             self.asset_prices, 
             self.asset_quantities, 
             self.total_wealth])
 
-    def step(self, action): 
-
-        
+    def step(self, action):        
         #Update asset and cash quantities 
         for idx, a in enumerate(action): 
             if a in range(self.max_transaction_size): 
