@@ -34,9 +34,9 @@ class PortfolioOptEnv(gym.Env):
 
     Actions:
         Type: Box (3)
-        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 0: no transaction
-        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 1-n: Sell j "in" [1,n] amt of asset
-        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; n+1-2n: Buy j "in" [1,n] amt of asset
+        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 
+        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 
+        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; 
 
     Reward:
         Change in total wealth from previous period or [-max(asset price of all assets) *  maximum transaction size]
@@ -62,38 +62,37 @@ class PortfolioOptEnv(gym.Env):
         self.sell_cost = np.array([0.040, 0.020, 0.030])
         self._max_reward = 400
         self.investment_horizon = 10 
-        self.asset_prices_means = np.random.rand(
-            self.investment_horizon + 1, self.num_assets) + 0.5
+        self.asset_prices_means = np.random.rand(self.num_assets) + 0.5
         self.asset_price_variance = np.ones(self.num_assets) * 0.25
         self.max_steps = copy(self.investment_horizon)
 
         #Define observation and action spaces
-        self.observation_space = spaces.Box(-1000, 1000, shape=(7,)) 
-        self.action_space = spaces.Box(-10, 10, shape=(self.num_assets,))
+        self.observation_space = spaces.Box(-10000, 10000, shape=(9,)) 
+        self.action_space = spaces.Box(-self.max_transaction_size, self.max_transaction_size, 
+            shape=(self.num_assets,))
         #set seed 
         self.seed()
         #reset state 
         self.state = self.reset()
 
     def reset(self): 
-        self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
+    	self.current_total_wealth = 0
+    	self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
             self.initial_assets[2]])
-        self.total_wealth = self.initial_cash*self.cash_price
+    	self.total_wealth = self.initial_cash*self.cash_price
+    	self.step_counter = 0 
+    	self._update_state()
 
-        self.step_counter = 0 
-        self._update_state()
-
-        return self.state
+    	return self.state
 
     def _get_obs(self):
         return self.state
 
     def _update_state(self): 
-        self.asset_prices = np.concatenate(
-            (np.array([self.cash_price]), \
+    	self.asset_prices = np.concatenate((np.array([self.cash_price]), \
             np.random.normal(self.asset_prices_means, self.asset_price_variance)))
-        self.total_wealth = self.current_total_wealth
-        self.state = np.array([
+    	self.total_wealth = self.current_total_wealth
+    	self.state = np.hstack([
             self.asset_prices, 
             self.asset_quantities, 
             self.total_wealth])
@@ -101,16 +100,16 @@ class PortfolioOptEnv(gym.Env):
     def step(self, action):        
         #Update asset and cash quantities 
         for idx, a in enumerate(action): 
-            if a in range(self.max_transaction_size): 
-                self.asset_quantities[idx+1] -= a 
-                self.asset_quantities[0] += (1-self.sell_cost[idx])*self.asset_prices[idx]*a 
+            if a < 0: 
+                self.asset_quantities[idx+1] += a 
+                self.asset_quantities[0] -= (1-self.sell_cost[idx])*self.asset_prices[idx]*a 
 
             else: 
-                self.asset_quantities[idx+1] += a-self.max_transaction_size
-                self.asset_quantities[0] -= (1+self.buy_cost)*self.asset_prices[idx]*(a-self.max_transaction_size)
+                self.asset_quantities[idx+1] += a
+                self.asset_quantities[0] -= (1+self.buy_cost[idx])*self.asset_prices[idx]*a
 
         #Calculate reward 
-        current_total_wealth = 0 
+        self.current_total_wealth = 0 
         for idx, a in enumerate(self.asset_prices): 
             self.current_total_wealth += self.asset_prices[idx]*self.asset_quantities[idx]
         if np.all(self.asset_quantities >= 0): 
@@ -133,4 +132,4 @@ class PortfolioOptEnv(gym.Env):
         return self.state, reward, done, {"Status": Termination}
 
     def sample_action(self): 
-        return np.array(np.random.choice(range(2*self.max_transaction_size+1), size=len(self.asset_prices-1)))
+        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.asset_prices-1))
