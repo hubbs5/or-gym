@@ -2,6 +2,7 @@ import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
+from or_gym.utils.env_config import *
 import copy
 
 class KnapsackEnv(gym.Env):
@@ -42,21 +43,28 @@ class KnapsackEnv(gym.Env):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        # Generate data with consistent random seed to ensure reproducibility
+        values = np.random.randint(30, size=200)
+        weights = np.random.randint(1, 20, size=200)
+        limits = np.random.randint(1, 10, size=200)
         self.item_weights = weights
         self.item_values = values
         self.item_numbers = np.arange(len(self.item_weights))
-        self.N = len(self.item_weights)
         self.max_weight = 200
         self.current_weight = 0
+        self._max_reward = 4800
+        self.seed = 0
+        # Add env_config, if any
+        assign_env_config(self, kwargs)
         
+        self.N = len(self.item_weights)
         self.action_space = spaces.Discrete(self.N)
-        self.observation_space = spaces.Tuple((
-            spaces.Discrete(self.N),
-            spaces.Discrete(self.N),
-            spaces.Discrete(2)))
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(2, self.N + 1), 
+            dtype=np.int16)
         
-        self.seed()
+        self.set_seed(self.seed)
         self.reset()
         
     def step(self, item):
@@ -80,11 +88,15 @@ class KnapsackEnv(gym.Env):
         return self.state
     
     def _update_state(self):
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
-            self.item_values,
-            self.max_weight,
-            self.current_weight)
+            self.item_values
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight]])
+        ])
     
     def reset(self):
         self.current_weight = 0
@@ -93,6 +105,11 @@ class KnapsackEnv(gym.Env):
     
     def sample_action(self):
         return np.random.choice(self.item_numbers)
+
+    def set_seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
 
 class BoundedKnapsackEnv(KnapsackEnv):
     '''
@@ -116,7 +133,6 @@ class BoundedKnapsackEnv(KnapsackEnv):
         3: maximum weight of the knapsack
         4: current weight in knapsack
 
-
     Actions:
         Type: Discrete
         0: Place item 0 into knapsack
@@ -133,10 +149,13 @@ class BoundedKnapsackEnv(KnapsackEnv):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
-    def __init__(self):
-        self.item_limits_init = limits
+    def __init__(self, *args, **kwargs):
+        self.item_limits_init = np.random.randint(1, 10, size=200)
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
+        self.observation_space = spaces.Box(
+            0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
+        self._max_reward = 500 # Used for VF clipping
         
     def step(self, item):
         # Check item limit
@@ -149,6 +168,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
                     done = True
                 else:
                     done = False
+                self._update_state(item)
             else:
                 # End if over weight
                 reward = 0
@@ -158,19 +178,23 @@ class BoundedKnapsackEnv(KnapsackEnv):
             reward = 0
             done = True
             
-        self._update_state()
         return self.state, reward, done, {}
-        
+
     def _update_state(self, item=None):
         if item is not None:
             self.item_limits[item] -= 1
-            
-        self.state = (
+        self.state = np.vstack([
             self.item_weights,
             self.item_values,
-            self.item_limits,
-            self.max_weight,
-            self.current_weight)
+            self.item_limits
+        ])
+        self.state = np.hstack([
+            self.state, 
+            np.array([[self.max_weight],
+                      [self.current_weight], 
+                      [0] # Serves as place holder
+                ])
+        ])
         
     def sample_action(self):
         return np.random.choice(
@@ -220,19 +244,21 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         Full knapsack, selection that puts the knapsack over the limit, or
         the number of items to be drawn has been reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         BoundedKnapsackEnv.__init__(self)
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Tuple((
-            spaces.Discrete(self.N),
-            spaces.Discrete(self.N),
-            spaces.Discrete(2)))
+        # self.observation_space = spaces.Tuple((
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Weights
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Values
+        #     spaces.Box(0, self.max_weight, shape=(self.N,)), # Probs
+        #     spaces.Box(0, self.max_weight, shape=(3,))))
+        self.observation_space = spaces.Box(0, self.max_weight, shape=(4,))
 
         self.step_counter = 0
         self.step_limit = 50
         
-        self.seed()
         self.state = self.reset()
+        self._max_reward = 600
         
     def step(self, action):
         # Check that item will fit
@@ -245,6 +271,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
                     done = True
                 else:
                     done = False
+                self._update_state()
             else:
                 # End if over weight
                 reward = 0
@@ -257,19 +284,20 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         if self.step_counter >= self.step_limit:
             done = True
             
-        self._update_state()
         return self.state, reward, done, {}
     
     def _update_state(self):
         self.current_item = np.random.choice(self.item_numbers, p=self.item_probs)
         self.state = (
-            self.item_weights,
-            self.item_values,
-            self.item_probs,
-            self.max_weight,
+            # self.item_weights,
+            # self.item_values,
+            # self.item_probs,
             np.array([
+                # self.max_weight,
                 self.current_weight,
-                self.current_item
+                self.current_item,
+                self.item_weights[self.current_item],
+                self.item_values[self.current_item]
             ]))
         
     def sample_action(self):
@@ -284,42 +312,3 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self._update_state()
         return self.state
 
-# Generated randomly with np.random.randint(30, 200)
-values = np.array([28, 23, 16,  9, 20,  7, 22, 21, 23,  7, 21, 18, 23,  1, 17, 27,  0,
-    1, 19, 10, 26, 28,  4, 11, 17,  9, 24,  7,  0, 16, 26, 16,  0,  3,
-    0, 25, 18, 25,  7, 19, 17,  9, 12,  9, 24,  4, 12,  4, 23,  4,  8,
-    15, 12,  2, 11,  0, 22, 21, 19, 22, 15,  1, 11,  5,  0, 28,  6,  6,
-    7, 21, 14, 13,  8, 23, 20, 22,  3, 12, 19, 10, 23, 25,  8, 19, 27,
-    0, 21, 11, 15, 21, 15, 19,  9,  0, 11,  3, 13, 25, 14,  4,  0, 21,
-    21,  7, 28, 16,  5, 19,  9,  4, 24, 13, 10, 26,  1,  3, 18, 25, 13,
-    22,  0, 12,  2, 10,  7, 26, 20, 26,  5, 18,  4, 21,  4, 16, 24, 18,
-    21,  7, 13, 25, 14,  7,  6,  2,  6,  7, 14,  5, 10,  0, 19,  9, 12,
-    13,  2, 13, 10,  6, 26, 15,  7, 13, 17,  5,  6,  6, 29, 13,  6, 18,
-    25, 14, 14,  8,  9, 27, 21, 16,  5,  3,  9,  7, 24, 22, 22,  4, 29,
-    0,  6,  3, 22,  1,  7, 29, 23,  5, 29, 21,  0, 16])
-
-# Generated randomly with np.random.randint(1, 20, 200)
-weights = np.array([16, 12,  3, 19, 12, 11, 12, 13,  2, 12,  9,  3,  3,  1, 15,  1,  7,
-    16, 14, 18,  5, 15, 11,  8, 11,  6,  4, 12,  6,  2, 18, 10, 15, 14,
-    9, 16,  7, 13,  7,  4, 18, 15, 11,  1, 17, 14, 14, 10,  3, 11,  8,
-    15,  8,  7,  8, 14,  1,  5, 10,  1,  8, 15, 14,  8,  7,  1,  1,  5,
-    4, 12,  3, 14,  4, 18,  1,  3, 18, 14,  8,  4,  7,  8, 12,  5,  5,
-    4, 14, 18,  7,  3, 14, 16,  9,  8,  1,  4,  5, 13,  3, 14,  9,  3,
-    10, 10, 11, 12,  9, 18,  7,  3, 14, 11, 12,  1,  9, 19,  1,  8,  6,
-    8,  6, 15,  1,  4, 10,  6,  3, 16,  6,  2, 15, 11,  8, 17, 17, 14,
-    5,  4,  6, 12, 14, 12, 19, 18, 11, 15,  1,  9,  2,  8,  7, 14, 10,
-    3,  4,  9, 12,  2,  8,  9, 14, 14, 11,  9, 16,  4,  2, 17,  9,  4,
-    5,  3,  8,  6,  2, 11,  5,  9, 16,  4, 10,  7,  8, 14,  1,  3, 14,
-    14, 16,  7, 19, 16, 10, 10,  7, 10, 12, 10, 19, 16])
-
-# Generated randomly with np.random.randint(1, 10, 200)
-limits = np.array([8, 5, 1, 3, 5, 9, 4, 2, 1, 5, 2, 4, 6, 1, 2, 2, 9, 6, 2, 8, 2, 7,
-    5, 4, 7, 1, 6, 8, 3, 5, 6, 5, 5, 6, 3, 8, 2, 2, 4, 4, 6, 9, 1, 6,
-    7, 8, 2, 6, 6, 8, 2, 8, 3, 8, 6, 5, 1, 7, 3, 6, 8, 9, 9, 3, 9, 2,
-    9, 5, 1, 1, 2, 4, 3, 4, 8, 1, 1, 7, 4, 2, 8, 3, 5, 2, 6, 6, 8, 7,
-    1, 8, 4, 6, 7, 4, 1, 9, 7, 5, 8, 4, 2, 6, 3, 2, 7, 3, 2, 1, 1, 2,
-    9, 8, 1, 4, 3, 8, 1, 9, 7, 5, 2, 7, 4, 8, 3, 1, 5, 5, 7, 6, 9, 6,
-    3, 2, 7, 2, 5, 6, 1, 3, 5, 4, 4, 1, 2, 3, 7, 8, 1, 7, 8, 8, 4, 2,
-    4, 9, 2, 3, 2, 7, 5, 4, 3, 7, 1, 9, 5, 4, 8, 1, 4, 7, 7, 9, 5, 5,
-    4, 7, 1, 9, 4, 6, 5, 3, 6, 8, 2, 4, 7, 3, 3, 6, 7, 9, 2, 6, 4, 4,
-    8, 2])

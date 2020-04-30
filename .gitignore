@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.gz
+*.csv
 
 # C extensions
 *.so
@@ -127,3 +129,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Output files
+nohup.out
