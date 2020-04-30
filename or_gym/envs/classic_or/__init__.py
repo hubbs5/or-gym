@@ -5,4 +5,4 @@ from or_gym.envs.classic_or.binpacking import BinPackingEnv
 from or_gym.envs.classic_or.vmpacking import VMPackingEnv
 from or_gym.envs.classic_or.vmpacking import TempVMPackingEnv
 from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv
-from or_gym.envs.classic_or.newsvendor import NewsVendorEnv
+from or_gym.envs.classic_or.newsvendor import NewsVendorMasterEnv, NewsVendorBacklogEnv, NewsVendorLostSalesEnv

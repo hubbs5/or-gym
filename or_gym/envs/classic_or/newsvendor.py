@@ -1,20 +1,20 @@
 '''
 Multi-period inventory management
 Hector Perez, Christian Hubbs, Owais Sarwar
-4/1/2020
+4/14/2020
 '''
 
 import gym
 import itertools
 import numpy as np
-# import matplotlib.pyplot as plt
 from scipy.stats import *
+from or_gym.utils.env_config import *
 
-class NewsVendorEnv(gym.Env):
+class NewsVendorMasterEnv(gym.Env):
     '''
     The supply chain environment is structured as follows:
     
-    It is a multiperiod multiechelon production-inventory system for a single non-perishable product that is sold only
+    It is a multi-period multi-echelon production-inventory system for a single non-perishable product that is sold only
     in discrete quantities. Each stage in the supply chain consists of an inventory holding area and a production area.
     The exception are the first stage (retailer: only inventory area) and the last stage (raw material transformation
     plant: only production area, with unlimited raw material availability). The inventory holding area holds the inventory
@@ -26,7 +26,7 @@ class NewsVendorEnv(gym.Env):
         
     At the beginning of each time period, the following sequence of events occurs:
     
-    0) Stages 0 through M-1 place replinishment orders to their respective suppliers. Replenishment orders are filled
+    0) Stages 0 through M-1 place replenishment orders to their respective suppliers. Replenishment orders are filled
         according to available production capacity and available inventory at the respective suppliers.
     1) Stages 0 through M-1 receive incoming inventory replenishment shipments that have made it down the product pipeline
         after the stage's respective lead time.
@@ -67,18 +67,18 @@ class NewsVendorEnv(gym.Env):
         user_D = [list] user specified demand for each time period in simulation
         '''
         #set default (arbitrary) values when creating environment (if no args or kwargs are given)
-        self.periods = 1
-        self.I0 = 1
-        self.p = 1
-        self.r = [0,0]
-        self.k = [0,0]
-        self.h = 0
-        self.c = 1
-        self.L = 0
+        self.periods = 90
+        self.I0 = [100,100,200]
+        self.p = 2
+        self.r = [1.5,1.0,0.75,0.5]
+        self.k = [0.10,0.075,0.05,0.025]
+        self.h = [0.15,0.10,0.05]
+        self.c = [100,90,80]
+        self.L = [3,5,10]
         self.backlog = True
         self.dist = 1
-        self.dist_param = {'mu': 1}
-        self.alpha = 1
+        self.dist_param = {'mu': 20}
+        self.alpha = 0.97
         self.seed_int = 0
         self.user_D = np.zeros(self.periods)
         
@@ -88,9 +88,7 @@ class NewsVendorEnv(gym.Env):
         keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
         for i,value in enumerate(args):
             setattr(self,keys[i],value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
+        assign_env_config(self, kwargs)
         
         #input parameters
         try:
@@ -110,7 +108,6 @@ class NewsVendorEnv(gym.Env):
             self.lead_time = np.array(list(self.L))
         except:
             self.lead_time = np.array([self.L])
-        self.backlog = self.backlog
         self.discount = self.alpha
         self.user_D = np.array(list(self.user_D))
         
@@ -129,6 +126,15 @@ class NewsVendorEnv(gym.Env):
 #         self.dist_param = self.dist_param
         
         #check inputs
+        assert np.all(self.init_inv) >=0, "The initial inventory cannot be negative"
+        assert self.num_periods > 0, "The number of periods must be positive."
+        assert np.all(self.unit_price >= 0), "The sales prices cannot be negative."
+        assert np.all(self.unit_cost >= 0), "The procurement costs cannot be negative."
+        assert np.all(self.demand_cost >= 0), "The unfulfilled demand costs cannot be negative."
+        assert np.all(self.holding_cost >= 0), "The inventory holding costs cannot be negative."
+        assert np.all(self.supply_capacity > 0), "The supply capacities must be positive."
+        assert np.all(self.lead_time >= 0), "The lead times cannot be negative."
+        assert (self.backlog == False) | (self.backlog == True), "The backlog parameter must be a boolean."
         assert m >= 2, "The minimum number of stages is 2. Please try again"
         assert len(self.unit_cost) == m, "The length of r is not equal to the number of stages."
         assert len(self.demand_cost) == m, "The length of k is not equal to the number of stages."
@@ -141,10 +147,6 @@ class NewsVendorEnv(gym.Env):
         else:
             assert len(self.user_D) == self.num_periods, "The length of the user specified distribution is not equal to the number of periods."
         assert (self.alpha>0) & (self.alpha<=1), "alpha must be in the range (0,1]."
-        
-        #set random generation seed (unless using user demands)
-        if self.dist < 5:
-            self.seed(self.seed_int) 
         
         #select distribution
         self.demand_dist = distributions[self.dist]  
@@ -197,6 +199,10 @@ class NewsVendorEnv(gym.Env):
         self.period = 0 #initialize time
         self.I[0,:]=np.array(I0) #initial inventory
         self.T[0,:]=np.zeros(m-1) #initial pipeline inventory
+        
+        #set random generation seed (unless using user demands)
+        if self.dist < 5:
+            self.seed(self.seed_int) 
         
         #set state
         self._update_state()
@@ -347,3 +353,12 @@ class NewsVendorEnv(gym.Env):
         R = np.min(A, axis = 1) #replenishmet order to reach zopt (capacity constrained)
         
         return R
+        
+class NewsVendorBacklogEnv(NewsVendorMasterEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+class NewsVendorLostSalesEnv(NewsVendorMasterEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.backlog = False
