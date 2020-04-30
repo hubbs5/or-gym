@@ -44,6 +44,10 @@ class KnapsackEnv(gym.Env):
     '''
     
     def __init__(self, *args, **kwargs):
+        # Generate data with consistent random seed to ensure reproducibility
+        values = np.random.randint(30, size=200)
+        weights = np.random.randint(1, 20, size=200)
+        limits = np.random.randint(1, 10, size=200)
         self.item_weights = weights
         self.item_values = values
         self.item_numbers = np.arange(len(self.item_weights))
@@ -62,10 +66,6 @@ class KnapsackEnv(gym.Env):
         
         self.set_seed(self.seed)
         self.reset()
-        # Generate data with consistent random seed to ensure reproducibility
-        values = np.random.randint(30, size=200)
-        weights = np.random.randint(1, 20, size=200)
-        limits = np.random.randint(1, 10, size=200)
         
     def step(self, item):
         # Check that item will fit
@@ -150,12 +150,12 @@ class BoundedKnapsackEnv(KnapsackEnv):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     def __init__(self, *args, **kwargs):
-        self.item_limits_init = limits
+        self.item_limits_init = np.random.randint(1, 10, size=200)
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
         self.observation_space = spaces.Box(
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
-        self._max_reward = 1900 # Used for VF clipping
+        self._max_reward = 500 # Used for VF clipping
         
     def step(self, item):
         # Check item limit
