@@ -26,7 +26,7 @@ def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=Tru
     solver = SolverFactory(solver) #create solver
     if len(solver_kwargs) > 0: # set solver keyword args
         solver.options = solver_kwargs
-    if warmstart: # run warmstart
+    if warmstart: #run warmstart
         model = warm_start_nv(model, **warmstart_kwargs)
         results = solver.solve(model, tee=print_results, warmstart=warmstart)
         return model, results
