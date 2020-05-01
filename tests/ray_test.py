@@ -47,7 +47,7 @@ def test_env(env, n_episodes, print_output=True):
         if batch % 10 == 0 and print_output:
             t = t_end - t_batch
             t_tot = t_end - t_start
-            print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}s\tTotal Time: {:.1f}s".format(
+            print("\rEpisode: {}\tMean Rewards: {:.1f}\tEpisodes/sec: {:.2f}\tTotal Time: {:.1f}s".format(
                 eps_total[-1], rewards[-1], eps[-1]/t, t_tot), end="")
             
     print("Total Training Time: {:.1f}s\t".format(t_end - t_start))
@@ -58,10 +58,12 @@ if __name__ == "__main__":
     n_episodes = args.episodes
     print_output = args.print
     ray.init(ignore_reinit_error=True)
-    trainer = ppo.PPOTrainer(env=create_env(env_name), 
+    trainer = ppo.PPOTrainer(env=create_env(env_name),
         config={
         "env_config": {
-            "reuse_actors":True},
+            "mask": True
+            },
+        "vf_share_layers": True,
         "vf_clip_param": 10000, # Set to high number to avoid any warnings
         "model": {
             "fcnet_activation": "elu",
