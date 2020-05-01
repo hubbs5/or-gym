@@ -48,7 +48,9 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'NewsVendor-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 	elif env_name == 'NewsVendor-v1':
-		from or_gym.envs.classic_or.newsvendor import NewsVendorEnv as env
+		from or_gym.envs.classic_or.newsvendor import NewsVendorBacklogEnv as env
+	elif env_name == 'NewsVendor-v2':
+		from or_gym.envs.classic_or.newsvendor import NewsVendorLostSalesEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env
