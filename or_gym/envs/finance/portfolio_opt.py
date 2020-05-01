@@ -132,7 +132,7 @@ class PortfolioOptEnv(gym.Env):
         return self.state, reward, done, {"Status": Termination}
 
     def sample_action(self): 
-        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.asset_prices-1))
+        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.num_assets))
 
 
 #num_assets = 3
