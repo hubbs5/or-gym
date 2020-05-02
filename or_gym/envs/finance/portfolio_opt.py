@@ -76,7 +76,6 @@ class PortfolioOptEnv(gym.Env):
         self.state = self.reset()
 
     def reset(self): 
-    	self.current_total_wealth = 0
     	self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
             self.initial_assets[2]])
     	self.total_wealth = self.initial_cash*self.cash_price
@@ -89,10 +88,11 @@ class PortfolioOptEnv(gym.Env):
         return self.state
 
     def _update_state(self): 
-    	self.asset_prices = np.concatenate((np.array([self.cash_price]), \
+        if self.step_counter > 0:
+            self.total_wealth = self.current_total_wealth
+        self.asset_prices = np.concatenate((np.array([self.cash_price]), \
             np.random.normal(self.asset_prices_means[self.step_counter], self.asset_price_variance)))
-    	self.total_wealth = self.current_total_wealth
-    	self.state = np.hstack([
+        self.state = np.hstack([
             self.asset_prices, 
             self.asset_quantities, 
             self.total_wealth])
@@ -132,7 +132,7 @@ class PortfolioOptEnv(gym.Env):
         return self.state, reward, done, {"Status": Termination}
 
     def sample_action(self): 
-        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.asset_prices-1))
+        return np.random.uniform(low=-self.max_transaction_size, high=self.max_transaction_size,size=len(self.num_assets))
 
 
 #num_assets = 3
