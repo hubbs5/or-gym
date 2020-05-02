@@ -20,20 +20,9 @@ setup(name='or-gym',
 		'scipy>=1.4.1',
 		# 'torch>=1.4.0',
 		# 'torchvision>=0.5.0',
-<<<<<<< HEAD
-<<<<<<< HEAD
 		# 'tensorflow>=2.0',
 		'pyomo>=5.5',
 		'ray>=0.9',
 		'pandas>=1.0'],
-=======
-		'pyomo>=5.5',
-=======
-		'pyomo>=5.5',
->>>>>>> newsvendor
-		# 'ray>=0.8',
-		'pandas>=1.0',
-		'tensorflow>=2.0'],
->>>>>>> newsvendor
 	zip_safe=False
 )
