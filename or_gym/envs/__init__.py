@@ -28,12 +28,12 @@ register(id='VehicleRouting-v1',
 	entry_point='or_gym.envs.classic_or.vehicle_routing:VehicleRoutingEnv'
 )
 
-register(id='NewsVendor-v1',
-	entry_point='or_gym.envs.classic_or.newsvendor:NewsVendorBacklogEnv'
+register(id='InvManagement-v0',
+	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementBacklogEnv'
 )
 
-register(id='NewsVendor-v2',
-	entry_point='or_gym.envs.classic_or.newsvendor:NewsVendorLostSalesEnv'
+register(id='InvManagement-v1',
+	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementLostSalesEnv'
 )
 
 register(id='PortfolioOpt-v0',
