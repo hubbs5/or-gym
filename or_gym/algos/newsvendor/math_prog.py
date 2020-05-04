@@ -268,7 +268,10 @@ def nv_dfo_model(x,env,online):
         sim_kwargs['dist'] = env.dist #copy dist from env
         
     #build simulation environment (this is just clean copy if in offline mode)
-    sim = or_gym.make("NewsVendor-v1",env_config=sim_kwargs) 
+    if env.backlog:
+        sim = or_gym.make("NewsVendor-v1",env_config=sim_kwargs)
+    else:
+        sim = or_gym.make("NewsVendor-v2",env_config=sim_kwargs)
     
     #run simulation
     for t in range(sim.num_periods):
