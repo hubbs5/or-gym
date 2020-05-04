@@ -13,11 +13,11 @@ import time
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
-            'VMPacking-v0', 'VMPacking-v1',
+            'VMPacking-v0',
             'PortfolioOpt-v0',
-            'TSP-v0',
             'VehicleRouting-v0', 'VehicleRouting-v1',
-            'NewsVendor-v0', 'NewsVendor-v1']
+            'NewsVendor-v0',
+            'InvManagement-v0', 'InvManagement-v1']
 
 def parse_arguments():
     parser = ArgumentParser()

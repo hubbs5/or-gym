@@ -39,17 +39,17 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
         print("*******************************************\nPeriod: {} \n".format(env.period)) 
         #build model
         model = build_nv_mip_model(env,online=True) 
-        #solve model
-        if warmstart & (len(basestock) > 0):
-            model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs,
-                                                warmstart=True,
-                                                warmstart_kwargs={'mapping_env':env,
-                                                                  'mapping_z':basestock[-1],
-                                                                  'online':True})
-        else:
-            model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs)
-        #Extract base stock level
         try:
+            #solve model
+            if warmstart & (len(basestock) > 0):
+                model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs,
+                                                    warmstart=True,
+                                                    warmstart_kwargs={'mapping_env':env,
+                                                                      'mapping_z':basestock[-1],
+                                                                      'online':True})
+            else:
+                model, results = solve_math_program(model,solver=solver,solver_kwargs=solver_kwargs)
+            #Extract base stock level
             zopt = list(model.z.get_values().values()) 
         except:
             zopt = basestock[-1]

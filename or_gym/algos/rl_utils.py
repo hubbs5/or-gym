@@ -47,10 +47,10 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'NewsVendor-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
-	elif env_name == 'NewsVendor-v1':
-		from or_gym.envs.classic_or.newsvendor import NewsVendorBacklogEnv as env
-	elif env_name == 'NewsVendor-v2':
-		from or_gym.envs.classic_or.newsvendor import NewsVendorLostSalesEnv as env
+	elif env_name == 'InvManagement-v0':
+		from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv as env
+	elif env_name == 'InvManagement-v1':
+		from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env

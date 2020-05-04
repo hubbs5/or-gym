@@ -47,9 +47,9 @@ def test_env(env, n_episodes, print_output=True):
 			if done:
 				total_steps.append(step_count)
 				steps.append(step_count)
-				if ep % 100 == 0 and print_output:
+				if (ep + 1) % 100 == 0 and print_output:
 					print("Ep {}\t\tRewards={:.1f}\tMean Steps={:.1f}\t".format(
-						ep, rewards, np.mean(step_count)))
+						ep + 1, rewards, np.mean(step_count)))
 					step_count = []
 
 	t1 = time.time()

@@ -67,7 +67,7 @@ class NewsVendorMasterEnv(gym.Env):
         user_D = [list] user specified demand for each time period in simulation
         '''
         #set default (arbitrary) values when creating environment (if no args or kwargs are given)
-        self.periods = 90
+        self.periods = 30
         self.I0 = [100,100,200]
         self.p = 2
         self.r = [1.5,1.0,0.75,0.5]
@@ -156,9 +156,9 @@ class NewsVendorMasterEnv(gym.Env):
         
         #define spaces
         #action space (reorder quantities for each stage; list)
-        self.action_space = gym.spaces.Box(low=0, high=np.max(self.supply_capacity), shape = (m-1,)) #an action is defined for every stage (except last one)
+        self.action_space = gym.spaces.Box(low=np.zeros(m-1), high=self.supply_capacity) #an action is defined for every stage (except last one)
         #observation space (Inventory position at each echelon, which is any integer value)
-        self.observation_space = gym.spaces.Box(low=-np.Inf, high=np.Inf, shape = (m-1,))#, dtype=np.int32)
+        self.observation_space = gym.spaces.Box(low=-np.ones(m-1)*np.Inf, high=self.supply_capacity*self.num_periods)#, dtype=np.int32)
         
     def seed(self,seed=None):
         '''
