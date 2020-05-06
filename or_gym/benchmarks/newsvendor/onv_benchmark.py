@@ -22,6 +22,7 @@ def parse_arguments():
 def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
     env.reset() #reset env
+    env.seed(env.seed_int)
     
     #initialize
     actions, rewards, basestock = [], [], []
@@ -67,6 +68,7 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
 def online_optimize_nv_dfo(env):
     # raise NotImplementedError('ONV (min) optimization not yet implemented.')
     env.reset() #reset env
+    env.seed(env.seed_int)
     
     #initialize
     actions, rewards, basestock = [], [], []

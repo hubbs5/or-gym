@@ -313,13 +313,8 @@ class InvManagementMasterEnv(gym.Env):
         # update stae
         self._update_state()
         
-        # calculate reward (weighted cumulative profit)
-        if self.dist < 5:
-            prob = self.demand_dist.pmf(self.D[:n+1],**self.dist_param)
-        else:
-            prob = np.ones(n+1)
-            
-        reward = 1/self.period*np.sum(prob*self.P[:n+1]) # weighted and normalized cumulative profit at current period
+        # set reward (profit from current timestep)
+        reward = P 
         
         # determine if simulation should terminate
         if self.period >= self.num_periods:
