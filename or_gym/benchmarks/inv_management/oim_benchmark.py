@@ -1,6 +1,6 @@
 #!usr/bin/env python
 
-from or_gym.algos.inventory_management.math_prog import *
+from or_gym.algos.inv_management.math_prog import *
 from or_gym.algos.math_prog_utils import *
 import gym
 import or_gym
