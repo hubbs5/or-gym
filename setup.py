@@ -22,7 +22,7 @@ setup(name='or-gym',
 		# 'torchvision>=0.5.0',
 		# 'tensorflow>=2.0',
 		'pyomo>=5.5',
-		'ray>=0.9',
+		#'ray>=0.9',
 		'pandas>=1.0'],
 	zip_safe=False
 )

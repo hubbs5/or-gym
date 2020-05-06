@@ -67,7 +67,7 @@ class InvManagementMasterEnv(gym.Env):
         user_D = [list] user specified demand for each time period in simulation
         '''
         # set default (arbitrary) values when creating environment (if no args or kwargs are given)
-        self.num_periods = 30
+        self.periods = 30
         self.I0 = [100, 100, 200]
         self.p = 2
         self.r = [1.5, 1.0, 0.75, 0.5]
@@ -80,7 +80,7 @@ class InvManagementMasterEnv(gym.Env):
         self.dist_param = {'mu': 20}
         self.alpha = 0.97
         self.seed_int = 0
-        self.user_D = np.zeros(self.num_periods)
+        self.user_D = np.zeros(self.periods)
         
         # add environment configuration dictionary and keyword arguments
         for key, value in kwargs.items():
@@ -95,7 +95,7 @@ class InvManagementMasterEnv(gym.Env):
             self.init_inv = np.array(list(self.I0))
         except:
             self.init_inv = np.array([self.I0])
-        # self.num_periods = self.periods
+        self.num_periods = self.periods
         self.unit_price = np.append(self.p,self.r[:-1]) # cost to stage 1 is price to stage 2
         self.unit_cost = np.array(self.r)
         self.demand_cost = np.array(self.k)
