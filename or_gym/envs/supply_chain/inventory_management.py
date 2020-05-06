@@ -83,11 +83,6 @@ class InvManagementMasterEnv(gym.Env):
         self.user_D = np.zeros(self.periods)
         
         # add environment configuration dictionary and keyword arguments
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
-        for i, value in enumerate(args):
-            setattr(self, keys[i], value)
         assign_env_config(self, kwargs)
         
         # input parameters
@@ -159,6 +154,8 @@ class InvManagementMasterEnv(gym.Env):
         
         # action space (reorder quantities for each stage; list)
         # An action is defined for every stage (except last one)
+        # self.action_space = gym.spaces.Tuple(tuple(
+            # [gym.spaces.Box(0, i, shape=(1,)) for i in self.supply_capacity]))
         self.action_space = gym.spaces.Box(
             low=np.zeros(m-1), high=self.supply_capacity)
         # observation space (Inventory position at each echelon, which is any integer value)
@@ -230,6 +227,11 @@ class InvManagementMasterEnv(gym.Env):
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
         '''
+        if type(action) != type(np.array([])):
+            R = np.array(action).flatten().astype(int)
+        else:
+            R = action.astype(int)
+
         # get inventory at hand and pipeline inventory at beginning of the period
         n = self.period
         L = self.lead_time
@@ -244,7 +246,6 @@ class InvManagementMasterEnv(gym.Env):
         Im1 = np.append(I[1:], np.Inf) 
         
         # place replenishment order
-        R = action.astype(int)
         R[R<0] = 0 # force non-negativity
         if n>=1: # add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
