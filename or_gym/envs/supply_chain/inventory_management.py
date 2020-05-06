@@ -150,6 +150,10 @@ class InvManagementMasterEnv(gym.Env):
         # select distribution
         self.demand_dist = distributions[self.dist]  
         
+        # set random generation seed (unless using user demands)
+        if self.dist < 5:
+            self.seed(self.seed_int)
+
         # intialize
         self.reset()
         
@@ -200,11 +204,7 @@ class InvManagementMasterEnv(gym.Env):
         # initializetion
         self.period = 0 # initialize time
         self.I[0,:]=np.array(I0) # initial inventory
-        self.T[0,:]=np.zeros(m-1) # initial pipeline inventory
-        
-        # set random generation seed (unless using user demands)
-        if self.dist < 5:
-            self.seed(self.seed_int) 
+        self.T[0,:]=np.zeros(m-1) # initial pipeline inventory 
         
         # set state
         self._update_state()
@@ -248,7 +248,7 @@ class InvManagementMasterEnv(gym.Env):
         R[R<0] = 0 # force non-negativity
         if n>=1: # add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
-        Rcopy = R # copy oritignal replenishment quantity
+        Rcopy = R.copy() # copy original replenishment quantity
         R[R>=c] = c[R>=c] # enforce capacity constraint
         R[R>=Im1] = Im1[R>=Im1] # enforce available inventory constraint
         self.R[n,:] = R # store R[n]
@@ -277,7 +277,7 @@ class InvManagementMasterEnv(gym.Env):
         S = np.append(S0,R) # at each stage
         self.S[n,:] = S # store S[n]
         
-        # update inventory at hand and pipeline inventory
+        # update inventory on hand and pipeline inventory
         I = I - S[:-1] # updated inventory at all stages (exclude last stage)
         T = T - RnL + R # updated pipeline inventory at all stages (exclude last one)
         self.I[n+1,:] = I # store inventory available at start of period n + 1 (exclude last stage)
@@ -289,7 +289,7 @@ class InvManagementMasterEnv(gym.Env):
         # backlog and lost sales
         if self.backlog:
             B = U
-            LS = np.zeros(m) 
+            LS = np.zeros(m)
         else:
             LS = U # lost sales
             B = np.zeros(m)
