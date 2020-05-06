@@ -17,6 +17,7 @@ def parse_arguments():
 def optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     #run optimization
     env.reset()
+    env.seed(env.seed_int)
     model = build_nv_mip_model(env)
     model, results = solve_math_program(model, solver = solver, solver_kwargs = solver_kwargs,
                                         warmstart=warmstart, warmstart_kwargs=warmstart_kwargs)
@@ -24,6 +25,7 @@ def optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmsta
     
     #reset env to run simulation with base stock levels found
     env.reset() 
+    env.seed(env.seed_int)
     #run simulation
     for t in range(env.num_periods):
         #take a step in the simulation using base stock policy
@@ -33,10 +35,12 @@ def optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmsta
 def optimize_nv_dfo(env):
     #run optimization
     env.reset()
+    env.seed(env.seed_int)
     results = solve_dfo_program(env, fun = nv_dfo_model, local_search = True)
     
     #reset env to run simulation with base stock levels found
     env.reset() 
+    env.seed(env.seed_int)
     #run simulation
     for t in range(env.num_periods):
         #take a step in the simulation using base stock policy
@@ -46,6 +50,7 @@ def optimize_nv_dfo(env):
 def optimize_nv_pi_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     #run optimization
     env.reset()
+    env.seed(env.seed_int)
     model = build_nv_pi_mip_model(env)
     model, results = solve_math_program(model, solver = solver, solver_kwargs = solver_kwargs,
                                         warmstart=warmstart, warmstart_kwargs=warmstart_kwargs)
@@ -55,6 +60,7 @@ def optimize_nv_pi_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warm
     
     #reset env to run simulation with base stock levels found
     env.reset() 
+    env.seed(env.seed_int)
     #run simulation
     for t in range(env.num_periods):
         #take a step in the simulation using base stock policy
