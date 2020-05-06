@@ -1,6 +1,6 @@
 #!usr/bin/env python
 
-from or_gym.algos.newsvendor.math_prog import *
+from or_gym.algos.inventory_management.math_prog import *
 from or_gym.algos.math_prog_utils import *
 import gym
 import or_gym
@@ -19,7 +19,7 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
+def online_optimize_im_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,warmstart_kwargs={}):
     # raise NotImplementedError('ONV (MIP) optimization not yet implemented.')
     env.reset() #reset env
     env.seed(env.seed_int)
@@ -39,7 +39,7 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
         #print period
         print("*******************************************\nPeriod: {} \n".format(env.period)) 
         #build model
-        model = build_nv_mip_model(env,online=True) 
+        model = build_im_mip_model(env,online=True) 
         try:
             #solve model
             if warmstart & (len(basestock) > 0):
@@ -65,7 +65,7 @@ def online_optimize_nv_mip(env,solver='gurobi',solver_kwargs={},warmstart=False,
 
     return actions, rewards, np.array(basestock)
     
-def online_optimize_nv_dfo(env):
+def online_optimize_im_dfo(env):
     # raise NotImplementedError('ONV (min) optimization not yet implemented.')
     env.reset() #reset env
     env.seed(env.seed_int)
@@ -85,7 +85,7 @@ def online_optimize_nv_dfo(env):
         #print period
         print("*******************************************\nPeriod: {} \n".format(env.period)) 
         #run DFO
-        results = solve_dfo_program(env, fun = nv_dfo_model, online=True, local_search = True)
+        results = solve_dfo_program(env, fun = im_dfo_model, online=True, local_search = True)
         #Extract base stock level
         if results.success:
             zopt = results.zopt
@@ -100,35 +100,4 @@ def online_optimize_nv_dfo(env):
         basestock.append(list(zopt))
         
     return actions, rewards, np.array(basestock)
-
-# def optimize_onv(env, print_results=False):
-    # model = build_onv_ip_model(env)
-    # model, results = solve_math_program(model, print_results=print_results)
-
-    # return model, results
-
-# if __name__ == '__main__':
-    #parser = parse_arguments()
-    #args = parser(sys.argv)
-    # env = gym.make('Knapsack-v2')
-
-    #Keep items constant across all applications
-    # N_SCENARIOS = 1000
-    # item_sequence = np.random.choice(env.item_numbers, 
-        # size=(N_SCENARIOS, env.step_limit), p=env.item_probs)
-    # avg_opt_rewards = 0
-    # for n in range(N_SCENARIOS):
-        # env.reset()
-        # model, results = optimize_onv(env, item_sequence[n])
-        # avg_opt_rewards += (model.obj.expr() - avg_opt_rewards) / (n + 1)
-
-    # print("Average Optimal Reward\t\t=\t{}".format(avg_opt_rewards))
-
-    # avg_heur_rewards = 0
-    # for n in range(N_SCENARIOS):
-        # env.reset()
-        # actions, items, rewards = okp_heuristic(env, item_sequence[n])
-        # avg_heur_rewards += (sum(rewards) - avg_heur_rewards) / (n + 1)
-    # print("Average Heuristic Reward\t=\t{:.2f}".format(avg_heur_rewards))
     
-    #print("Average RL Reward\t\t=\t{}".format())
