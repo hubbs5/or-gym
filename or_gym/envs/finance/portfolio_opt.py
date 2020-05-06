@@ -58,10 +58,9 @@ class PortfolioOptEnv(gym.Env):
         self.sell_cost = np.array([0.04, 0.02, 0.03])
         self.step_limit = 10
         assign_env_config(self, kwargs)
-        # self.asset_price_means = np.random.normal(1, 0.25, 
-            # (self.num_assets, self.step_limit))
-        self.asset_price_means = (np.random.randint(10, 50, self.num_assets) \
-            * np.ones((self.step_limit, self.num_assets))).T
+        self.asset_price_means = asset_price_means.T
+        # self.asset_price_means = (np.random.randint(10, 50, self.num_assets) \
+        #     * np.ones((self.step_limit, self.num_assets))).T
         self.asset_price_var = np.ones(self.asset_price_means.shape)
         
         # Cash on hand, asset prices, num of shares, portfolio value
@@ -101,7 +100,6 @@ class PortfolioOptEnv(gym.Env):
         return asset_prices
     
     def step(self, action):
-        assert self.action_space.contains(action)
         # Round actions to integer values
         action = np.round(action)
         asset_prices = self.asset_prices[:, self.step_count].copy()
@@ -232,7 +230,7 @@ class PortfolioOptEnv(gym.Env):
 #num_assets = 3
 #investment_horizon = 10 
 #asset_price_means = np.random.rand(investment_horizon + 1, num_assets) + 0.5
-asset_prices_means = np.array([
+asset_price_means = np.array([
     [0.729104  , 0.70066482, 1.33728305],
     [0.71028955, 1.15127388, 0.65365377],
     [0.83731888, 0.78674174, 1.14186928],
