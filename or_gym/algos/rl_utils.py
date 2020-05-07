@@ -51,6 +51,14 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv as env
 	elif env_name == 'InvManagement-v1':
 		from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv as env
+	elif env_name == 'SCSched-v0':
+		from or_gym.envs.supply_chain.scheduling import DiscreteSchedEnv as env
+	elif env_name == 'SCSched-v1':
+		from or_gym.envs.supply_chain.scheduling import MaskedDiscreteSchedEnv as env
+	elif env_name == 'SCSched-v2':
+		from or_gym.envs.supply_chain.scheduling import ContSchedEnv as env
+	elif env_name == 'SCSched-v3':
+		from or_gym.envs.supply_chain.scheduling import MaskedContSchedEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env

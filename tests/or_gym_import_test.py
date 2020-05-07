@@ -25,7 +25,7 @@ def main(args):
     for env_name in env_list:
         print('\nTesting functionality for {}'.format(env_name))
         try:
-            env = gym.make(env_name)
+            env = or_gym.make(env_name)
             print('{} initialized successfully'.format(env_name))
             try:
                 action = env.action_space.sample()

@@ -11,13 +11,11 @@ class BaseSchedEnv(gym.Env):
         self.step_limit = 10
         self.transition_prob = [0.5, 0.5]
         self.sales_price = np.ones(self.num_products)
-        self.production_rate = [10, 10, 10]
+        self.production_rate = np.ones(self.num_products) * 10
         self.action_setting = 'discrete'
-        self.mask = False
         assign_env_config(self, kwargs)
         self.transition_matrix = self.generate_transition_matrix()
         self.obs_dim = self.num_products * 2 + 3
-                    
         # Reference to see which columns in state corresponds to different inputs
         self.state_indices = {
             'time': 0,
@@ -31,16 +29,20 @@ class BaseSchedEnv(gym.Env):
         }
         
         self.reset()
-        
-    def step(self, action):
-        done = False
-        t = self.current_step
-        self.inventory[self.last_action[0]] += self.planned_production
+
+    def _split_action(self, action):
         if self.action_setting == 'continuous':
             product, rate = np.argmax(action), np.max(action)
         else:
-            product = action
-            rate = self.production_rate[action]
+            product = int(action)
+            rate = self.production_rate[product]
+        return product, rate
+        
+    def step(self, action):
+        product, rate = self._split_action(action)
+        done = False
+        t = self.current_step
+        self.inventory[self.last_action[0]] += self.planned_production
         # To be carried forward to next step
         self.planned_production = self.transition_matrix[self.last_action[0], product] * rate
         
@@ -114,7 +116,7 @@ class DiscreteSchedEnv(BaseSchedEnv):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.action_setting = 'discrete':
+        self.action_setting = 'discrete'
         self.action_space = spaces.Discrete(self.num_products)
         self.observation_space = spaces.Box(0, 100, shape=(self.obs_dim,))
 
@@ -135,7 +137,7 @@ class MaskedDiscreteSchedEnv(BaseSchedEnv):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.action_setting = 'discrete':
+        self.action_setting = 'discrete'
         self.action_space = spaces.Discrete(self.num_products)
         self.observation_space = spaces.Dict({
             'action_mask': spaces.Box(0, 1, shape=(self.num_products,)),
@@ -160,7 +162,7 @@ class ContSchedEnv(BaseSchedEnv):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.action_setting = 'continuous':
+        self.action_setting = 'continuous'
         self.action_space = spaces.Box(
             low=np.zeros(self.num_products), 
             high=self.production_rate)
@@ -177,7 +179,7 @@ class MaskedContSchedEnv(BaseSchedEnv):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.action_setting = 'continuous':
+        self.action_setting = 'continuous'
         self.action_space = spaces.Box(
             low=np.zeros(self.num_products), 
             high=self.production_rate)
