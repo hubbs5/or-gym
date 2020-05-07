@@ -19,7 +19,7 @@ def parse_arguments():
 if __name__ == "__main__":
 	args = parse_arguments()
 	env_name = args.env
-	algo = args.algo
+	algo = args.algo.upper()
 	model_name = args.model_name
 	timestamp = datetime.strftime(datetime.today(), '%Y-%m-%d')
 	rl_config = rl_utils.check_config(env_name)

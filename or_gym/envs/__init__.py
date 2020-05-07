@@ -39,3 +39,19 @@ register(id='InvManagement-v1',
 register(id='PortfolioOpt-v0',
 	entry_point='or_gym.envs.finance.portfolio_opt:PortfolioOptEnv'
 )
+
+register(id='SCSched-v0',
+	entry_point='or_gym.envs.supply_chain.schedule:DiscreteSchedEnv'
+)
+
+register(id='SCSched-v1',
+	entry_point='or_gym.envs.supply_chain.schedule:MaskedDiscreteSchedEnv'
+)
+
+register(id='SCSched-v2',
+	entry_point='or_gym.envs.supply_chain.schedule:ContSchedEnv'
+)
+
+register(id='SCSched-v3',
+	entry_point='or_gym.envs.supply_chain.schedule:MaskedContSchedEnv'
+)

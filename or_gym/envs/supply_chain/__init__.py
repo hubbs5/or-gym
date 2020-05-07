@@ -1,2 +1,6 @@
 from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv
 from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv
+from or_gym.envs.supply_chain.scheduling import DiscreteSchedEnv
+from or_gym.envs.supply_chain.scheduling import MaskedDiscreteSchedEnv
+from or_gym.envs.supply_chain.scheduling import ContSchedEnv
+from or_gym.envs.supply_chain.scheduling import MaskedContSchedEnv

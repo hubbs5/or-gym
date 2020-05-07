@@ -73,15 +73,17 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			},
 		# "vf_clip_param": vf_clip_param,
 		# "vf_share_layers": tune.grid_search([True, False]),
-		"lr": tune.grid_search([1e-5, 1e-6]),
-		"entropy_coeff": tune.grid_search([1e-3]),
+		# "lr": tune.grid_search([1e-5, 1e-6]),
+		# "entropy_coeff": tune.grid_search([1e-3]),
+		"critic_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
+		"actor_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
 		# "lambda": tune.grid_search([0.95, 0.9]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
 			"custom_model": model_name,
 			"fcnet_activation": "elu",
-			"fcnet_hiddens": [128, 128, 128]
+			# "fcnet_hiddens": [128, 128, 128]
 			}
 	}
 	
