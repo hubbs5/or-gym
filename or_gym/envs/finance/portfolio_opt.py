@@ -35,9 +35,9 @@ class PortfolioOptEnv(gym.Env):
 
     Actions:
         Type: Box (3)
-        "asset 1 transaction amount" (idx 0): Buy/sell up to n amount of asset 1; 
-        "asset 2 transaction amount" (idx 1): Buy/sell up to n amount of asset 2; 
-        "asset 3 transaction amount" (idx 2): Buy/sell up to n amount of asset 3; 
+        "asset 1 transaction amount" (idx 0): x in [0,1]/[-1,0): Use x fraction of cash to buy/sell -x fraction of asset 1; 
+        "asset 2 transaction amount" (idx 1): x in [0,1]/[-1,0): Use x fraction of cash to buy/sell -x fraction of asset 2; 
+        "asset 3 transaction amount" (idx 2): x in [0,1]/[-1,0): Use x fraction of cash to buy/sell -x fraction of asset 3; 
 
     Reward:
         Change in total wealth from previous period or [-max(asset price of all assets) *  maximum transaction size]
@@ -54,6 +54,7 @@ class PortfolioOptEnv(gym.Env):
         self.num_assets = 3
         self.initial_cash = 100
         self.cash = copy(self.initial_cash)
+        #Transaction costs proportional to amount bought 
         self.buy_cost = np.array([0.045, 0.025, 0.035])
         self.sell_cost = np.array([0.04, 0.02, 0.03])
         self.step_limit = 10
@@ -71,8 +72,8 @@ class PortfolioOptEnv(gym.Env):
 #             "avail_actions": spaces.Box(0, 1, shape=(self.num_assets,)),
 #             "state": spaces.Box(-1000, 1000, shape=(self.obs_length,))
 #         })
-        self.observation_space = spaces.Box(0, 10000, shape=(self.obs_length,))
-        self.action_space = spaces.Box(-1000, 1000, shape=(self.num_assets,))
+        self.observation_space = spaces.Box(-1000, 1000, shape=(self.obs_length,))
+        self.action_space = spaces.Box(-1, 1, shape=(self.num_assets,))
         
         self.reset()
         
@@ -101,29 +102,32 @@ class PortfolioOptEnv(gym.Env):
         return asset_prices
     
     def step(self, action):
-        assert self.action_space.contains(action)
-        # Round actions to integer values
-        action = np.round(action)
+    	assert self.action_space.contains(action)
+    	#If buying assets requries more than 95% of cash, then normalize as proportions to be =95%
+    	max_cash_frac_spend = 0.95
+    	if sum(action[action > 0]) > 0.95:
+    		SUM = sum(action[action > 0])
+    		for idx, value in enumerate(action): 
+    			if value > 0: 
+    				action[idx] = value / SUM * max_cash_frac_spend
+
+        
         asset_prices = self.asset_prices[:, self.step_count].copy()
+        cash_available = self.cash.copy()
         for idx, a in enumerate(action):
             if a == 0:
                 continue
-            # Sell a shares of asset
+            # Sell shares of asset (as a fraction "a" of current position)
             elif a < 0:
                 a = np.abs(a)
-                if a > self.holdings[idx]:
-                    a = self.holdings[idx]
-                self.holdings[idx] -= a
-                self.cash += asset_prices[idx] * a * (1 - self.sell_cost[idx])
-            # Buy a shares of asset
+                sell_amt = a * self.holdings[idx]
+                self.holdings[idx] -= sell_amt
+                self.cash += asset_prices[idx] * sell_amt * (1 - self.sell_cost[idx])
+            # Buy shares of asset (as a fraction "a" of current cash at end of previous period)
             elif a > 0:
-                purchase_cost = asset_prices[idx] * a * (1 + self.buy_cost[idx])
-                if self.cash < purchase_cost:
-                    a = np.floor(self.cash / (
-                        asset_prices[idx] * (1 + self.buy_cost[idx])))
-                    purchase_cost = asset_prices[idx] * a * (1 + self.buy_cost[idx])
-                self.holdings[idx] += a
-                self.cash -= purchase_cost
+                buy_amt = a * cash_available / asset_prices[idx] 
+                self.holdings[idx] += buy_amt 
+                self.cash -= asset_prices[idx] * buy_amt * (1 + self.buy_cost[idx])
                 
         # Return total portfolio value as reward
         reward = np.dot(asset_prices, self.holdings) + self.cash
