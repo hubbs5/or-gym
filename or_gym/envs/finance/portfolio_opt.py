@@ -102,18 +102,18 @@ class PortfolioOptEnv(gym.Env):
         return asset_prices
     
     def step(self, action):
-    	assert self.action_space.contains(action)
-    	#If buying assets requries more than 95% of cash, then normalize as proportions to be =95%
-    	max_cash_frac_spend = 0.95
-    	if sum(action[action > 0]) > 0.95:
-    		SUM = sum(action[action > 0])
-    		for idx, value in enumerate(action): 
-    			if value > 0: 
-    				action[idx] = value / SUM * max_cash_frac_spend
+        # assert self.action_space.contains(action)
+        #If buying assets requries more than 95% of cash, then normalize as proportions to be =95%
+        max_cash_frac_spend = 0.95
+        if sum(action[action > 0]) > 0.95:
+            SUM = sum(action[action > 0])
+            for idx, value in enumerate(action): 
+                if value > 0: 
+                    action[idx] = value / SUM * max_cash_frac_spend
 
         
         asset_prices = self.asset_prices[:, self.step_count].copy()
-        cash_available = self.cash.copy()
+        cash_available = copy(self.cash)
         for idx, a in enumerate(action):
             if a == 0:
                 continue
@@ -173,13 +173,13 @@ class PortfolioOptEnv(gym.Env):
     #     self.state = self.reset()
 
     # def reset(self): 
-    # 	self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
+    #     self.asset_quantities = np.array([self.initial_cash, self.initial_assets[0], self.initial_assets[1], \
     #         self.initial_assets[2]])
-    # 	self.total_wealth = self.initial_cash*self.cash_price
-    # 	self.step_counter = 0 
-    # 	self._update_state()
+    #     self.total_wealth = self.initial_cash*self.cash_price
+    #     self.step_counter = 0 
+    #     self._update_state()
 
-    # 	return self.state
+    #     return self.state
 
     # def _get_obs(self):
     #     return self.state
