@@ -77,7 +77,7 @@ class InvManagementMasterEnv(gym.Env):
         self.L = [3, 5, 10]
         self.backlog = True
         self.dist = 1
-        self.dist_param = {'mu': 20}
+        self.dist_param = {'mu': 2}
         self.alpha = 0.97
         self.seed_int = 0
         self.user_D = np.zeros(self.periods)
@@ -157,11 +157,11 @@ class InvManagementMasterEnv(gym.Env):
         # self.action_space = gym.spaces.Tuple(tuple(
             # [gym.spaces.Box(0, i, shape=(1,)) for i in self.supply_capacity]))
         self.action_space = gym.spaces.Box(
-            low=np.zeros(m-1), high=self.supply_capacity)
+            low=np.zeros(m-1), high=self.supply_capacity, dtype=np.int16)
         # observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = gym.spaces.Box(
-            low=-np.ones(m-1)*np.Inf, 
-            high=self.supply_capacity*self.num_periods)
+            low=-np.ones(m-1)*self.supply_capacity*self.num_periods, 
+            high=self.supply_capacity*self.num_periods, dtype=np.int32)
 
     def seed(self,seed=None):
         '''

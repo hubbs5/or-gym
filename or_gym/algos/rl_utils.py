@@ -63,6 +63,21 @@ def create_env(config, *args, **kwargs):
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env
 
+def set_config(default_config, config_dict=None):
+    config = deepcopy(default_config)
+    if type(config_dict) == dict:
+        for k in config.keys():
+            if k in config_dict.keys():
+                if type(config[k]) == dict:
+                    for m in config[k].keys():
+                        if m in config_dict.keys():
+                            config[k][m] = config_dict[m]
+                else:
+                    config[k] = config_dict[k]
+            else:
+                continue
+                
+    return config
 
 def check_config(env_name, model_name=None, *args, **kwargs):
 	if model_name is None:
@@ -81,17 +96,17 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 			},
 		# "vf_clip_param": vf_clip_param,
 		# "vf_share_layers": tune.grid_search([True, False]),
-		# "lr": tune.grid_search([1e-5, 1e-6]),
-		# "entropy_coeff": tune.grid_search([1e-3]),
-		"critic_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
-		"actor_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
+		"lr": tune.grid_search([1e-4, 1e-5, 1e-6]),
+		# "entropy_coeff": tune.grid_search([1e-3, 1e-4]),
+		# "critic_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
+		# "actor_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
 		# "lambda": tune.grid_search([0.95, 0.9]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
 		"model": {
-			"custom_model": model_name,
+			# "custom_model": model_name,
 			"fcnet_activation": "elu",
-			# "fcnet_hiddens": [128, 128, 128]
+			"fcnet_hiddens": [128, 128, 128]
 			}
 	}
 	
@@ -152,16 +167,15 @@ def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
 	ray.init()
 	if "VMPacking" in rl_config["env"]:
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, VMActionMaskModel)
-	else:
-		ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
+	# else:
+	# 	ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
 	results = tune.run(
 		algo,
 		checkpoint_at_end=True,
 		queue_trials=True,
 		stop={
-			# "timesteps_total": 1000000,
-			"training_iteration": 1000
+			"training_iteration": 500
 		},
 		config=rl_config,
 		reuse_actors=True
