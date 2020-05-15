@@ -9,6 +9,7 @@ import itertools
 import numpy as np
 from scipy.stats import *
 from or_gym.utils.env_config import *
+from collections import deque
 
 class InvManagementMasterEnv(gym.Env):
     '''
@@ -77,10 +78,11 @@ class InvManagementMasterEnv(gym.Env):
         self.L = [3, 5, 10]
         self.backlog = True
         self.dist = 1
-        self.dist_param = {'mu': 2}
+        self.dist_param = {'mu': 20}
         self.alpha = 0.97
         self.seed_int = 0
         self.user_D = np.zeros(self.periods)
+        self._max_rewards = 2000
         
         # add environment configuration dictionary and keyword arguments
         assign_env_config(self, kwargs)
@@ -107,6 +109,7 @@ class InvManagementMasterEnv(gym.Env):
         self.user_D = np.array(list(self.user_D))
         self.num_stages = len(self.init_inv) + 1
         m = self.num_stages
+        lt_max = self.lead_time.max()
         
         #  parameters
         #  dictionary with options for demand distributions
@@ -156,12 +159,17 @@ class InvManagementMasterEnv(gym.Env):
         # An action is defined for every stage (except last one)
         # self.action_space = gym.spaces.Tuple(tuple(
             # [gym.spaces.Box(0, i, shape=(1,)) for i in self.supply_capacity]))
+        pipeline_length = (m-1)*(lt_max+1)
         self.action_space = gym.spaces.Box(
             low=np.zeros(m-1), high=self.supply_capacity, dtype=np.int16)
         # observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = gym.spaces.Box(
-            low=-np.ones(m-1)*self.supply_capacity*self.num_periods, 
-            high=self.supply_capacity*self.num_periods, dtype=np.int32)
+            low=-np.ones(pipeline_length)*self.supply_capacity.max()*self.num_periods*10,
+            high=np.ones(pipeline_length)*self.supply_capacity.max()*self.num_periods, dtype=np.int32)
+
+        # self.observation_space = gym.spaces.Box(
+        #     low=-np.ones(m-1)*self.supply_capacity.max()*self.num_periods*10, 
+        #     high=self.supply_capacity*self.num_periods, dtype=np.int32)
 
     def seed(self,seed=None):
         '''
@@ -202,13 +210,33 @@ class InvManagementMasterEnv(gym.Env):
         self.period = 0 # initialize time
         self.I[0,:]=np.array(I0) # initial inventory
         self.T[0,:]=np.zeros(m-1) # initial pipeline inventory 
-        
+        self.action_log = np.zeros((periods, m-1))
         # set state
         self._update_state()
         
         return self.state
-    
+
     def _update_state(self):
+        m = self.num_stages - 1
+        t = self.period
+        lt_max = self.lead_time.max()
+        state = np.zeros(m*(lt_max + 1))
+        # state = np.zeros(m)
+        if t == 0:
+            state[:m] = self.I0
+        else:
+            state[:m] = self.I[t]
+
+        if t == 0:
+            pass
+        elif t >= lt_max:
+            state[-m*lt_max:] += self.action_log[t-lt_max:t].flatten()
+        else:
+            state[-m*(t):] += self.action_log[:t].flatten()
+
+        self.state = state.copy()
+    
+    def _update_base_stock_policy_state(self):
         '''
         Get current state of the system: Inventory position at each echelon
         Inventory at hand + Pipeline inventory - backlog up to the current stage 
@@ -227,10 +255,7 @@ class InvManagementMasterEnv(gym.Env):
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
         '''
-        if type(action) != type(np.array([])):
-            R = np.array(action).flatten().astype(int)
-        else:
-            R = action.astype(int)
+        R = np.maximum(action, 0).astype(int)
 
         # get inventory at hand and pipeline inventory at beginning of the period
         n = self.period
@@ -241,7 +266,7 @@ class InvManagementMasterEnv(gym.Env):
         
         # get production capacities
         c = self.supply_capacity # capacity
-        
+        self.action_log[n] = R.copy()
         # available inventory at the m+1 stage (note: last stage has unlimited supply)
         Im1 = np.append(I[1:], np.Inf) 
         
@@ -306,6 +331,7 @@ class InvManagementMasterEnv(gym.Env):
         II = np.append(I,0) # augment inventory so that last has no onsite inventory
         RR = np.append(R,S[-1]) # augment replenishment orders to include production cost at last stage
         P = a**n*np.sum(p*S - (r*RR + k*U + h*II)) # discounted profit in period n
+        # P = a**n*np.sum(p*S - (r*RR + k*U + h*I))
         self.P[n] = P # store P
         
         # update period
@@ -339,7 +365,7 @@ class InvManagementMasterEnv(gym.Env):
         n = self.period
         c = self.supply_capacity
         m = self.num_stages
-        IP = self.state # extract inventory position (current state)
+        IP = self._update_base_stock_policy_state() # extract inventory position (current state)
         
         try:
             dimz = len(z)
