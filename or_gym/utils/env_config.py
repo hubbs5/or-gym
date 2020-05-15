@@ -1,4 +1,5 @@
 import numpy as np
+
 def assign_env_config(self, kwargs):
     for key, value in kwargs.items():
         setattr(self, key, value)
