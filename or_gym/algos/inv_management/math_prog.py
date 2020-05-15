@@ -5,7 +5,7 @@ import or_gym
 import pyomo.environ as pe
 import numpy as np
 
-def build_nv_mip_model(env,bigm=10000,online=False):
+def build_im_mip_model(env,bigm=10000,online=False):
     '''
     Optimize base stock level (z variable) on a simulated sample path using an MILP. The existing
     sample path (historical demands) is used when running online.
@@ -17,13 +17,13 @@ def build_nv_mip_model(env,bigm=10000,online=False):
         -All parameters to the simulation environment must have been defined 
             previously when making the environment.
     
-    env = [NewsVendorEnv] current simulation environment. 
+    env = [InvManagementEnv] current simulation environment. 
     bigm = [Float] big-M value for BM reformulation
     online = [Boolean] should the optimization be run online?
     ''' 
     
-    # assert env.spec.id == 'NewsVendor-v1', \
-        # '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'InvManagement-v0', \
+        # '{} received. Heuristic designed for InvManagement-v0.'.format(env.spec.id)
     #do not reset environment
     
     #big m values
@@ -220,18 +220,18 @@ def build_nv_mip_model(env,bigm=10000,online=False):
     
     return mip
 
-def nv_dfo_model(x,env,online):
+def im_dfo_model(x,env,online):
     '''
     Compute negative of the expected profit for a sample path.
     This function is used in an unconstrained optimization algorithm (scipy.optimize.minimize).
     
     x = [integer list; dimension |Stages| - 1] total inventory levels at each node.
-    env = [NewsVendorEnv] current simulation environment.
+    env = [InvManagementEnv] current simulation environment.
     online = [Boolean] should the optimization be run online?
     '''
     
-    # assert env.spec.id == 'NewsVendor-v1', \
-        # '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'InvManagement-v0', \
+        # '{} received. Heuristic designed for InvManagement-v0.'.format(env.spec.id)
     
     x = np.array(x) #inventory level at each node
     z = np.cumsum(x) #base stock levels
@@ -269,9 +269,9 @@ def nv_dfo_model(x,env,online):
         
     #build simulation environment (this is just clean copy if in offline mode)
     if env.backlog:
-        sim = or_gym.make("NewsVendor-v1",env_config=sim_kwargs)
+        sim = or_gym.make("InvManagement-v0",env_config=sim_kwargs)
     else:
-        sim = or_gym.make("NewsVendor-v2",env_config=sim_kwargs)
+        sim = or_gym.make("InvManagement-v1",env_config=sim_kwargs)
     
     #run simulation
     for t in range(sim.num_periods):
@@ -284,9 +284,9 @@ def nv_dfo_model(x,env,online):
     #expected profit
     return -1/sim.num_periods*np.sum(prob*sim.P)
     
-def build_nv_pi_mip_model(env):#,bigm=10000):
+def build_im_pi_mip_model(env):#,bigm=10000):
     '''
-    Build a perfect information MILP model for the newsvendor problem. No policy is used for the reorder.
+    Build a perfect information MILP model for the InvManagement problem. No policy is used for the reorder.
     This will give you the optimal reorder quantities if you knew the demand before hand.
     
     Notes: 
@@ -295,12 +295,12 @@ def build_nv_pi_mip_model(env):#,bigm=10000):
         -All parameters to the simulation environment must have been defined 
             previously when making the environment.
     
-    env = [NewsVendorEnv] current simulation environment. 
+    env = [InvManagementEnv] current simulation environment. 
     # bigm = [Float] big-M value for BM reformulation
     ''' 
     
-    # assert env.spec.id == 'NewsVendor-v1', \
-        # '{} received. Heuristic designed for NewsVendor-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'InvManagement-v0', \
+        # '{} received. Heuristic designed for InvManagement-v0.'.format(env.spec.id)
     #do not reset environment
     
     #big m values

@@ -17,7 +17,7 @@ def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=Tru
     print_results = [Boolean] should the results of the optimization be printed?
     warmstart = [Boolean] should math program be warm started?
     warmstart_kwargs:
-        'mapping_env' = [NewsVendor Environment] that has been run until completion
+        'mapping_env' = [InvManagement Environment] that has been run until completion
             NOTE: the mapping environment must have the same demand profile as the MIP model
         'mapping_z' = [list] base_stock used in mapping_env
         'online' = [Boolean] is the optimization being done online?
@@ -27,7 +27,7 @@ def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=Tru
     if len(solver_kwargs) > 0: # set solver keyword args
         solver.options = solver_kwargs
     if warmstart: #run warmstart
-        model = warm_start_nv(model, **warmstart_kwargs)
+        model = warm_start_im(model, **warmstart_kwargs)
         results = solver.solve(model, tee=print_results, warmstart=warmstart)
         return model, results
     else: #run regular solve
@@ -85,15 +85,15 @@ def extract_vm_packing_plan(model):
 
     return plan[-1]
 
-def warm_start_nv(model, mapping_env, mapping_z, online=False, perfect_information=False):
+def warm_start_im(model, mapping_env, mapping_z, online=False, perfect_information=False):
     '''
-    For NewsVendor
+    For InvManagement
     
     Uses finalized simulation with the base stock policy to provide a warm start to
     the base stock MIP.
     
     model = [Pyomo model]
-    mapping_env = [NewsVendor Environment]
+    mapping_env = [InvManagement Environment]
         NOTE: the mapping environment must have the same demand profile as the MIP model
     mapping_z = [list] base_stock used in mapping_env
     online = [Boolean] is the optimization being done online?
@@ -128,9 +128,9 @@ def warm_start_nv(model, mapping_env, mapping_z, online=False, perfect_informati
         
     #create env
     if mapping_env.backlog:
-        env = or_gym.make("NewsVendor-v1",env_config=env_kwargs)
+        env = or_gym.make("InvManagement-v0",env_config=env_kwargs)
     else:
-        env = or_gym.make("NewsVendor-v2",env_config=env_kwargs)
+        env = or_gym.make("InvManagement-v1",env_config=env_kwargs)
         
     #run simulation    
     for t in range(env.num_periods):
@@ -220,7 +220,7 @@ def solve_dfo_program(env, fun, online = False, local_search = False, print_resu
     Powell's method is used since the objective function is not smooth.
     
     env_args = [list] arguments for simulation environment on which to perform SPA.
-    fun = [function] function over which to optimize (i.e. nv_min_model or onv_min_model)
+    fun = [function] function over which to optimize (i.e. im_min_model or oim_min_model)
     online = [Boolean] should the optimization be run in online mode?
     local_search = [Boolean] search neighborhood around NLP relaxation to get integer solution (by enumeration).
     print_results = [Boolean] should the results of the optimization be printed?

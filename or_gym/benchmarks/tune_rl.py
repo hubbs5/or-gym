@@ -10,6 +10,7 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('--env', type=str, default='Knapsack-v0')
     parser.add_argument('--model_name', type=str, default='or_gym_tune')
+    parser.add_argument('--algo', type=str, default='A3C')
     parser.add_argument('--print', type=bool, default=True,
         help='Print output.')
 
@@ -18,12 +19,13 @@ def parse_arguments():
 if __name__ == "__main__":
 	args = parse_arguments()
 	env_name = args.env
+	algo = args.algo.upper()
 	model_name = args.model_name
 	timestamp = datetime.strftime(datetime.today(), '%Y-%m-%d')
 	rl_config = rl_utils.check_config(env_name)
 	print('\n')
 	_ = [print(k, rl_config[k]) for k in rl_config.keys()]
-	results = rl_utils.tune_model(env_name, rl_config)
+	results = rl_utils.tune_model(env_name, rl_config, model_name=model_name, algo=algo)
 	if os.path.exists('results') == False:
 		os.mkdir('results')
 
