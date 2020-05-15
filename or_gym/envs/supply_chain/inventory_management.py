@@ -83,11 +83,6 @@ class InvManagementMasterEnv(gym.Env):
         self.user_D = np.zeros(self.periods)
         
         # add environment configuration dictionary and keyword arguments
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        keys = ['periods','I0','p','r','k','h','c','L','backlog','dist','dist_param','alpha','seed_int','user_D']
-        for i, value in enumerate(args):
-            setattr(self, keys[i], value)
         assign_env_config(self, kwargs)
         
         # input parameters
