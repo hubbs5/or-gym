@@ -45,20 +45,20 @@ class KnapsackEnv(gym.Env):
     
     def __init__(self, *args, **kwargs):
         # Generate data with consistent random seed to ensure reproducibility
-        values = np.random.randint(30, size=200)
-        weights = np.random.randint(1, 20, size=200)
-        limits = np.random.randint(1, 10, size=200)
-        self.item_weights = weights
-        self.item_values = values
-        self.item_numbers = np.arange(len(self.item_weights))
+        self.N = 200
+        self.item_numbers = np.arange(self.N)
         self.max_weight = 200
         self.current_weight = 0
-        self._max_reward = 4800
+        self._max_reward = 6000
         self.seed = 0
         # Add env_config, if any
         assign_env_config(self, kwargs)
+        values = np.random.randint(30, size=self.N)
+        weights = np.random.randint(1, 20, size=self.N)
+        limits = np.random.randint(1, 10, size=self.N)
+        self.item_weights = weights
+        self.item_values = values
         
-        self.N = len(self.item_weights)
         self.action_space = spaces.Discrete(self.N)
         self.observation_space = spaces.Box(
             0, self.max_weight, shape=(2, self.N + 1), 
@@ -153,9 +153,16 @@ class BoundedKnapsackEnv(KnapsackEnv):
         self.item_limits_init = np.random.randint(1, 10, size=200)
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
-        self.observation_space = spaces.Box(
+        obs_space = spaces.Box(
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
-        self._max_reward = 500 # Used for VF clipping
+        self.observation_space = spaces.Dict({
+            "action_mask": spaces.Box(0, 1, shape=(len(self.item_limits),)),
+            "avail_actions": spaces.Box(0, 1, shape=(len(self.item_limits),)),
+            "state": obs_space
+            })
+        # self.observation_space = spaces.Box(
+        #     0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
+        self._max_reward = 1800 # Used for VF clipping
         
     def step(self, item):
         # Check item limit
@@ -183,18 +190,26 @@ class BoundedKnapsackEnv(KnapsackEnv):
     def _update_state(self, item=None):
         if item is not None:
             self.item_limits[item] -= 1
-        self.state = np.vstack([
+        state_items = np.vstack([
             self.item_weights,
             self.item_values,
             self.item_limits
         ])
-        self.state = np.hstack([
-            self.state, 
+        state = np.hstack([
+            state_items, 
             np.array([[self.max_weight],
                       [self.current_weight], 
                       [0] # Serves as place holder
                 ])
         ])
+        mask = np.where(self.current_weight + self.item_weights > self.max_weight,
+            0, 1)
+        mask = np.where(self.item_limits > 0, mask, 0)
+        self.state = {
+            "action_mask": mask,
+            "avail_actions": np.ones(self.N),
+            "state": state
+        }
         
     def sample_action(self):
         return np.random.choice(
