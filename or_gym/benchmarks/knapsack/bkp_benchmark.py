@@ -12,6 +12,8 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('--print', type=bool, default=True,
         help='Print output.')
+    parser.add_argument('--iters', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=0)
 
     return parser.parse_args()
 
@@ -22,11 +24,16 @@ def optimize_bkp(env, print_results=False):
     return model, results
 
 if __name__ == '__main__':
-    parser = parse_arguments()
-    args = parser(sys.argv)
-    env = gym.make('Knapsack-v1')
+    args = parse_arguments()
+    env_config = {'seed': args.seed}
+    env = gym.make('Knapsack-v1', env_config=args.seed)
     model, results = optimize_bkp(env)
     print("Optimal reward\t\t=\t{}".format(model.obj.expr()))
-    actions, rewards = bkp_heuristic(env)
-    print("Heuristic reward\t=\t{}".format(sum(rewards)))
-    print("RL reward\t\t=\t{}".format())
+    
+    total_heur_rewards = []
+    for i in range(args.iters):
+        actions, rewards = bkp_heuristic(env)
+        total_heur_rewards.append(sum(rewards))
+    print("Heuristic reward\t=\t{}\tStd Dev\t=\t{:.1f}".format(np.mean(total_heur_rewards), 
+        np.std(total_heur_rewards)))
+    # print("RL reward\t\t=\t{}".format())
