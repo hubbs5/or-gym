@@ -50,11 +50,15 @@ class VMPackingEnv(gym.Env):
         self.mask = True
         assign_env_config(self, kwargs)
         self.action_space = spaces.Discrete(self.n_pms)
-        self.observation_space = spaces.Dict({
-            "action_mask": spaces.Box(0, 1, shape=(self.n_pms,)),
-            "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,)),
-            "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3))
-        })
+
+        if self.mask:
+            self.observation_space = spaces.Dict({
+                "action_mask": spaces.Box(0, 1, shape=(self.n_pms,)),
+                "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,)),
+                "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+            })
+        else:
+            self.observation_space = spaces.Box(0, 1, shape=(self.n_pms+1, 3))
         self.reset()
         
     def reset(self):
@@ -122,7 +126,7 @@ class VMPackingEnv(gym.Env):
         cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
         cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
         mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
-        return np.vstack([np.zeros(n), cpu_demand/100, mem_demand]).T
+        return np.vstack([np.arange(n)/n, cpu_demand/100, mem_demand]).T
 
 class TempVMPackingEnv(VMPackingEnv):
     '''
