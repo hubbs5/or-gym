@@ -99,7 +99,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 		# "entropy_coeff": 1e-4,
 		# "vf_clip_param": vf_clip_param,
 		"lr": tune.grid_search([1e-4, 1e-5, 1e-6, 1e-7]),
-		# "entropy_coeff": tune.grid_search([1e-2, 1e-3, 1e-4]),
+		"entropy_coeff": tune.grid_search([1e-2, 1e-3, 1e-4]),
 		# "critic_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
 		# "actor_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
 		# "lambda": tune.grid_search([0.95, 0.9]),
@@ -194,10 +194,10 @@ def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
 		model_name = 'or_gym_tune'
 	register_env(env_name)
 	ray.init()
-	# if "VMPacking" in rl_config["env"]:
-		# ray.rllib.models.ModelCatalog.register_custom_model(model_name, VMActionMaskModel)
-	# elif "Knapsack-v1" in rl_config["env"]:
-		# ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP1ActionMaskModel)
+	if "VMPacking" in rl_config["env"]:
+		ray.rllib.models.ModelCatalog.register_custom_model(model_name, VMActionMaskModel)
+	elif "Knapsack-v1" in rl_config["env"]:
+		ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP1ActionMaskModel)
 	# else:
 		# ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
