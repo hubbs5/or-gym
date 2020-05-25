@@ -13,7 +13,16 @@ setup(name='or-gym',
 	author='Christian Hubbs',
 	license='MIT',
 	# pacakges=[package for package in find_packages() if package.startswith('something')],
-	install_requires=['gym>=0.15.0','matplotlib>=3.0.3', 'str2bool>=1',
-		'numpy>=1.16.1','scipy>=1.4.1','torch>=1.4.0','torchvision>=0.5.0','pyomo>=5.5'],
+	install_requires=[
+		'gym>=0.15.0',
+		'matplotlib>=3.0.3',
+		'numpy>=1.16.1',
+		'scipy>=1.4.1',
+		# 'torch>=1.4.0',
+		# 'torchvision>=0.5.0',
+		# 'tensorflow>=2.0',
+		'pyomo>=5.5',
+		#'ray>=0.9',
+		'pandas>=1.0'],
 	zip_safe=False
 )
