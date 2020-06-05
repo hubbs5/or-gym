@@ -55,15 +55,21 @@ class PortfolioOptEnv(gym.Env):
         self.initial_cash = 100
         self.cash = copy(self.initial_cash)
         #Transaction costs proportional to amount bought 
-        self.buy_cost = np.array([0.045, 0.025, 0.035])
-        self.sell_cost = np.array([0.04, 0.02, 0.03])
+        # self.buy_cost = np.array([0.045, 0.025, 0.035])
+        # self.sell_cost = np.array([0.04, 0.02, 0.03])
+        self.buy_cost = np.zeros(self.num_assets)
+        self.sell_cost = np.zeros(self.num_assets)
         self.step_limit = 10
         assign_env_config(self, kwargs)
         # self.asset_price_means = np.random.normal(1, 0.25, 
             # (self.num_assets, self.step_limit))
-        self.asset_price_means = (np.random.randint(10, 50, self.num_assets) \
-            * np.ones((self.step_limit, self.num_assets))).T
-        self.asset_price_var = np.ones(self.asset_price_means.shape)
+        # self.asset_price_means = (np.random.randint(10, 50, self.num_assets) \
+            # * np.ones((self.step_limit, self.num_assets))).T
+        # self.asset_price_var = np.ones(self.asset_price_means.shape)
+        # self.asset_price_means = (np.arange(self.step_limit).reshape(-1, 1) * np.ones((self.step_limit, self.num_assets)) + 1).T
+        self.asset_price_means = np.vstack([np.arange(1, self.step_limit + 1).reshape(1, -1), 
+            np.ones((2, 10))])
+        self.asset_price_var = np.zeros((self.asset_price_means.shape))
         
         # Cash on hand, asset prices, num of shares, portfolio value
         self.obs_length = 1 + 2 * self.num_assets
@@ -79,7 +85,7 @@ class PortfolioOptEnv(gym.Env):
         
     def reset(self):
         self.step_count = 0
-        self.asset_prices = self._generate_asset_prices()        
+        self.asset_prices = self._generate_asset_prices()
         self.holdings = np.zeros(self.num_assets)
         self.cash = copy(self.initial_cash)
         self.state = np.hstack([
@@ -102,18 +108,13 @@ class PortfolioOptEnv(gym.Env):
         return asset_prices
     
     def step(self, action):
-        # assert self.action_space.contains(action)
-        #If buying assets requries more than 95% of cash, then normalize as proportions to be =95%
-        max_cash_frac_spend = 0.95
-        if sum(action[action > 0]) > 0.95:
+        if sum(action[action > 0]) > 1:
             SUM = sum(action[action > 0])
             for idx, value in enumerate(action): 
-                if value > 0: 
-                    action[idx] = value / SUM * max_cash_frac_spend
-
+                if value > 0:
+                    action[idx] = value / SUM
         
         asset_prices = self.asset_prices[:, self.step_count].copy()
-        cash_available = copy(self.cash)
         for idx, a in enumerate(action):
             if a == 0:
                 continue
@@ -125,7 +126,10 @@ class PortfolioOptEnv(gym.Env):
                 self.cash += asset_prices[idx] * sell_amt * (1 - self.sell_cost[idx])
             # Buy shares of asset (as a fraction "a" of current cash at end of previous period)
             elif a > 0:
-                buy_amt = a * cash_available / asset_prices[idx] 
+                buy_amt = a * self.cash / asset_prices[idx]
+                # Can't purchase if cash <= 0
+                if self.cash <= 0:
+                    continue
                 self.holdings[idx] += buy_amt 
                 self.cash -= asset_prices[idx] * buy_amt * (1 + self.buy_cost[idx])
                 
@@ -159,7 +163,7 @@ class PortfolioOptEnv(gym.Env):
     #     self.sell_cost = np.array([0.040, 0.020, 0.030])
     #     self._max_reward = 400
     #     self.investment_horizon = 10 
-    #     self.asset_prices_means = asset_prices_means
+    #     self.asset_price_means = asset_price_means
     #     self.asset_price_variance = np.ones(self.num_assets) * 0.25
     #     self.max_steps = copy(self.investment_horizon)
 
@@ -188,7 +192,7 @@ class PortfolioOptEnv(gym.Env):
     #     if self.step_counter > 0:
     #         self.total_wealth = self.current_total_wealth
     #     self.asset_prices = np.concatenate((np.array([self.cash_price]), \
-    #         np.random.normal(self.asset_prices_means[self.step_counter], self.asset_price_variance)))
+    #         np.random.normal(self.asset_price_means[self.step_counter], self.asset_price_variance)))
     #     self.state = np.hstack([
     #         self.asset_prices, 
     #         self.asset_quantities, 
@@ -236,7 +240,7 @@ class PortfolioOptEnv(gym.Env):
 #num_assets = 3
 #investment_horizon = 10 
 #asset_price_means = np.random.rand(investment_horizon + 1, num_assets) + 0.5
-asset_prices_means = np.array([
+asset_price_means = np.array([
     [0.729104  , 0.70066482, 1.33728305],
     [0.71028955, 1.15127388, 0.65365377],
     [0.83731888, 0.78674174, 1.14186928],
