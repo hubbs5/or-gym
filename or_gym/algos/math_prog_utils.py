@@ -6,7 +6,7 @@ from scipy.optimize import minimize
 import itertools
 import or_gym
 
-def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=True,
+def solve_math_program(model, solver='glpk', solver_kwargs={}, print_results=False,
                         warmstart=False, warmstart_kwargs={}):
     '''
     Solves mathematical program using pyomo
