@@ -67,8 +67,13 @@ class PortfolioOptEnv(gym.Env):
             # * np.ones((self.step_limit, self.num_assets))).T
         # self.asset_price_var = np.ones(self.asset_price_means.shape)
         # self.asset_price_means = (np.arange(self.step_limit).reshape(-1, 1) * np.ones((self.step_limit, self.num_assets)) + 1).T
-        self.asset_price_means = np.vstack([np.arange(1, self.step_limit + 1).reshape(1, -1), 
-            np.ones((2, 10))])
+
+        # self.asset_price_means = np.vstack([np.arange(1, self.step_limit + 1).reshape(1, -1), 
+        #     np.ones((2, 10))])
+        asset1mean = np.array([1, 2, 4, 5, 3, 2, 3, 6, 9, 7]).reshape(1, -1) #up and down all the way 
+        asset2mean = np.array([5, 3, 2, 2, 1, 4, 5, 6, 7, 8]).reshape(1, -1) #down intially then up 
+        asset3mean = np.array([3, 5, 6, 9, 10, 8, 4, 2, 1, 4]).reshape(1, -1) #up initially then down 
+        self.asset_price_means = np.vstack([asset1mean, asset2mean, asset3mean])
         self.asset_price_var = np.zeros((self.asset_price_means.shape))
         
         # Cash on hand, asset prices, num of shares, portfolio value
