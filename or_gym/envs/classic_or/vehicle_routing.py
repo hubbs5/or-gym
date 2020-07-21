@@ -1,7 +1,13 @@
+'''
+Example taken from Balaji et al.
+Paper: https://arxiv.org/abs/1911.10641
+GitHub: https://github.com/awslabs/or-rl-benchmarks
+'''
 import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
+from or_gym.utils.env_config import assign_env_config
 import copy
 
 class VehicleRoutingEnv(gym.Env):
@@ -49,9 +55,7 @@ class VehicleRoutingEnv(gym.Env):
         Episode termination occurs when all time periods for the day have elapsed. 
 
     '''
-
     def __init__(self, *args, **kwargs):
-        # Immutable parameters
         self.vehicle_max_capacity = 50
         self.movement_cost  = 0.2
         self.after_hours_movement_multipler = 2
@@ -61,12 +65,7 @@ class VehicleRoutingEnv(gym.Env):
         self.depot_location = 56
         self.num_locs = 100
         self._max_reward = 10
-        # Add env_config, if any
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
+        
 
         # State and action space definitions
         self.observation_space = spaces.Box(0, self.num_locs,

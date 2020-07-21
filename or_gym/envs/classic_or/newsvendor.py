@@ -93,6 +93,11 @@ class NewsvendorEnv(gym.Env):
         new_inventory[:-1] += inventory[1:]
         new_inventory[-1] += order_qty
         self.state = np.hstack([self.state[:5], new_inventory])
+
+        self.step_count += 1
+        if self.step_count >= self.step_limit:
+            done = True
+            
         return self.state, reward, done, {}
 
     def reset(self):
