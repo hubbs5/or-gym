@@ -1,5 +1,6 @@
 import numpy as np
 from collections import Iterable
+import copy
 
 def ukp_heuristic(env):
     assert env.spec.id == 'Knapsack-v0', \

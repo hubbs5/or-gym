@@ -2,6 +2,7 @@ import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
+from or_gym.utils.env_config import *
 import copy
 
 class VMPackingEnv(gym.Env):
@@ -38,58 +39,94 @@ class VMPackingEnv(gym.Env):
         limit is reached.
     '''
     def __init__(self, *args, **kwargs):
-        # Normalized Capacities
         self.cpu_capacity = 1
-        self.ram_capacity = 1
-        self.step_limit = 60 * 24 / 15
-        self.n_pms = 100 # Number of physical machines to choose from
-        self.load_idx = np.array([1, 2]) # Gives indices for CPU and mem reqs
-        # Add env_config, if any
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        if hasattr(self, 'env_config'):
-            for key, value in self.env_config.items():
-                setattr(self, key, value)
-
-        self.observation_space = spaces.Box(
-            low=np.zeros((self.n_pms, 3), dtype=np.float32),
-            high=np.ones((self.n_pms, 3), dtype=np.float32),
-            dtype=np.float32)
+        self.mem_capacity = 1
+        self.t_interval = 20
+        self.tol = 1e-5
+        self.step_limit = int(60 * 24 / self.t_interval)
+        self.n_pms = 50
+        self.load_idx = np.array([1, 2])
+        self.seed = 0
+        self.mask = True
+        assign_env_config(self, kwargs)
         self.action_space = spaces.Discrete(self.n_pms)
+
+        if self.mask:
+            self.observation_space = spaces.Dict({
+                "action_mask": spaces.Box(0, 1, shape=(self.n_pms,)),
+                "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,)),
+                "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+            })
+        else:
+            self.observation_space = spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+        self.reset()
         
-        self.state = self.reset()
-        
+    def reset(self):
+        self.demand = self.generate_demand()
+        self.current_step = 0
+        self.state = {
+            "action_mask": np.ones(self.n_pms),
+            "avail_actions": np.ones(self.n_pms),
+            "state": np.vstack([
+                np.zeros((self.n_pms, 3)),
+                self.demand[self.current_step]])
+        }
+        self.assignment = {}
+        return self.state
+    
     def step(self, action):
         done = False
-        pm_state = self.state[0] # Physical machine state
+        pm_state = self.state["state"][:-1]
+        demand = self.state["state"][-1, 1:]
+        
         if action < 0 or action >= self.n_pms:
-            raise ValueError('Invalid Action')
-        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1):
+            raise ValueError("Invalid action: {}".format(action))
+            
+        elif any(pm_state[action, 1:] + demand > 1 + self.tol):
             # Demand doesn't fit into PM
-            reward = -100
+            reward = -1000
             done = True
         else:
             if pm_state[action, 0] == 0:
                 # Open PM if closed
                 pm_state[action, 0] = 1
-            pm_state[action, self.load_idx] += self.demand[self.step_count]
-            reward = np.sum(pm_state[:, 0] * 
-                (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
+            pm_state[action, self.load_idx] += demand
+            reward = np.sum(pm_state[:, 0] * (pm_state[:,1:].sum(axis=1) - 2))
+            self.assignment[self.current_step] = action
             
-        self.step_count += 1
-        if self.step_count >= self.step_limit:
+        self.current_step += 1
+        if self.current_step >= self.step_limit:
             done = True
-            reward = 0
-        else:
-            self.state = (pm_state, self.demand[self.step_count])
-        
+        self.update_state(pm_state)
         return self.state, reward, done, {}
     
-    def reset(self):
-        self.step_count = 0
-        self.demand = generate_demand()
-        self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
-        return self.state
+    def update_state(self, pm_state):
+        # Make action selection impossible if the PM would exceed capacity
+        step = self.current_step if self.current_step < self.step_limit else self.step_limit-1
+        data_center = np.vstack([pm_state, self.demand[step]])
+        data_center = np.where(data_center>1,1,data_center) # Fix rounding errors
+        self.state["state"] = data_center
+        self.state["action_mask"] = np.ones(self.n_pms)
+        self.state["avail_actions"] = np.ones(self.n_pms)
+        if self.mask:
+            action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
+            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
+
+    def sample_action(self):
+        return self.action_space.sample()
+
+    def generate_demand(self):
+        n = self.step_limit
+        # From Azure data
+        mem_probs = np.array([0.12 , 0.165, 0.328, 0.287, 0.064, 0.036])
+        mem_bins = np.array([0.02857143, 0.05714286, 0.11428571, 0.45714286, 0.91428571,
+           1.]) # Normalized bin sizes
+        mu_cpu = 16.08
+        sigma_cpu = 1.26
+        cpu_demand = np.random.normal(loc=mu_cpu, scale=sigma_cpu, size=n)
+        cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
+        mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
+        return np.vstack([np.arange(n)/n, cpu_demand/100, mem_demand]).T
 
 class TempVMPackingEnv(VMPackingEnv):
     '''
@@ -127,75 +164,68 @@ class TempVMPackingEnv(VMPackingEnv):
     def __init__(self, *args, **kwargs):
         super().__init__()       
         self.state = self.reset()
-        
+
     def step(self, action):
         done = False
-        pm_state = self.state[0]
+        pm_state = self.state["state"][:-1]
+        demand = self.state["state"][-1, 1:]
+        
         if action < 0 or action >= self.n_pms:
-            raise ValueError('Invalid Action')
-        elif any(pm_state[action, 1:] + self.demand[self.step_count] > 1):
+            raise ValueError("Invalid action: {}".format(action))
+            
+        elif any(pm_state[action, 1:] + demand > 1 + self.tol):
             # Demand doesn't fit into PM
-            reward = -100
+            reward = -1000
             done = True
         else:
             if pm_state[action, 0] == 0:
                 # Open PM if closed
                 pm_state[action, 0] = 1
-            pm_state[action, self.load_idx] += self.demand[self.step_count]
-            self.assignments[self.step_count] = action
-        
+            pm_state[action, self.load_idx] += demand
+            reward = np.sum(pm_state[:, 0] * (pm_state[:,1:].sum(axis=1) - 2))
+            self.assignment[self.current_step] = action
+
         # Remove processes
-        if self.step_count in self.durations.values():
+        if self.current_step in self.durations.values():
             for process in self.durations.keys():
                 # Remove process from PM
-                if self.durations[process] == self.step_count:
-                    pm = alist[process]
-                    pm_state[pm, self.load_idx] -= env.demand[process]
+                if self.durations[process] == self.current_step:
+                    pm = self.assignment[process] # Find PM where process was assigned
+                    pm_state[pm, self.load_idx] -= self.demand[process]
                     # Shut down PM's if state is 0
                     if pm_state[pm, self.load_idx].sum() == 0:
                         pm_state[pm, 0] = 0
             
-        if self.step_count >= self.step_limit:
+        self.current_step += 1
+        if self.current_step >= self.step_limit:
             done = True
-            reward = 0
-            
-        if not done:
-            reward = np.sum(pm_state[:, 0] * 
-                (pm_state[:, 1] - 1 + pm_state[:, 2] - 1))
-        
-        self.state = (pm_state, self.demand[self.step_count])
-        self.step_count += 1
-        
+        self.update_state(pm_state)
         return self.state, reward, done, {}
+    
+    def update_state(self, pm_state):
+        # Make action selection impossible if the PM would exceed capacity
+        step = self.current_step if self.current_step < self.step_limit else self.step_limit-1
+        data_center = np.vstack([pm_state, self.demand[step]])
+        data_center = np.where(data_center>1,1,data_center) # Fix rounding errors
+        self.state["state"] = data_center
+        self.state["action_mask"] = np.ones(self.n_pms)
+        self.state["avail_actions"] = np.ones(self.n_pms)
+        if self.mask:
+            action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
+            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
         
     def reset(self):
-        self.step_count = 0
-        self.assignments = {}
-        self.demand = generate_demand()
+        self.current_step = 0
+        self.assignment = {}
+        self.demand = self.generate_demand()
         self.durations = generate_durations(self.demand)
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
 
-# Placeholder demand generation function
-def generate_demand():
-    t_int = 15
-    n_steps = int(1440 / t_int) # 1 day, 15 minute intervals
-    steps = np.arange(n_steps)
-    level = np.abs(np.sin(steps) + 5)
-    noise = np.random.normal(size=n_steps)
-    trend = np.sin(steps / n_steps * 2*np.pi + np.pi)
-    cpu_demand = level + noise + trend
-    cpu_demand /= cpu_demand.max()
-    
-    ram_levels = np.array([2, 4, 8, 16, 32, 64, 128])
-    # Assume levels are poisson distributed around 3 with each 
-    # value mapping to one of the levels
-    ram_sample = np.random.poisson(lam=3, size=n_steps)
-    ram_demand = np.array([ram_levels[i] 
-        if i < len(ram_levels) else max(ram_levels) 
-        for i in ram_sample]) / max(ram_levels)
-    return np.vstack([cpu_demand, ram_demand]).T
-
 def generate_durations(demand):
+    # duration_params = np.array([ 6.53563303e-02,  5.16222242e+01,  4.05028032e+06, -4.04960880e+06])
     return {i: np.random.randint(low=i+1, high=len(demand)+1)
         for i, j in enumerate(demand)}
+
+def gaussian_model(params, x):
+    return params[2] * np.exp(-0.5*((x - params[0]) / params[1]) ** 2) + params[3]

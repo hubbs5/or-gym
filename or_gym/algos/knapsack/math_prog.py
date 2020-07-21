@@ -8,7 +8,7 @@ import numpy as np
 def build_ukp_ip_model(env):
     assert env.spec.id == 'Knapsack-v0', \
         '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
-    env.reset()
+
     # Initialize model
     m = ConcreteModel()
 
