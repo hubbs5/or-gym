@@ -17,7 +17,6 @@ def create_env(config, *args, **kwargs):
 		env_name = config['env']
 	else:
 		env_name = config
-		# print('Environment\t{}'.format(env_name))
 	if env_name == 'Knapsack-v0':
 		from or_gym.envs.classic_or.knapsack import KnapsackEnv as env
 	elif env_name == 'Knapsack-v1':

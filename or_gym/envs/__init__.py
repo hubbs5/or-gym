@@ -1,5 +1,6 @@
 from gym.envs.registration import register
 
+# Knapsack Environments
 register(id='Knapsack-v0',
     entry_point='or_gym.envs.classic_or.knapsack:KnapsackEnv'
 )
@@ -12,8 +13,29 @@ register(id='Knapsack-v2',
 	entry_point='or_gym.envs.classic_or.knapsack:OnlineKnapsackEnv'
 )
 
+# Bin Packing Environments
 register(id='BinPacking-v0',
 	entry_point='or_gym.envs.classic_or.binpacking:BinPackingEnv'
+)
+
+register(id='BinPacking-v1',
+	entry_point='or_gym.envs.classic_or.binpacking:BinPackingLW1'
+)
+
+register(id='BinPacking-v2',
+	entry_point='or_gym.envs.classic_or.binpacking:BinPackingPP0'
+)
+
+register(id='BinPacking-v3',
+	entry_point='or_gym.envs.classic_or.binpacking:BinPackingPP1'
+)
+
+register(id='BinPacking-v4',
+	entry_point='or_gym.envs.classic_or.binpacking:BinPackingBW0'
+)
+
+register(id='BinPacking-v5',
+	entry_point='or_gym.envs.classic_or.binpacking:BinPackingBW1'
 )
 
 register(id='VMPacking-v0',
