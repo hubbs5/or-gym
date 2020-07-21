@@ -38,6 +38,12 @@ register(id='BinPacking-v5',
 	entry_point='or_gym.envs.classic_or.binpacking:BinPackingBW1'
 )
 
+# Newsvendor Envs
+register(id='Newsvendor-v0',
+	entry_point='or_gym.envs.classic_or.newsvendor:NewsvendorEnv'
+)
+
+# Virtual Machine Packing Envs
 register(id='VMPacking-v0',
 	entry_point='or_gym.envs.classic_or.vmpacking:VMPackingEnv'
 )
@@ -46,10 +52,12 @@ register(id='VMPacking-v1',
 	entry_point='or_gym.envs.classic_or.vmpacking:TempVMPackingEnv'
 )
 
-register(id='VehicleRouting-v1',
+# Vehicle Routing Envs
+register(id='VehicleRouting-v0',
 	entry_point='or_gym.envs.classic_or.vehicle_routing:VehicleRoutingEnv'
 )
 
+# Inventory Management Envs
 register(id='InvManagement-v0',
 	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementBacklogEnv'
 )
@@ -58,22 +66,7 @@ register(id='InvManagement-v1',
 	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementLostSalesEnv'
 )
 
+# Asset Allocation Envs
 register(id='PortfolioOpt-v0',
 	entry_point='or_gym.envs.finance.portfolio_opt:PortfolioOptEnv'
-)
-
-register(id='SCSched-v0',
-	entry_point='or_gym.envs.supply_chain.scheduling:DiscreteSchedEnv'
-)
-
-register(id='SCSched-v1',
-	entry_point='or_gym.envs.supply_chain.scheduling:MaskedDiscreteSchedEnv'
-)
-
-register(id='SCSched-v2',
-	entry_point='or_gym.envs.supply_chain.scheduling:ContSchedEnv'
-)
-
-register(id='SCSched-v3',
-	entry_point='or_gym.envs.supply_chain.scheduling:MaskedContSchedEnv'
 )

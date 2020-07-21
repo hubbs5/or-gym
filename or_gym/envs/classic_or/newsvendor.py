@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 from or_gym.utils.env_config import assign_env_config
 
-class NewsVendorEnv(gym.Env):
+class NewsvendorEnv(gym.Env):
     '''
     Multi-Period Newsvendor with Lead Times
 
@@ -96,8 +96,8 @@ class NewsVendorEnv(gym.Env):
 
     def reset(self):
         # Randomize costs
-        self.price = np.random.rand() * self.p_max
-        self.cost = np.random.rand() * self.price
+        self.price = max(1, np.random.rand() * self.p_max)
+        self.cost = max(1, np.random.rand() * self.price)
         self.h = np.random.rand() * min(self.cost, self.h_max)
         self.k = np.random.rand() * self.k_max
         self.mu = np.random.rand() * self.mu_max
