@@ -61,7 +61,7 @@ class BinPackingEnv(gym.Env):
         self.bin_capacity = 9
         self.item_sizes = [2, 3]
         self.item_probs = [0.8, 0.2]
-        self.step_counter = 0
+        self.step_count = 0
         self.step_limit = 100
         self.mask = False
         assign_env_config(self, kwargs)
@@ -100,14 +100,14 @@ class BinPackingEnv(gym.Env):
         
         self.total_reward += reward
         
-        if self.step_counter >= self.step_limit:
+        if self.step_count >= self.step_limit:
             done = True
         
-        self.state = self.update_state()
+        self.state = self._update_state()
         
         return self.state, reward, done, {}
 
-    def update_state(self):
+    def _update_state(self):
         self.item_size = self.get_item()
         state = np.array(self.bin_levels + [self.item_size])
         if self.mask:
@@ -134,11 +134,10 @@ class BinPackingEnv(gym.Env):
     
     def reset(self):
         self.current_weight = 0
-        self.step_counter = 0        
+        self.step_count = 0        
         self.num_full_bins = 0
         self.total_reward = 0
         self.waste = 0
-        self.step_counter = 0
         self.bin_levels = [0] * self.bin_capacity
         self.item_size = self.get_item()
         self.state = self.update_state()
