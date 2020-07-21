@@ -60,8 +60,9 @@ class NewsvendorEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=np.zeros(self.obs_dim),
             high=np.array(
-                [self.p_max, self.p_max, self.h_max, self.k_max, self.mu_max]),
-            dtype=np.int32)
+                [self.p_max, self.p_max, self.h_max, self.k_max, self.mu_max] +
+                [self.max_order_quantity] * self.lead_time),
+            dtype=np.float32)
         self.action_space = spaces.Box(
             low=np.zeros(1), high=np.array([self.max_order_quantity]), 
             dtype=np.float32)
