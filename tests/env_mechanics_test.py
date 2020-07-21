@@ -40,8 +40,10 @@ def test_env(env, n_episodes, print_output=True):
 			# Check env vals
 			valid_state = env.observation_space.contains(s)
 			if valid_state == False:
-				raise ValueError(
-					'Observation Space does not match:\nobservation_space: {}'.format(s))
+				msg = 'Observation Space does not match:'
+				msg += '\nobservation_space:\nShape:\t{}\n\t{}'.format(s.shape, s)
+				msg += '\nAction:\t{}'.format(action)
+				raise ValueError(msg)
 			rewards += r
 			step_count += 1
 			if done:
