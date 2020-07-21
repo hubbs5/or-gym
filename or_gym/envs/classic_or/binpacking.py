@@ -11,6 +11,8 @@ class BinPackingEnv(gym.Env):
     '''
     Online Bin Packing Problem
 
+    Example taken from Balaji et al.: https://arxiv.org/abs/1911.10641
+
     The Bin Packing Problem (BPP) is a combinatorial optimization problem which
     requires the user to select from a range of goods of different values and
     weights in order to maximize the value of the selected items within a 
@@ -24,7 +26,6 @@ class BinPackingEnv(gym.Env):
         Type: Tuple, Discrete
         0 - bin_capacity: Count of bins at a given level h
         -1: Current item size
-
 
     Actions:
         Type: Discrete
@@ -42,7 +43,7 @@ class BinPackingEnv(gym.Env):
         When invalid action is selected (e.g. attempt to place item in non-existent
         bin), bin limits are exceeded, or step limit is reached.
     '''
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.bin_capacity = 9
         self.item_sizes = [2, 3]
         self.item_probs = [0.8, 0.2]
@@ -98,7 +99,7 @@ class BinPackingEnv(gym.Env):
             done = True
             
         self.item_size = self.get_item()
-        state = self.bin_levels + [self.item_size]
+        self.state = self.bin_levels + [self.item_size]
         
         return self.state, reward, done, {}
     
