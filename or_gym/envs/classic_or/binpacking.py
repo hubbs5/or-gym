@@ -62,6 +62,7 @@ class BinPackingEnv(gym.Env):
         
         self.action_space = spaces.Discrete(self.bin_capacity)
         
+        self._check_settings()
         self.seed()
         self.state = self.reset()
         
@@ -123,9 +124,10 @@ class BinPackingEnv(gym.Env):
 
     def _check_settings(self):
         # Ensure setting sizes and probs are correct at initialization
-        assert sum(self.item_probs) == 1, "Item probabilities do not sum to 1."
+        assert sum(self.item_probs) == 1, 'Item probabilities do not sum to 1.'
         assert len(self.item_probs) == len(self.item_sizes), \
-            "Dimension mismatch between item probabilities ({}) and sizes ({})".format(
+            'Dimension mismatch between item probabilities' + \
+                ' ({}) and sizes ({})'.format(
                 len(self.item_probs), len(self.item_sizes))
 
 class BinPackingLW1(BinPackingEnv):
@@ -134,7 +136,8 @@ class BinPackingLW1(BinPackingEnv):
     Env Registration: BinPacking-v1
     '''
     def __init__(self, *args, **kwargs):
-        self.bin_size = 100
+        super().__init__()
+        self.bin_capacity = 100
         self.item_probs = [0.14, 0.1, 0.06, 0.13, 0.11, 0.13, 0.03, 0.11, 0.19]
         self.item_sizes = np.arange(1, 10)
 
@@ -143,31 +146,33 @@ class BinPackingLW1(BinPackingEnv):
             high=np.array([self.step_limit] * self.bin_capacity + 
                 [max(self.item_sizes)]),
             dtype=np.uint32)
-        
         self.action_space = spaces.Discrete(self.bin_capacity)
         
+        self._check_settings()
         self.seed()
         self.state = self.reset()
-
-        self.reset()
 
 class BinPackingPP0(BinPackingEnv):
     '''
     Small Perfectly Packable Bin Packing with Linear Waste
+    Env Registration: BinPacking-v2
     '''
     def __init__(self, *args, **kwargs):
+        super().__init__()
         self.item_probs = [0.75, 0.25]
+        self._check_settings()
         self.seed()
-        self.reset()
+        self.state = self.reset()
 
 class BinPackingPP1(BinPackingPP0):
     '''
     Large Bin Packing Probem with Bounded Waste
-    Env Registration: BinPacking-v1
+    Env Registration: BinPacking-v3
     '''
     def __init__(self, *args, **kwargs):
-        self.bin_size = 100
-        self.item_probs = [0.06, 0.11, 0.11, 0.22, 0, 0.11, 0.06, 0, 0.03]
+        super().__init__()
+        self.bin_capacity = 100
+        self.item_probs = [0.06, 0.11, 0.11, 0.22, 0, 0.11, 0.06, 0, 0.33]
         self.item_sizes = np.arange(1, 10)
 
         self.observation_space = spaces.Box(
@@ -175,27 +180,33 @@ class BinPackingPP1(BinPackingPP0):
             high=np.array([self.step_limit] * self.bin_capacity + 
                 [max(self.item_sizes)]),
             dtype=np.uint32)
-        
         self.action_space = spaces.Discrete(self.bin_capacity)
-        
+
+        self._check_settings()
         self.seed()
         self.state = self.reset()
-
-        self.reset()
 
 class BinPackingBW0(BinPackingEnv):
     '''
     Small Perfectly Packable Bin Packing Problem with Bounded Waste
+    Env Registration: BinPacking-v4
     '''
     def __init__(self, *args, **kwargs):
+        super().__init__()
         self.item_probs = [0.5, 0.5]
+
+        self._check_settings()
+        self.seed()
+        self.state = self.reset()
 
 class BinPackingBW1(BinPackingBW0):
     '''
     Large Perfectly Packable Bin Packing Problem with Bounded Waste
+    Env Registration: BinPacking-v5
     '''
     def __init__(self, *args, **kwargs):
-        self.bin_size = 100
+        super().__init__()
+        self.bin_capacity = 100
         self.item_probs = [0, 0, 0, 1/3, 0, 0, 0, 0, 2/3]
         self.item_sizes = np.arange(1, 10)
 
@@ -204,10 +215,8 @@ class BinPackingBW1(BinPackingBW0):
             high=np.array([self.step_limit] * self.bin_capacity + 
                 [max(self.item_sizes)]),
             dtype=np.uint32)
-        
         self.action_space = spaces.Discrete(self.bin_capacity)
         
+        self._check_settings()
         self.seed()
         self.state = self.reset()
-
-        self.reset()
