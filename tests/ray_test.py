@@ -28,7 +28,18 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def test_env(env, n_episodes, print_output=True):
+def test_env(env_name, n_episodes, print_output=True):
+    trainer = ppo.PPOTrainer(env=create_env(env_name),
+        config={
+        "env_config": {
+            "mask": True
+            },
+        "vf_share_layers": True,
+        "vf_clip_param": 10000, # Set to high number to avoid any warnings
+        "model": {
+            "fcnet_activation": "elu",
+            "fcnet_hiddens": [128, 128, 128]}
+        })
     rewards, eps, eps_total = [], [], []
     training = True
     batch = 0
@@ -58,30 +69,18 @@ if __name__ == "__main__":
     n_episodes = args.episodes
     print_output = args.print
     ray.init(ignore_reinit_error=True)
-    trainer = ppo.PPOTrainer(env=create_env(env_name),
-        config={
-        "env_config": {
-            "mask": True
-            },
-        "vf_share_layers": True,
-        "vf_clip_param": 10000, # Set to high number to avoid any warnings
-        "model": {
-            "fcnet_activation": "elu",
-            "fcnet_hiddens": [128, 128, 128]}
-        })
-
     if env_name.lower() == 'all':
         for name in env_list:
             print('Testing {}'.format(name))
             try:
                 env = gym.make(name)
                 try:
-                    test_env(env, n_episodes)
+                    test_env(name, n_episodes)
                 except Exception as e:
                     print('Error encountered\n')
             except Exception as e:
-                print('Error initializing {}\n'.format(name))
+                print('Error initializing {}\n'.format(name))    
     else:
-        env = gym.make(env_name)
+        # env = gym.make(env_name)
         print('Testing {}'.format(env_name))
-        test_env(env, n_episodes)
+        test_env(env_name, n_episodes)
