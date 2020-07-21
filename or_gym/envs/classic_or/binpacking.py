@@ -1,3 +1,8 @@
+'''
+Example taken from Balaji et al.
+Paper: https://arxiv.org/abs/1911.10641
+GitHub: https://github.com/awslabs/or-rl-benchmarks
+'''
 import numpy as np
 import gym
 from gym import spaces, logger
@@ -6,12 +11,12 @@ import copy
 
 
 BIG_NEG_REWARD = -100
+BIG_POS_REWARD = 10
 # Matches the AWS model as first pass
 class BinPackingEnv(gym.Env):
     '''
-    Online Bin Packing Problem
-
-    Example taken from Balaji et al.: https://arxiv.org/abs/1911.10641
+    Small Bin Packing with Bounded Waste
+    Env Registration: BinPacking-v0
 
     The Bin Packing Problem (BPP) is a combinatorial optimization problem which
     requires the user to select from a range of goods of different values and
@@ -30,7 +35,7 @@ class BinPackingEnv(gym.Env):
     Actions:
         Type: Discrete
         0: Open a new bin and place item into bin
-        1+: Attempt to place item into bin at the given level
+        1+: Attempt to place item into bin at the corresponding level
 
     Reward:
         Negative of the waste, which is the difference between the current
@@ -72,8 +77,6 @@ class BinPackingEnv(gym.Env):
         elif action == 0:
             # Create new bin
             self.bin_levels[self.item_size] += 1
-            # This waste penalty seems very strange, it only occurs
-            # when a new bin is opened.
             self.waste = self.bin_capacity - self.item_size
             reward = -1 * self.waste
         elif self.bin_levels[action] == 0:
@@ -95,9 +98,6 @@ class BinPackingEnv(gym.Env):
         if self.step_counter >= self.step_limit:
             done = True
             
-        if self.step_counter == self.step_limit:
-            done = True
-            
         self.item_size = self.get_item()
         self.state = self.bin_levels + [self.item_size]
         
@@ -116,8 +116,98 @@ class BinPackingEnv(gym.Env):
         self.total_reward = 0
         self.waste = 0
         self.step_counter = 0
-        
         self.bin_levels = [0] * self.bin_capacity
         self.item_size = self.get_item()
         initial_state = self.bin_levels + [self.item_size]
         return initial_state
+
+    def _check_settings(self):
+        # Ensure setting sizes and probs are correct at initialization
+        assert sum(self.item_probs) == 1, "Item probabilities do not sum to 1."
+        assert len(self.item_probs) == len(self.item_sizes), \
+            "Dimension mismatch between item probabilities ({}) and sizes ({})".format(
+                len(self.item_probs), len(self.item_sizes))
+
+class BinPackingLW1(BinPackingEnv):
+    '''
+    Large Bin Packing Probem with Bounded Waste
+    Env Registration: BinPacking-v1
+    '''
+    def __init__(self, *args, **kwargs):
+        self.bin_size = 100
+        self.item_probs = [0.14, 0.1, 0.06, 0.13, 0.11, 0.13, 0.03, 0.11, 0.19]
+        self.item_sizes = np.arange(1, 10)
+
+        self.observation_space = spaces.Box(
+            low=np.array([0] * (1 + self.bin_capacity)),
+            high=np.array([self.step_limit] * self.bin_capacity + 
+                [max(self.item_sizes)]),
+            dtype=np.uint32)
+        
+        self.action_space = spaces.Discrete(self.bin_capacity)
+        
+        self.seed()
+        self.state = self.reset()
+
+        self.reset()
+
+class BinPackingPP0(BinPackingEnv):
+    '''
+    Small Perfectly Packable Bin Packing with Linear Waste
+    '''
+    def __init__(self, *args, **kwargs):
+        self.item_probs = [0.75, 0.25]
+        self.seed()
+        self.reset()
+
+class BinPackingPP1(BinPackingPP0):
+    '''
+    Large Bin Packing Probem with Bounded Waste
+    Env Registration: BinPacking-v1
+    '''
+    def __init__(self, *args, **kwargs):
+        self.bin_size = 100
+        self.item_probs = [0.06, 0.11, 0.11, 0.22, 0, 0.11, 0.06, 0, 0.03]
+        self.item_sizes = np.arange(1, 10)
+
+        self.observation_space = spaces.Box(
+            low=np.array([0] * (1 + self.bin_capacity)),
+            high=np.array([self.step_limit] * self.bin_capacity + 
+                [max(self.item_sizes)]),
+            dtype=np.uint32)
+        
+        self.action_space = spaces.Discrete(self.bin_capacity)
+        
+        self.seed()
+        self.state = self.reset()
+
+        self.reset()
+
+class BinPackingBW0(BinPackingEnv):
+    '''
+    Small Perfectly Packable Bin Packing Problem with Bounded Waste
+    '''
+    def __init__(self, *args, **kwargs):
+        self.item_probs = [0.5, 0.5]
+
+class BinPackingBW1(BinPackingBW0):
+    '''
+    Large Perfectly Packable Bin Packing Problem with Bounded Waste
+    '''
+    def __init__(self, *args, **kwargs):
+        self.bin_size = 100
+        self.item_probs = [0, 0, 0, 1/3, 0, 0, 0, 0, 2/3]
+        self.item_sizes = np.arange(1, 10)
+
+        self.observation_space = spaces.Box(
+            low=np.array([0] * (1 + self.bin_capacity)),
+            high=np.array([self.step_limit] * self.bin_capacity + 
+                [max(self.item_sizes)]),
+            dtype=np.uint32)
+        
+        self.action_space = spaces.Discrete(self.bin_capacity)
+        
+        self.seed()
+        self.state = self.reset()
+
+        self.reset()
