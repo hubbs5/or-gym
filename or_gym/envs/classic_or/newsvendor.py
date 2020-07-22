@@ -20,7 +20,8 @@ class NewsvendorEnv(gym.Env):
     expires at the end of each period.
 
     Observation:
-        Type: Continuous values S = (p, c, h, k, mu, x_l, x_l-1)
+        Type: Box 
+        State Vector: S = (p, c, h, k, mu, x_l, x_l-1)
         p = price
         c = cost
         h = holding cost
@@ -29,7 +30,7 @@ class NewsvendorEnv(gym.Env):
         x_l = order quantities in the queue
 
     Actions:
-        Type: Continuous
+        Type: Box
         Amount of product to order.
 
     Reward:
@@ -97,7 +98,7 @@ class NewsvendorEnv(gym.Env):
         self.step_count += 1
         if self.step_count >= self.step_limit:
             done = True
-            
+
         return self.state, reward, done, {}
 
     def reset(self):
