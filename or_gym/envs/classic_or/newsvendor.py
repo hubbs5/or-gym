@@ -48,7 +48,6 @@ class NewsvendorEnv(gym.Env):
         self.lead_time = 5
         self.max_inventory = 4000
         self.max_order_quantity = 2000
-        self.step_count = 0
         self.step_limit = 40
         self.p_max = 100    # Max sale price
         self.h_max = 5      # Max holding cost
