@@ -90,11 +90,10 @@ class VehicleRoutingEnv(gym.Env):
         self._order_nums = np.arange(self.max_orders)
         self.loc_permutations = [(x, y) for x in range(self.grid[0])
             for y in range(self.grid[1])]
-        
+        self.action_dim = 1 + 3 * self.max_orders + self.n_restaurants
         self.obs_dim = 2 * self.n_restaurants + 4 + 6 * self.max_orders
-        self.observation_space = spaces.Box(
-            low=np.zeros(self.obs_dim),
-            high=np.hstack(
+        box_low = np.zeros(self.obs_dim)
+        box_high = np.hstack(
                 [np.repeat(
                     max(self.grid), 2 * self.n_restaurants + 2), # Locations
                  np.repeat(self.vehicle_capacity, 2), # Vehicle capacities
@@ -103,11 +102,28 @@ class VehicleRoutingEnv(gym.Env):
                  np.repeat(self.n_restaurants-1, self.max_orders), # Restaurant ID's
                  np.repeat(self.order_promise, self.max_orders), # Order times
                  np.repeat(max(self.order_reward_max), self.max_orders) # Order values
-                ]),
-            dtype=np.float16)
-            
-        
-        self.action_dim = 1 + 3 * self.max_orders + self.n_restaurants
+                ])
+        if self.mask:
+            self.observation_space = spaces.Dict({
+                'action_mask': spaces.Box(
+                    low=np.zeros(self.action_dim),
+                    high=np.ones(self.action_dim),
+                    dtype=np.uint8),
+                'avail_actions': spaces.Box(
+                    low=np.zeros(self.action_dim),
+                    high=np.ones(self.action_dim),
+                    dtype=np.uint8),
+                'state': spaces.Box(
+                    low=box_low,
+                    high=box_high,
+                    dtype=np.float16)
+            })
+        else:
+            self.observation_space = spaces.Box(
+                low=box_low,
+                high=box_high,
+                dtype=np.float16)
+                    
         self.action_space = spaces.Discrete(self.action_dim)
         
         self.reset()
@@ -238,7 +254,17 @@ class VehicleRoutingEnv(gym.Env):
             np.hstack([self.vehicle_load, self.vehicle_capacity]),
             order_array.flatten()
         ])
+        if self.mask:
+            action_mask = self._update_mask(state)
+            state = {
+                'state': state,
+                'action_mask': action_mask,
+                'avail_actions': np.ones(self.action_dim)
+            }
         return state
+
+    def _update_mask(self, state):
+        pass
     
     def reset(self):
         self.step_count = 0
