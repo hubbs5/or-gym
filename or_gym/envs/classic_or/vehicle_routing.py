@@ -93,16 +93,14 @@ class VehicleRoutingEnv(gym.Env):
         self.action_dim = 1 + 3 * self.max_orders + self.n_restaurants
         self.obs_dim = 2 * self.n_restaurants + 4 + 6 * self.max_orders
         box_low = np.zeros(self.obs_dim)
-        box_high = np.hstack(
-                [np.repeat(
-                    max(self.grid), 2 * self.n_restaurants + 2), # Locations
-                 np.repeat(self.vehicle_capacity, 2), # Vehicle capacities
-                 np.repeat(max(self.grid), 2*self.max_orders), # Locations
-                 np.repeat(4, self.max_orders), # Order status
-                 np.repeat(self.n_restaurants-1, self.max_orders), # Restaurant ID's
-                 np.repeat(self.order_promise, self.max_orders), # Order times
-                 np.repeat(max(self.order_reward_max), self.max_orders) # Order values
-                ])
+        box_high = np.hstack([
+            np.repeat(
+                max(self.grid), 2 * self.n_restaurants + 2), # Locations 0-5
+            np.repeat(self.vehicle_capacity, 2), # Vehicle capacities 6-7
+            np.tile(np.hstack([4, self.n_restaurants, self.grid, 
+            self.order_promise, max(self.order_reward_max)]), self.max_orders)
+        ])
+
         if self.mask:
             self.observation_space = spaces.Dict({
                 'action_mask': spaces.Box(
@@ -240,7 +238,7 @@ class VehicleRoutingEnv(gym.Env):
     
     def _update_state(self):
         self._update_orders()
-        order_array = np.zeros((env.max_orders, 6)) # Placeholder for order data
+        order_array = np.zeros((self.max_orders, 6)) # Placeholder for order data
         try:
             order_data = np.hstack([v1 for v in self.order_dict.values() 
                 for v1 in v.values()]).reshape(-1, 7)
@@ -289,7 +287,7 @@ class VehicleRoutingEnv(gym.Env):
         self.randomize_locations()
         self.zone_loc = self._get_zones()
         self.order_dict = {}
-        self.state = None
+        self.state = self._update_state()
         return self.state
     
     def _update_order_times(self):
