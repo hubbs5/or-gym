@@ -264,8 +264,25 @@ class VehicleRoutingEnv(gym.Env):
         return state
 
     def _update_mask(self, state):
-        pass
-    
+        action_mask = np.zeros(self.action_dim)
+        # Wait and return to restaurant are always allowed
+        action_mask[0] = 1
+        action_mask[(3 * self.max_orders + 1):(3 * self.max_orders + self.n_restaurants + 1)] = 1
+
+        for k, v in self.order_dict.items():
+            status = v['Status']
+            # Allow accepting an open order
+            if status == 1:
+                action_mask[k + 1] = 1
+            # Allow navigating to accepted order for pickup
+            elif status == 2 and self.vehicle_load < self.vehicle_capacity:
+                action_mask[k + self.max_orders + 1] = 1
+            # Allow delivery of picked up order
+            elif status == 3:
+                action_mask[k + 2 * self.max_orders + 1] = 1
+
+        return action_mask
+
     def reset(self):
         self.step_count = 0
         self.vehicle_load = 0
