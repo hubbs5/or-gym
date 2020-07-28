@@ -212,7 +212,7 @@ class VehicleRoutingEnv(gym.Env):
         self._generate_orders()
         
     def _remove_orders(self):
-        # Remove past due orders
+        # Remove orders if they're over due
         orders_to_delete = []
         for k, v in self.order_dict.items():
             if v['Time'] >= self.order_promise:
@@ -226,15 +226,15 @@ class VehicleRoutingEnv(gym.Env):
                     self.vehicle_capacity -= 1
                 orders_to_delete.append(k)
                 
-            if v['Status'] == 4:
+            elif v['Status'] == 4:
                 orders_to_delete.append(k)
                 
             # Probabalistically remove open orders
-            if v['Status'] == 1 and np.random.random() < self.order_timeout_prob:
+            elif v['Status'] == 1 and np.random.random() < self.order_timeout_prob:
                 orders_to_delete.append(k)
                 
         for k in orders_to_delete:
-            del self.order_dict[k]            
+            del self.order_dict[k]
     
     def _update_state(self):
         self._update_orders()
@@ -337,6 +337,8 @@ class VehicleRoutingEnv(gym.Env):
         self.driver_loc = list(random.sample(self.loc_permutations, 1)[0])
         
     def _move_driver(self, direction):
+        if direction is None:
+            return None
         # Receives direction from routing function
         if direction == 0: # Up
             self.driver_loc[1] += 1
@@ -367,11 +369,15 @@ class VehicleRoutingEnv(gym.Env):
                 direction = 2
             elif x_diff < 0:
                 direction = 3
+            elif abs(x_diff) == abs(y_diff): # 0 == 0
+                # Do nothing
+                direction = None
         else:
             if y_diff > 0:
                 direction = 0
             elif y_diff < 0:
                 direction = 1
+        
         self._move_driver(direction)
             
     def _get_num_spaces_per_zone(self):
