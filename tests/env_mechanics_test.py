@@ -14,7 +14,7 @@ env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'VMPacking-v0', 'VMPacking-v1',
             'PortfolioOpt-v0',
             'TSP-v0',
-            'VehicleRouting-v0', 'VehicleRouting-v1',
+            'VehicleRouting-v0',# 'VehicleRouting-v1',
             'NewsVendor-v0', 'NewsVendor-v1']
 
 def parse_arguments():
@@ -43,6 +43,7 @@ def test_env(env, n_episodes, print_output=True):
 				msg = 'Observation Space does not match:'
 				msg += '\nobservation_space:\nShape:\t{}\n\t{}'.format(s.shape, s)
 				msg += '\nAction:\t{}'.format(action)
+				# msg += '\n{}\n{}\n{}'.format(np.where(s>env.box_high), s[np.where(s>env.box_high)], env.box_high[np.where(s>env.box_high)])
 				raise ValueError(msg)
 			rewards += r
 			step_count += 1

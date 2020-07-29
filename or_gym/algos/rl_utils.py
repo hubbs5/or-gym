@@ -7,6 +7,7 @@ import gym
 from gym import spaces
 import or_gym
 from datetime import datetime
+from copy import deepcopy
 
 
 tf = try_import_tf()
@@ -26,10 +27,8 @@ def create_env(config, *args, **kwargs):
 	elif env_name == 'BinPacking-v0':
 		from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
 	elif env_name == 'BinPacking-v1':
-		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
 	elif env_name == 'BinPacking-v2':
-		raise NotImplementedError('{} not yet implemented.'.format(env_name))
 		from or_gym.envs.classic_or.binpacking import BinPackingEnv as env
 	elif env_name == 'VMPacking-v0':
 		from or_gym.envs.classic_or.vmpacking import VMPackingEnv as env
@@ -39,9 +38,8 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.finance.portfolio_opt import PortfolioOptEnv as env
 	elif env_name == 'TSP-v0':
 		raise NotImplementedError('{} not yet implemented.'.format(env_name))
-		from or_gym.envs.classic_or.tsp import TSPEnv as env
 	elif env_name == 'VehicleRouting-v0':
-		raise NotImplementedError('{} not yet implemented.'.format(env_name))
+		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'VehicleRouting-v1':
 		from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
 	elif env_name == 'NewsVendor-v0':
@@ -50,14 +48,6 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv as env
 	elif env_name == 'InvManagement-v1':
 		from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv as env
-	elif env_name == 'SCSched-v0':
-		from or_gym.envs.supply_chain.scheduling import DiscreteSchedEnv as env
-	elif env_name == 'SCSched-v1':
-		from or_gym.envs.supply_chain.scheduling import MaskedDiscreteSchedEnv as env
-	elif env_name == 'SCSched-v2':
-		from or_gym.envs.supply_chain.scheduling import ContSchedEnv as env
-	elif env_name == 'SCSched-v3':
-		from or_gym.envs.supply_chain.scheduling import MaskedContSchedEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env

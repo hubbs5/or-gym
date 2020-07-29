@@ -20,7 +20,8 @@ class NewsvendorEnv(gym.Env):
     expires at the end of each period.
 
     Observation:
-        Type: Continuous values S = (p, c, h, k, mu, x_l, x_l-1)
+        Type: Box 
+        State Vector: S = (p, c, h, k, mu, x_l, x_l-1)
         p = price
         c = cost
         h = holding cost
@@ -29,7 +30,7 @@ class NewsvendorEnv(gym.Env):
         x_l = order quantities in the queue
 
     Actions:
-        Type: Continuous
+        Type: Box
         Amount of product to order.
 
     Reward:
@@ -47,7 +48,6 @@ class NewsvendorEnv(gym.Env):
         self.lead_time = 5
         self.max_inventory = 4000
         self.max_order_quantity = 2000
-        self.step_count = 0
         self.step_limit = 40
         self.p_max = 100    # Max sale price
         self.h_max = 5      # Max holding cost
@@ -93,6 +93,11 @@ class NewsvendorEnv(gym.Env):
         new_inventory[:-1] += inventory[1:]
         new_inventory[-1] += order_qty
         self.state = np.hstack([self.state[:5], new_inventory])
+
+        self.step_count += 1
+        if self.step_count >= self.step_limit:
+            done = True
+
         return self.state, reward, done, {}
 
     def reset(self):

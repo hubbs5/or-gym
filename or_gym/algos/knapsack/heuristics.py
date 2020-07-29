@@ -19,7 +19,11 @@ def ukp_heuristic(env):
         if env.item_weights[max_item] > (env.max_weight - env.current_weight):
             # Remove item from list
             vw_order = vw_order[1:].copy()
-            continue
+            if len(vw_order) == 0:
+                # End episode
+                break
+            else:
+                continue
         # Select max_item
         state, reward, done, _ = env.step(max_item)
         actions.append(max_item)
@@ -44,12 +48,13 @@ def bkp_heuristic(env):
         if env.item_limits[max_item] == 0:
             # Remove item from list
             vw_order = vw_order[1:].copy()
-            continue
         # Check that item fits
-        if env.item_weights[max_item] > (env.max_weight - env.current_weight):
+        elif env.item_weights[max_item] > (env.max_weight - env.current_weight):
             # Remove item from list
             vw_order = vw_order[1:].copy()
-            continue
+        if len(vw_order) == 0:
+                # End episode
+                break
         # Select max_item
         state, reward, done, _ = env.step(max_item)
         actions.append(max_item)
