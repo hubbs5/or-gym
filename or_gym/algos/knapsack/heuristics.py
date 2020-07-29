@@ -45,16 +45,21 @@ def bkp_heuristic(env):
     while not done:
         # Check that max item is available
         max_item = vw_order[0]
+        cont_flag = False
         if env.item_limits[max_item] == 0:
             # Remove item from list
             vw_order = vw_order[1:].copy()
+            cont_flag = True
         # Check that item fits
         elif env.item_weights[max_item] > (env.max_weight - env.current_weight):
             # Remove item from list
             vw_order = vw_order[1:].copy()
+            cont_flag = True
         if len(vw_order) == 0:
-                # End episode
-                break
+            # End episode
+            break
+        if cont_flag:
+            continue
         # Select max_item
         state, reward, done, _ = env.step(max_item)
         actions.append(max_item)

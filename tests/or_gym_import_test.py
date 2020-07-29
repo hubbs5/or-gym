@@ -7,11 +7,12 @@ from argparse import ArgumentParser
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
+            'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
             'VMPacking-v0', 'VMPacking-v1',
+            'InvManagement-v0', 'InvManagement-v1',
             'PortfolioOpt-v0',
-            'VehicleRouting-v0', 'VehicleRouting-v1',
-            'NewsVendor-v0', 'NewsVendor-v1',
-            'SCSched-v0', 'SCSched-v1', 'SCSched-v2', 'SCSched-v3']
+            'VehicleRouting-v0', 
+            'NewsVendor-v0']
 
 def parse_arguments():
     parser = ArgumentParser()

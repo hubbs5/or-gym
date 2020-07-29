@@ -6,10 +6,14 @@ register(id='Knapsack-v0',
 )
 
 register(id='Knapsack-v1',
-	entry_point='or_gym.envs.classic_or.knapsack:BoundedKnapsackEnv'
+	entry_point='or_gym.envs.classic_or.knapsack:BinaryKnapsackEnv'
 )
 
 register(id='Knapsack-v2',
+	entry_point='or_gym.envs.classic_or.knapsack:BoundedKnapsackEnv'
+)
+
+register(id='Knapsack-v3',
 	entry_point='or_gym.envs.classic_or.knapsack:OnlineKnapsackEnv'
 )
 

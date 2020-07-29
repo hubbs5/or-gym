@@ -31,9 +31,35 @@ def build_ukp_ip_model(env):
 
     return m
 
-def build_bkp_ip_model(env):
+def build_bin_kp_model(env):
     assert env.spec.id == 'Knapsack-v1', \
-        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
+        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
+
+    # Initialize model
+    m = ConcreteModel()
+
+    # Sets, parameters, and variables
+    m.W = env.max_weight
+    m.i = Set(initialize=env.item_numbers)
+    m.w = Param(m.i, 
+        initialize={i: j for i, j in zip(env.item_numbers, env.item_weights)})
+    m.v = Param(m.i, 
+        initialize={i: j for i, j in zip(env.item_numbers, env.item_values)})
+    m.x = Var(m.i, within=Binary)
+
+    @m.Constraint()
+    def weight_constraint(m):
+        return sum(m.w[i] * m.x[i] for i in m.i) - m.W <= 0
+
+    m.obj = Objective(expr=(
+        sum([m.v[i] * m.x[i] for i in m.i])),
+        sense=maximize)
+
+    return m
+
+def build_bkp_ip_model(env):
+    assert env.spec.id == 'Knapsack-v2', \
+        '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
     env.reset()
 
     # Initialize model
@@ -67,8 +93,8 @@ def build_bkp_ip_model(env):
 def build_okp_ip_model(env, scenario):
     '''This model returns the optimal solution.'''
     # TODO: Develop an online version to provide tighter upper bound
-    assert env.spec.id == 'Knapsack-v2', \
-        '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
+    assert env.spec.id == 'Knapsack-v3', \
+        '{} received. Heuristic designed for Knapsack-v3.'.format(env.spec.id)
     env.reset()
     
     # Selected items
