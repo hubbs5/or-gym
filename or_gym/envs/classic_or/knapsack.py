@@ -228,14 +228,17 @@ class BinaryKnapsackEnv(KnapsackEnv):
                       [0] # Serves as place holder
                 ])
         ])
-        mask = np.where(self.current_weight + self.item_weights > self.max_weight,
-            0, 1)
-        mask = np.where(self.item_limits > 0, mask, 0)
-        self.state = {
-            "action_mask": mask,
-            "avail_actions": np.ones(self.N),
-            "state": state
-        }
+        if self.mask:
+            mask = np.where(self.current_weight + self.item_weights > self.max_weight,
+                0, 1)
+            mask = np.where(self.item_limits > 0, mask, 0)
+            self.state = {
+                "action_mask": mask,
+                "avail_actions": np.ones(self.N),
+                "state": state
+            }
+        else:
+            self.state = state.copy()
         
     def sample_action(self):
         return np.random.choice(
@@ -345,14 +348,17 @@ class BoundedKnapsackEnv(KnapsackEnv):
                       [0] # Serves as place holder
                 ])
         ])
-        mask = np.where(self.current_weight + self.item_weights > self.max_weight,
-            0, 1)
-        mask = np.where(self.item_limits > 0, mask, 0)
-        self.state = {
-            "action_mask": mask,
-            "avail_actions": np.ones(self.N),
-            "state": state
-        }
+        if self.mask:
+            mask = np.where(self.current_weight + self.item_weights > self.max_weight,
+                0, 1)
+            mask = np.where(self.item_limits > 0, mask, 0)
+            self.state = {
+                "action_mask": mask,
+                "avail_actions": np.ones(self.N),
+                "state": state
+            }
+        else:
+            self.state = state.copy()
         
     def sample_action(self):
         return np.random.choice(
