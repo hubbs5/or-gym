@@ -140,7 +140,7 @@ class BinPackingEnv(gym.Env):
         self.waste = 0
         self.bin_levels = [0] * self.bin_capacity
         self.item_size = self.get_item()
-        self.state = self.update_state()
+        self.state = self._update_state()
         return self.state
 
     def _build_obs_space(self):
