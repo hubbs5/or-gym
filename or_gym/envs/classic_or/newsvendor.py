@@ -7,6 +7,7 @@ import gym
 from gym import spaces
 import itertools
 import numpy as np
+from collections import Iterable
 from or_gym.utils.env_config import assign_env_config
 
 class NewsvendorEnv(gym.Env):
@@ -97,6 +98,8 @@ class NewsvendorEnv(gym.Env):
         self.step_count += 1
         if self.step_count >= self.step_limit:
             done = True
+        if isinstance(reward, Iterable):
+            reward = sum(reward)
 
         return self.state, reward, done, {}
 

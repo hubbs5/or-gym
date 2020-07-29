@@ -3,19 +3,20 @@
 # Imports environment and runs 1,000 episodes with random actions to ensure
 # there are no basic errors in the environment.
 
-import gym
 import or_gym
 from argparse import ArgumentParser
 import time
 import numpy as np
 
-env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
+env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2', 'Knapsack-v3',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
+			'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
             'VMPacking-v0', 'VMPacking-v1',
             'PortfolioOpt-v0',
             'TSP-v0',
-            'VehicleRouting-v0',# 'VehicleRouting-v1',
-            'NewsVendor-v0', 'NewsVendor-v1']
+			'InvManagement-v0', 'InvManagement-v1',
+            'Newsvendor-v0']
+			#'VehicleRouting-v0']
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -43,7 +44,6 @@ def test_env(env, n_episodes, print_output=True):
 				msg = 'Observation Space does not match:'
 				msg += '\nobservation_space:\nShape:\t{}\n\t{}'.format(s.shape, s)
 				msg += '\nAction:\t{}'.format(action)
-				# msg += '\n{}\n{}\n{}'.format(np.where(s>env.box_high), s[np.where(s>env.box_high)], env.box_high[np.where(s>env.box_high)])
 				raise ValueError(msg)
 			rewards += r
 			step_count += 1
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 		for name in env_list:
 			print('Testing {}'.format(name))
 			try:
-				env = gym.make(name)
+				env = or_gym.make(name)
 				try:
 					test_env(env, n_episodes)
 				except Exception as e:
@@ -76,6 +76,6 @@ if __name__ == "__main__":
 			except Exception as e:
 				print('Error initializing {}\n'.format(name))
 	else:
-		env = gym.make(env_name)
+		env = or_gym.make(env_name)
 		print('Testing {}'.format(env_name))
 		test_env(env, n_episodes)

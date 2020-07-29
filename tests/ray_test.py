@@ -11,13 +11,15 @@ from ray.rllib.agents import ppo
 from argparse import ArgumentParser
 import time
 
-env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
+env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2', 'Knapsack-v3',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
-            'VMPacking-v0',
+			'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
+            'VMPacking-v0', 'VMPacking-v1',
             'PortfolioOpt-v0',
-            'VehicleRouting-v0', 'VehicleRouting-v1',
+            'TSP-v0',
+			'InvManagement-v0', 'InvManagement-v1',
             'NewsVendor-v0',
-            'InvManagement-v0', 'InvManagement-v1']
+			'VehicleRouting-v0']
 
 def parse_arguments():
     parser = ArgumentParser()
