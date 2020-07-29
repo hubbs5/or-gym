@@ -46,14 +46,15 @@ class KnapsackEnv(gym.Env):
     def __init__(self, *args, **kwargs):
         # Generate data with consistent random seed to ensure reproducibility
         self.N = 200
-        self.item_numbers = np.arange(self.N)
         self.max_weight = 200
         self.current_weight = 0
         self._max_reward = 10000
         self.mask = False
         self.seed = 0
-        self.item_weights = weights.copy()
-        self.item_values = values.copy()
+        self.item_numbers = np.arange(self.N)
+        self.item_weights = default_bkp_weights.copy()
+        self.item_values = default_bkp_values.copy()
+        self.randomize_params_on_reset = False
         # Add env_config, if any
         assign_env_config(self, kwargs)
         self.set_seed()
@@ -116,20 +117,12 @@ class KnapsackEnv(gym.Env):
                 np.array([
                     [self.max_weight],
                      [self.current_weight]])
-                ])
-        # state = np.hstack([state,
-            # np.array([self.current_weight])])
-        # self.state = np.hstack([
-        #     self.state, 
-        #     np.array([[self.max_weight],
-        #               [self.current_weight]])
-        # ])
-
-       
-        # mask = np.where(self.item_limits > 0, mask, 0)
-        
+                ])        
     
     def reset(self):
+        if self.randomize_params_on_reset:
+            self.item_weights = np.random.randint(1, 100, size=self.N)
+            self.item_values = np.random.randint(0, 100, size=self.N)
         self.current_weight = 0
         self._update_state()
         return self.state
@@ -179,9 +172,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     def __init__(self, *args, **kwargs):
-        self.item_limits_init = np.ones(self.N)
         super().__init__()
-        
         self.item_weights = default_bin_weights.copy()
         self.item_weights = default_bin_values.copy()
         assign_env_config(self, kwargs)
@@ -252,7 +243,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
     
     def reset(self):
         self.current_weight = 0
-        self.item_limits = self.item_limits_init.copy()
+        self.item_limits = np.ones(self.N)
         self._update_state()
         return self.state
 
@@ -517,9 +508,42 @@ default_bin_values = np.array([18, 64, 79, 30, 79, 33, 69, 87, 17, 56, 95, 5,
 default_ukp_values = None
 default_ukp_weights = None
 
-default_bkp_values = None
-default_bkp_weights = None
-default_bkp_limits = None
+default_bkp_weights = np.array([66,  2,  1, 42, 90, 69, 76, 86, 92, 73, 62,  5, 63, 30, 59, 41, 86,
+       35, 82, 83, 66, 44, 44, 21, 70, 35, 22, 36, 32, 13, 42, 14, 44, 19,
+        3, 91, 74, 72, 94, 10, 99, 32, 67, 91, 60, 46, 45, 31, 90, 92, 81,
+       45, 28, 24, 72, 90, 11, 95, 70, 97, 46, 29, 67, 75, 12, 12, 33, 41,
+       88, 77, 74, 37, 74, 57, 50, 28,  4,  2, 53, 58, 29, 61, 33, 77, 57,
+       21, 77, 94, 35, 18, 96, 63, 59, 41, 94, 54, 90, 65, 49, 93, 14, 14,
+       28,  5, 87, 29, 51, 73, 44, 15, 96, 63, 10, 89, 75, 90, 36, 67, 40,
+       51, 22, 44,  8, 44, 61, 17, 46, 73, 56, 27, 23, 72, 20, 31, 41, 11,
+       92, 17, 88, 35, 68, 87, 62, 31,  2, 69, 75, 86, 43, 59, 22, 11, 95,
+       76, 22,  6, 14, 58, 25, 31, 25, 81, 68, 40, 38, 58, 30, 20, 44, 65,
+       84, 35, 26, 57, 14, 74, 39, 57, 87, 40, 76, 30, 14, 17, 71, 67, 34,
+        3, 34, 55, 39, 35, 86, 73, 85, 91, 17, 59, 79, 54])
+
+default_bkp_values = np.array([56, 26, 52, 29, 29, 36, 38, 80, 86,  5, 91, 56, 50, 86, 13, 22, 24,
+       69, 16, 77, 81, 87, 16, 48, 94, 62, 16, 51, 10, 56, 72, 25, 49,  5,
+       82, 40, 54, 66, 24, 88, 38, 99, 32, 89, 53, 81, 26, 17, 10,  2, 72,
+       57, 60, 73, 92, 35, 98, 12, 14, 96,  6, 22, 60, 15, 83, 90, 27, 33,
+       22, 37,  5,  1, 32, 75, 86, 29, 86, 29, 81, 62, 67,  4, 49, 10, 56,
+       67, 44,  2, 48, 41, 85, 25, 61, 82,  5, 16, 98, 70, 90, 65, 57, 61,
+       66, 64, 24, 64, 12, 88, 88, 70, 14, 54, 60,  1, 18, 42, 12,  9, 27,
+       33, 54, 17, 93, 99, 52, 16, 33, 78, 47, 78, 92, 63, 57, 86,  8, 65,
+       33, 44, 43, 49, 10, 60, 74,  3, 30, 85, 33, 46,  0,  8,  1, 88, 96,
+       52, 11,  9, 37, 54, 61, 78, 43, 86, 24, 23, 38, 84, 86, 97, 50, 27,
+       55, 51, 41,  4, 37, 16, 67, 30, 64, 13, 51, 33,  3, 60, 23, 47, 66,
+       63,  2, 14,  4, 90, 23, 82, 42, 72, 73, 47, 62, 90])
+
+default_bkp_limits = np.array([2, 2, 4, 1, 2, 9, 6, 1, 5, 0, 3, 9, 0, 7, 7, 2, 5, 4, 6, 0, 6, 5,
+       5, 5, 4, 4, 9, 9, 7, 3, 9, 2, 4, 6, 2, 2, 9, 1, 8, 4, 1, 3, 6, 8,
+       2, 9, 0, 3, 4, 5, 9, 4, 4, 3, 3, 4, 8, 7, 1, 1, 3, 9, 2, 0, 7, 0,
+       8, 2, 1, 5, 6, 1, 8, 2, 4, 9, 6, 1, 9, 8, 0, 3, 4, 2, 1, 7, 8, 1,
+       2, 6, 5, 7, 4, 4, 5, 8, 7, 9, 0, 6, 4, 6, 6, 1, 1, 0, 8, 5, 7, 2,
+       5, 8, 0, 9, 5, 0, 3, 9, 3, 9, 6, 5, 5, 1, 8, 4, 8, 4, 8, 4, 9, 0,
+       7, 3, 4, 8, 2, 8, 5, 4, 5, 6, 3, 3, 0, 4, 6, 6, 1, 3, 4, 1, 7, 5,
+       2, 5, 2, 0, 6, 4, 2, 5, 8, 9, 6, 9, 5, 1, 3, 8, 1, 4, 6, 8, 4, 5,
+       4, 5, 6, 6, 4, 1, 3, 9, 7, 0, 1, 2, 5, 7, 7, 8, 7, 0, 6, 4, 4, 5,
+       5, 0])
 
 default_okp_values = np.array([ 4, 13,  5, 25, 11, 15, 13, 17, 21, 18, 27,  2,  4, 13,  0,  0,  0,
     15,  6, 29, 26, 11, 27, 26, 16, 25, 19, 19, 22,  3, 22, 28, 15,  9,
@@ -546,14 +570,3 @@ default_okp_weights = np.array([17,  9,  6,  1,  7,  9,  1,  1, 13, 14,  6,  1, 
        16, 17, 10, 11,  1, 11, 15, 11, 16, 14,  5,  5,  7, 10,  9,  7, 17,
         4,  9, 14, 18,  8, 18,  3,  6, 19,  9,  5, 10, 13,  8, 12,  3, 12,
         5,  1,  2,  9, 13,  3, 18,  8, 13,  4,  3,  7, 14])
-
-# limits = np.array([3, 3, 8, 9, 8, 8, 3, 7, 8, 6, 4, 9, 8, 8, 5, 3, 9, 7, 8, 2, 3, 4,
-#        2, 8, 6, 9, 7, 2, 2, 2, 8, 6, 2, 5, 3, 5, 7, 2, 3, 1, 4, 6, 4, 7,
-#        8, 3, 8, 7, 3, 6, 2, 7, 9, 3, 3, 8, 3, 9, 8, 7, 2, 7, 1, 7, 4, 5,
-#        1, 3, 4, 2, 1, 4, 4, 3, 9, 4, 3, 9, 6, 5, 2, 5, 2, 2, 7, 4, 5, 1,
-#        8, 5, 2, 5, 4, 3, 9, 5, 9, 1, 8, 8, 3, 2, 1, 9, 5, 4, 6, 8, 7, 2,
-#        6, 8, 9, 3, 1, 9, 6, 3, 2, 4, 9, 2, 2, 4, 5, 8, 3, 8, 9, 3, 1, 2,
-#        6, 1, 5, 6, 7, 3, 9, 4, 4, 4, 2, 9, 8, 6, 5, 9, 8, 4, 5, 5, 3, 5,
-#        7, 2, 8, 6, 7, 5, 2, 7, 5, 2, 3, 7, 9, 2, 1, 4, 8, 8, 9, 8, 8, 7,
-#        7, 3, 2, 7, 3, 5, 4, 9, 1, 8, 1, 5, 7, 4, 2, 8, 8, 6, 1, 7, 2, 2,
-#        5, 1])

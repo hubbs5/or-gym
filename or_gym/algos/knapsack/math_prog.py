@@ -31,9 +31,9 @@ def build_ukp_ip_model(env):
 
     return m
 
-def build_bin_kp_model(env):
+def build_bin_ip_model(env):
     assert env.spec.id == 'Knapsack-v1', \
-        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
+        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
 
     # Initialize model
     m = ConcreteModel()
@@ -90,12 +90,14 @@ def build_bkp_ip_model(env):
 
     return m
 
-def build_okp_ip_model(env, scenario):
+def build_okp_ip_model(env, scenario=None):
     '''This model returns the optimal solution.'''
-    # TODO: Develop an online version to provide tighter upper bound
     assert env.spec.id == 'Knapsack-v3', \
         '{} received. Heuristic designed for Knapsack-v3.'.format(env.spec.id)
     env.reset()
+    if scenario is None:
+        scenario = np.random.choice(env.item_numbers, 
+            p=env.item_probs, size=env.step_limit)
     
     # Selected items
     ordered_weights = [env.item_weights[i] for i in scenario]
