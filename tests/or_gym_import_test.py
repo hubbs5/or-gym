@@ -7,11 +7,12 @@ from argparse import ArgumentParser
 
 env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
+            'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
             'VMPacking-v0', 'VMPacking-v1',
+            'InvManagement-v0', 'InvManagement-v1',
             'PortfolioOpt-v0',
-            'TSP-v0',
-            'VehicleRouting-v0', 'VehicleRouting-v1',
-            'NewsVendor-v0', 'NewsVendor-v1']
+            'VehicleRouting-v0', 
+            'NewsVendor-v0']
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -25,7 +26,7 @@ def main(args):
     for env_name in env_list:
         print('\nTesting functionality for {}'.format(env_name))
         try:
-            env = gym.make(env_name)
+            env = or_gym.make(env_name)
             print('{} initialized successfully'.format(env_name))
             try:
                 action = env.action_space.sample()
