@@ -49,7 +49,7 @@ class KnapsackEnv(gym.Env):
         self.max_weight = 200
         self.current_weight = 0
         self._max_reward = 10000
-        self.mask = False
+        self.mask = True
         self.seed = 0
         self.item_numbers = np.arange(self.N)
         self.item_weights = default_bkp_weights.copy()

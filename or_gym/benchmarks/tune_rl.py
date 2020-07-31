@@ -11,7 +11,7 @@ def parse_arguments():
     parser.add_argument('--env', type=str, default='Knapsack-v0')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--model_name', type=str, default='or_gym_tune')
-    parser.add_argument('--algo', type=str, default='A3C')
+    parser.add_argument('--algo', type=str, default='PPO')
     parser.add_argument('--print', type=bool, default=True,
         help='Print output.')
 

@@ -32,8 +32,8 @@ def ukp_heuristic(env):
     return actions, rewards
 
 def bkp_heuristic(env):
-    assert env.spec.id == 'Knapsack-v1', \
-        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
+    # assert env.spec.id == 'Knapsack-v1' or env.spec.id == 'Knapack-v2', \
+    #     '{} received. Heuristic designed for Knapsack-v1/v2.'.format(env.spec.id)
     env.reset()
 
     # Get value-weight ratios

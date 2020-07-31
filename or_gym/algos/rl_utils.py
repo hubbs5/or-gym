@@ -3,7 +3,6 @@ from ray import tune
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
 from ray.rllib.utils import try_import_tf
-import gym
 from gym import spaces
 import or_gym
 from datetime import datetime
@@ -79,7 +78,7 @@ def set_config(default_config, config_dict=None):
 def check_config(env_name, model_name=None, *args, **kwargs):
 	if model_name is None:
 		model_name = 'or_gym_tune'
-	env = gym.make(env_name)
+	env = or_gym.make(env_name)
 	try:
 		vf_clip_param = env._max_rewards
 	except AttributeError:
@@ -99,7 +98,7 @@ def check_config(env_name, model_name=None, *args, **kwargs):
 		"entropy_coeff": tune.grid_search([1e-2, 1e-3]), #, 1e-4]),
 		# "critic_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
 		# "actor_lr": tune.grid_search([1e-3, 1e-4, 1e-5]),
-		"lambda": tune.grid_search([0.95, 0.9]),
+		# "lambda": tune.grid_search([0.95, 0.9]),
 		"kl_target": tune.grid_search([0.01, 0.03]),
 		# "sgd_minibatch_size": tune.grid_search([128, 512, 1024]),
 		# "train_batch_size": tune.grid_search([])
@@ -214,7 +213,7 @@ class VMActionMaskModel(TFModelV2):
     def value_function(self):
         return self.action_embed_model.value_function()
 
-def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
+def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 	if model_name is None:
 		model_name = 'or_gym_tune'
 	register_env(env_name)
@@ -223,7 +222,7 @@ def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, VMActionMaskModel)
 	elif "Knapsack-v0" in rl_config["env"]:
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP0ActionMaskModel)
-	elif "Knapsack-v1" in rl_config["env"]:
+	elif "Knapsack-v1" in rl_config["env"] or "Knapsack-v2" in rl_config["env"]:
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP1ActionMaskModel)
 	# else:
 		# ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
@@ -235,7 +234,7 @@ def tune_model(env_name, rl_config, model_name=None, algo='A3C'):
 		queue_trials=True,
 		stop={
 			"training_iteration": 500,
-			"episode_reward_mean": 2415
+			"episode_reward_mean": 2696
 		},
 		config=rl_config,
 		reuse_actors=True

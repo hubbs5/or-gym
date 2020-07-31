@@ -17,17 +17,17 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def optimize_bkp(env, print_results=False):
+def optimize_bin_kp(env, print_results=False):
 
-    model = build_bkp_ip_model(env)
+    model = build_bin_ip_model(env)
     model, results = solve_math_program(model, print_results=print_results)
     return model, results
 
 if __name__ == '__main__':
     args = parse_arguments()
     env_config = {'seed': args.seed}
-    env = or_gym.make('Knapsack-v2', env_config=env_config)
-    model, results = optimize_bkp(env)
+    env = or_gym.make('Knapsack-v1', env_config=env_config)
+    model, results = optimize_bin_kp(env)
     print("Optimal reward\t\t=\t{}".format(model.obj.expr()))
     
     total_heur_rewards = []

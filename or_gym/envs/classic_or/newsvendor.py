@@ -99,6 +99,7 @@ class NewsvendorEnv(gym.Env):
         if self.step_count >= self.step_limit:
             done = True
         if isinstance(reward, Iterable):
+            # TODO: Sometimes reward is np.array with one entry
             reward = sum(reward)
 
         return self.state, reward, done, {}
