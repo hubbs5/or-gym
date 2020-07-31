@@ -159,13 +159,13 @@ class InvManagementMasterEnv(gym.Env):
         # An action is defined for every stage (except last one)
         # self.action_space = gym.spaces.Tuple(tuple(
             # [gym.spaces.Box(0, i, shape=(1,)) for i in self.supply_capacity]))
-        pipeline_length = (m-1)*(lt_max+1)
+        self.pipeline_length = (m-1)*(lt_max+1)
         self.action_space = gym.spaces.Box(
             low=np.zeros(m-1), high=self.supply_capacity, dtype=np.int16)
         # observation space (Inventory position at each echelon, which is any integer value)
         self.observation_space = gym.spaces.Box(
-            low=-np.ones(pipeline_length)*self.supply_capacity.max()*self.num_periods*10,
-            high=np.ones(pipeline_length)*self.supply_capacity.max()*self.num_periods, dtype=np.int32)
+            low=-np.ones(self.pipeline_length)*self.supply_capacity.max()*self.num_periods*10,
+            high=np.ones(self.pipeline_length)*self.supply_capacity.max()*self.num_periods, dtype=np.int32)
 
         # self.observation_space = gym.spaces.Box(
         #     low=-np.ones(m-1)*self.supply_capacity.max()*self.num_periods*10, 
@@ -271,7 +271,6 @@ class InvManagementMasterEnv(gym.Env):
         Im1 = np.append(I[1:], np.Inf) 
         
         # place replenishment order
-        R[R<0] = 0 # force non-negativity
         if n>=1: # add backlogged replenishment orders to current request
             R = R + self.B[n-1,1:]
         Rcopy = R.copy() # copy original replenishment quantity
@@ -310,7 +309,7 @@ class InvManagementMasterEnv(gym.Env):
         self.T[n+1,:] = T # store pipeline inventory at start of period n + 1
         
         # unfulfilled orders
-        U = np.append(D,Rcopy) - S # unfulfilled demand and replenishment orders
+        U = np.append(D, Rcopy) - S # unfulfilled demand and replenishment orders
         
         # backlog and lost sales
         if self.backlog:
@@ -394,3 +393,6 @@ class InvManagementLostSalesEnv(InvManagementMasterEnv):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.backlog = False
+        self.observation_space = gym.spaces.Box(
+            low=np.zeros(self.pipeline_length), # Never goes negative without backlog
+            high=np.ones(self.pipeline_length)*self.supply_capacity.max()*self.num_periods, dtype=np.int32)

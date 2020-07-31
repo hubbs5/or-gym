@@ -3,8 +3,6 @@ from collections import Iterable
 import copy
 
 def ukp_heuristic(env):
-    assert env.spec.id == 'Knapsack-v0', \
-        '{} received. Heuristic designed for Knapsack-v0.'.format(env.spec.id)
     env.reset()
     
     # Get value-weight ratios
@@ -16,7 +14,7 @@ def ukp_heuristic(env):
     while not done:
         max_item = vw_order[0]
         # Check that item fits
-        if env.item_weights[max_item] > (env.max_weight - env.current_weight):
+        if env.item_weights[max_item] + env.current_weight > env.max_weight:
             # Remove item from list
             vw_order = vw_order[1:].copy()
             if len(vw_order) == 0:
@@ -32,8 +30,6 @@ def ukp_heuristic(env):
     return actions, rewards
 
 def bkp_heuristic(env):
-    assert env.spec.id == 'Knapsack-v1', \
-        '{} received. Heuristic designed for Knapsack-v1.'.format(env.spec.id)
     env.reset()
 
     # Get value-weight ratios
@@ -51,7 +47,7 @@ def bkp_heuristic(env):
             vw_order = vw_order[1:].copy()
             cont_flag = True
         # Check that item fits
-        elif env.item_weights[max_item] > (env.max_weight - env.current_weight):
+        elif env.item_weights[max_item] + env.current_weight > env.max_weight:
             # Remove item from list
             vw_order = vw_order[1:].copy()
             cont_flag = True
@@ -69,8 +65,6 @@ def bkp_heuristic(env):
 
 def okp_heuristic(env, scenario=None):
     '''TwoBins from Han 2015'''
-    assert env.spec.id == 'Knapsack-v2', \
-        '{} received. Heuristic designed for Knapsack-v2.'.format(env.spec.id)
     if scenario is not None:
         # Ensure scenario is iterable of length step_limit
         assert isinstance(scenario, Iterable), 'scenario not iterable.'
@@ -92,7 +86,7 @@ def okp_heuristic(env, scenario=None):
         action = 0
         if r:
             # Greedy algorithm
-            if env.item_weights[item] <= (env.max_weight - env.current_weight):
+            if env.item_weights[max_item] + env.current_weight > env.max_weight:
                 action = 1
         else:
         	rejection_weight += env.item_weights[item]
