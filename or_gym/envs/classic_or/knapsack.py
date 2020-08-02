@@ -432,7 +432,6 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self._max_reward = 600
         
     def step(self, action):
-        # Check that item will fit
         if bool(action):
             # Check that item will fit
             if self.item_weights[self.current_item] + self.current_weight <= self.max_weight:
@@ -459,18 +458,25 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     
     def _update_state(self):
         self.current_item = np.random.choice(self.item_numbers, p=self.item_probs)
-        self.state = (
-            # self.item_weights,
-            # self.item_values,
-            # self.item_probs,
-            np.array([
-                # self.max_weight,
+        current_item_weight = self.item_weights[self.current_item]
+        state = np.array([
                 self.current_weight,
                 self.current_item,
-                self.item_weights[self.current_item],
+                current_item_weight,
                 self.item_values[self.current_item]
-            ]))
-        
+                ])
+        if self.mask:
+            mask = np.ones(2)
+            if current_item_weight + self.current_weight > self.max_weight:
+                mask[1] = 0
+            self.state = {
+                'state': state,
+                'avail_actions': np.ones(2),
+                'action_mask': mask
+            }            
+        else:
+            self.state = state
+
     def sample_action(self):
         return np.random.choice([0, 1])
     

@@ -187,6 +187,32 @@ class KP1ActionMaskModel(TFModelV2):
     def value_function(self):
         return self.action_embed_model.value_function()
 
+class OKPActionMaskModel(TFModelV2):
+    
+    def __init__(self, obs_space, action_space, num_outputs,
+        model_config, name, true_obs_shape=(4,), action_embed_size=2,
+        *args, **kwargs):
+        super(KP1ActionMaskModel, self).__init__(obs_space,
+            action_space, num_outputs, model_config, name, *args, **kwargs)
+        self.action_embed_model = FullyConnectedNetwork(
+            spaces.Box(0, 1, shape=true_obs_shape), action_space, action_embed_size,
+            model_config, name + "_action_embedding")
+        self.register_variables(self.action_embed_model.variables())
+        
+    def forward(self, input_dict, state, seq_lens):
+        avail_actions = input_dict["obs"]["avail_actions"]
+        action_mask = input_dict["obs"]["action_mask"]
+        action_embedding, _ = self.action_embed_model({
+            "obs": input_dict["obs"]["state"]
+        })
+        intent_vector = tf.expand_dims(action_embedding, 1)
+        action_logits = tf.reduce_sum(avail_actions * intent_vector, axis=1)
+        inf_mask = tf.maximum(tf.log(action_mask), tf.float32.min)
+        return action_logits + inf_mask, state
+    
+    def value_function(self):
+        return self.action_embed_model.value_function()
+
 class VMActionMaskModel(TFModelV2):
     
     def __init__(self, obs_space, action_space, num_outputs,
@@ -224,6 +250,8 @@ def tune_model(env_name, rl_config, model_name=None, algo='PPO'):
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP0ActionMaskModel)
 	elif "Knapsack-v1" in rl_config["env"] or "Knapsack-v2" in rl_config["env"]:
 		ray.rllib.models.ModelCatalog.register_custom_model(model_name, KP1ActionMaskModel)
+	elif "Knapsack-v3" in rl_config["env"]:
+		ray.rllib.models.ModelCatalog.register_custom_model(model_name, OKPActionMaskModel)
 	# else:
 		# ray.rllib.models.ModelCatalog.register_custom_model(model_name, FCModel)
 	# Relevant docs: https://ray.readthedocs.io/en/latest/tune-package-ref.html
