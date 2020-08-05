@@ -15,11 +15,7 @@ setup(name='or-gym',
 	# pacakges=[package for package in find_packages() if package.startswith('something')],
 	install_requires=[
 		'gym>=0.15.0',
-		'matplotlib>=3.0.3',
 		'numpy>=1.16.1',
-		'scipy>=1.4.1',
-		'pyomo>=5.5',
-		#'ray>=0.9',
-		'pandas>=1.0'],
+		'scipy>=1.4.1'],
 	zip_safe=False
 )
