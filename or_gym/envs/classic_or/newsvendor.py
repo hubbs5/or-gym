@@ -8,7 +8,7 @@ from gym import spaces
 import itertools
 import numpy as np
 from collections import Iterable
-from or_gym.utils.env_config import assign_env_config
+from or_gym.utils import assign_env_config
 
 class NewsvendorEnv(gym.Env):
     '''

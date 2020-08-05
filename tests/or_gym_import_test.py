@@ -4,15 +4,7 @@ import gym
 import or_gym
 import sys
 from argparse import ArgumentParser
-
-env_list = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
-            'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
-            'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
-            'VMPacking-v0', 'VMPacking-v1',
-            'InvManagement-v0', 'InvManagement-v1',
-            'PortfolioOpt-v0',
-            'VehicleRouting-v0', 
-            'NewsVendor-v0']
+from or_gym.version import ENV_LIST
 
 def parse_arguments():
     parser = ArgumentParser()
@@ -23,7 +15,7 @@ def parse_arguments():
 
 def main(args):
     args = parse_arguments()
-    for env_name in env_list:
+    for env_name in ENV_LIST:
         print('\nTesting functionality for {}'.format(env_name))
         try:
             env = or_gym.make(env_name)

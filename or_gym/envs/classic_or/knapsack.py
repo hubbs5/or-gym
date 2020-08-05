@@ -2,7 +2,7 @@ import numpy as np
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
-from or_gym.utils.env_config import assign_env_config
+from or_gym.utils import assign_env_config
 import copy
 
 class KnapsackEnv(gym.Env):
@@ -174,7 +174,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.item_weights = default_bin_weights.copy()
-        self.item_weights = default_bin_values.copy()
+        self.item_values = default_bin_values.copy()
         assign_env_config(self, kwargs)
 
         obs_space = spaces.Box(

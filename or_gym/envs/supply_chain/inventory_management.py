@@ -8,7 +8,7 @@ import gym
 import itertools
 import numpy as np
 from scipy.stats import *
-from or_gym.utils.env_config import *
+from or_gym.utils import assign_env_config
 from collections import deque
 
 class InvManagementMasterEnv(gym.Env):

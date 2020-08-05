@@ -6,6 +6,7 @@ GitHub: https://github.com/awslabs/or-rl-benchmarks
 import gym
 from gym import spaces
 import or_gym
+from or_gym.utils import assign_env_config
 import random
 import numpy as np
 from scipy.stats import truncnorm
@@ -87,6 +88,7 @@ class VehicleRoutingEnv(gym.Env):
         self.mask = False
         self.info = {}
         
+        assign_env_config(self, kwargs)
         self._order_nums = np.arange(self.max_orders)
         self.loc_permutations = [(x, y) for x in range(self.grid[0])
             for y in range(self.grid[1])]
