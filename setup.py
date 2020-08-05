@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'or_gym'))
-from version import VERSION
+from or_gym.version import VERSION
 
 setup(name='or-gym',
 	version=VERSION,
