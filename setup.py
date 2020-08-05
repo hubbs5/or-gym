@@ -12,10 +12,12 @@ setup(name='or-gym',
 	description='OR-Gym: A set of environments for developing reinforcement learning agents for OR problems.',
 	author='Christian Hubbs',
 	license='MIT',
+	url='https://github.com/hubbs5/or-gym',
 	# pacakges=[package for package in find_packages() if package.startswith('something')],
 	install_requires=[
 		'gym>=0.15.0',
 		'numpy>=1.16.1',
 		'scipy>=1.4.1'],
-	zip_safe=False
+	zip_safe=False,
+	python_requires='>=3.5'
 )
