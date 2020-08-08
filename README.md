@@ -3,23 +3,22 @@
 
 This library contains environments consisting of operations research problems which adhere to the OpenAI Gym API. The purpose is to bring reinforcement learning to the operations research community via accessible simulation environments featuring classic problems that are solved both with reinforcement learning as well as traditional OR techniques.
 
-## Requirements
-
-<font color="#ff2400">See `requirements.txt`. Add to this...</font>
-
 ## Installation
 
-Clone the repo to your machine. Then navigate to the `or_gym_envs` folder. From there, run `pip install -e .` to install the OR Gym environments. To test the installation, run the `or_gym_test.py` file. You should receive a printout saying that the model was loaded successfully.
-<font color="#ff2400">Eventually, we need to get a simple `pip install or-gym` command. Also, would like to set this up such that we can just import or_gym.envs to get the environments, or_gym.benchmarks, to get those files, etc. Right now, using relative imports, which isn't ideal.</font>
+OR-Gym requires Python 3.5+, Numpy, Scipy, and Gym.
+
+Installation is possible via `pip`:
+
+`$ pip install or-gym`
 
 ## Environments
 
-- `Knapsack-v0`: a small version of the classic unbounded knapsack problem (<font color="#ff2400">find a simple one in the lit to cite</font>). See the [`unbounded_knapsack_problem`](https://github.com/hubbs5/or-gym/blob/knapsack_problem/notebooks/unbounded_knapsack_opt.ipynb) notebook for additional details and solutions.
-- `Knapsack-v1`: bounded knapsack problem with uncertainty (<font color="#ff2400">to be implemented</font>).
-- `NewsVendor-v0`: <font color="#ff2400">to be implemented</font>
-- `TSP-v0`: <font color="#ff2400">to be implemented</font>
-- `VRP-v0`: <font color="#ff2400">to be implemented</font>
-- `RTN-v0`: <font color="#ff2400">to be implemented</font>
+- `Knapsack-v0`: a small version of the classic unbounded knapsack problem with 200 items.
+- `Knapsack-v1`: binary (0-1) knapsack problem with 200 items.
+- `Knapsack-v2`: bounded knapsack problem with 200 items.
+- `Knapsack-v3`: stochastic, online knapsack problem.
+- `BinPacking-v0`: 
+
 
 Others to implement such as network design under uncertainty, portfolio optimization, etc? ChemE specific models like max pooling? 
 
