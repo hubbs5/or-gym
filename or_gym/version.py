@@ -1,4 +1,4 @@
-VERSION="0.0.1"
+VERSION="0.1.1"
 
 ENV_LIST = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',

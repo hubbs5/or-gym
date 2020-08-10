@@ -3,27 +3,40 @@
 
 This library contains environments consisting of operations research problems which adhere to the OpenAI Gym API. The purpose is to bring reinforcement learning to the operations research community via accessible simulation environments featuring classic problems that are solved both with reinforcement learning as well as traditional OR techniques.
 
-## Requirements
-
-<font color="#ff2400">See `requirements.txt`. Add to this...</font>
-
 ## Installation
 
-Clone the repo to your machine. Then navigate to the `or_gym_envs` folder. From there, run `pip install -e .` to install the OR Gym environments. To test the installation, run the `or_gym_test.py` file. You should receive a printout saying that the model was loaded successfully.
-<font color="#ff2400">Eventually, we need to get a simple `pip install or-gym` command. Also, would like to set this up such that we can just import or_gym.envs to get the environments, or_gym.benchmarks, to get those files, etc. Right now, using relative imports, which isn't ideal.</font>
+This library requires Python 3.5+ in order to function. 
+Installation is possible via `pip`:
+
+`$ pip install or-gym`
+
+Or, you can install directly from GitHub with:
+
+```
+git clone https://github.com/hubbs5/or-gym.git
+cd or-gym
+pip install -e .
+```
+
+## Citation
 
 ## Environments
 
-- `Knapsack-v0`: a small version of the classic unbounded knapsack problem (<font color="#ff2400">find a simple one in the lit to cite</font>). See the [`unbounded_knapsack_problem`](https://github.com/hubbs5/or-gym/blob/knapsack_problem/notebooks/unbounded_knapsack_opt.ipynb) notebook for additional details and solutions.
-- `Knapsack-v1`: bounded knapsack problem with uncertainty (<font color="#ff2400">to be implemented</font>).
-- `NewsVendor-v0`: <font color="#ff2400">to be implemented</font>
-- `TSP-v0`: <font color="#ff2400">to be implemented</font>
-- `VRP-v0`: <font color="#ff2400">to be implemented</font>
-- `RTN-v0`: <font color="#ff2400">to be implemented</font>
+- `Knapsack-v0`: a small version of the classic unbounded knapsack problem with 200 items.
+- `Knapsack-v1`: binary (0-1) knapsack problem with 200 items.
+- `Knapsack-v2`: bounded knapsack problem with 200 items.
+- `Knapsack-v3`: stochastic, online knapsack problem.
+- `BinPacking-v0` through `BinPacking-v5`: online bin packing problem taken from [Balaji et al.](https://arxiv.org/abs/1911.10641).
+- `Newsvendor-v0`: multi-period newsvendor problem with lead times taken from [Balaji et al.](https://arxiv.org/abs/1911.10641).
+- `VMPacking-v0`: permanent, multi-dimensional virtual machine packing problem.
+- `VMPacking-v1`: temporary, multi-dimensional virtual machine packing problem.
+- `VehicleRouting-v0`: pick-up and delivery problem with delivery windows taken from [Balaji et al.](https://arxiv.org/abs/1911.10641).
+- `InvManagement-v0`: multi-echelon supply chain re-order problem with backlogs.
+- `InvManagement-v1`: multi-echelon supply chain re-order problem without backlog.
+- `MPAA-v0`: Multi-period asset allocation problem for managing investment decisions taken from [Dantzig and Infanger](https://apps.dtic.mil/dtic/tr/fulltext/u2/a242510.pdf).
+- `TSP-v0`: travelling salesman problem with bi-directional connections and uniform cost.
+- `TSP-v1`: travelling salesman problem with bi-directional connections.
+- `TSP-v2`: travelling salesman problem for 50 largest US cities.
+- `TSP-v3`: travelling salesman problem with stochastic costs and connections.
 
-Others to implement such as network design under uncertainty, portfolio optimization, etc? ChemE specific models like max pooling? 
-
-Two key requirements for RL to be effective need to be kept in mind while finding models in the literature:
-- Requires sequential decision making such that the decisions made at each time period depend on decisions made in previous time periods.
-- Requires uncertainty in the model.
-These two factors tend to be difficult for many existing approaches in to deal with, but are where RL is particularly effective in comparison.
+## Resources
