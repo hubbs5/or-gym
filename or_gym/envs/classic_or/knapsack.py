@@ -42,7 +42,6 @@ class KnapsackEnv(gym.Env):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
-    
     def __init__(self, *args, **kwargs):
         # Generate data with consistent random seed to ensure reproducibility
         self.N = 200
