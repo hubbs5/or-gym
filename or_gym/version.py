@@ -7,4 +7,5 @@ ENV_LIST = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
             'InvManagement-v0', 'InvManagement-v1',
             'PortfolioOpt-v0',
             'VehicleRouting-v0', 
-            'Newsvendor-v0']
+            'Newsvendor-v0',
+            'TSP-v0']

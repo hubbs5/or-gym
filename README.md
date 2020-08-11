@@ -36,7 +36,5 @@ pip install -e .
 - `MPAA-v0`: Multi-period asset allocation problem for managing investment decisions taken from [Dantzig and Infanger](https://apps.dtic.mil/dtic/tr/fulltext/u2/a242510.pdf).
 - `TSP-v0`: travelling salesman problem with bi-directional connections and uniform cost.
 - `TSP-v1`: travelling salesman problem with bi-directional connections.
-- `TSP-v2`: travelling salesman problem for 50 largest US cities.
-- `TSP-v3`: travelling salesman problem with stochastic costs and connections.
 
 ## Resources
