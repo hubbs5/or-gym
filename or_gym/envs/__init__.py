@@ -61,6 +61,15 @@ register(id='VehicleRouting-v0',
 	entry_point='or_gym.envs.classic_or.vehicle_routing:VehicleRoutingEnv'
 )
 
+# TSP
+register(id='TSP-v0',
+	entry_point='or_gym.envs.classic_or.tsp:TSPEnv'
+)
+
+register(id='TSP-v1',
+	entry_point='or_gym.envs.classic_or.tsp:TSPDistCost'
+)
+
 # Inventory Management Envs
 register(id='InvManagement-v0',
 	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementBacklogEnv'
