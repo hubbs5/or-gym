@@ -22,7 +22,7 @@ setup(name='or-gym',
 	python_requires='>=3.5',
 	classifiers=[
 		'Development Status :: 3 - Alpha',
-		'Intended Audience :: Researchers and Developers',
+		'Intended Audience :: Developers',
 		'Programming Language :: Python :: 3',
 		'Programming Language :: Python :: 3.5',
 		'Programming Language :: Python :: 3.6',
