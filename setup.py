@@ -10,7 +10,7 @@ from or_gym.version import VERSION
 setup(name='or-gym',
 	version=VERSION,
 	description='OR-Gym: A set of environments for developing reinforcement learning agents for OR problems.',
-	author='Christian Hubbs',
+	author='Christian Hubbs, Hector Perez Parra, Owais Sarwar',
 	license='MIT',
 	url='https://github.com/hubbs5/or-gym',
 	packages=find_packages(),
