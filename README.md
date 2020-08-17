@@ -33,7 +33,7 @@ pip install -e .
 - `VehicleRouting-v0`: pick-up and delivery problem with delivery windows taken from [Balaji et al.](https://arxiv.org/abs/1911.10641).
 - `InvManagement-v0`: multi-echelon supply chain re-order problem with backlogs.
 - `InvManagement-v1`: multi-echelon supply chain re-order problem without backlog.
-- `MPAA-v0`: Multi-period asset allocation problem for managing investment decisions taken from [Dantzig and Infanger](https://apps.dtic.mil/dtic/tr/fulltext/u2/a242510.pdf).
+- `PortfolioOpt-v0`: Multi-period asset allocation problem for managing investment decisions taken from [Dantzig and Infanger](https://apps.dtic.mil/dtic/tr/fulltext/u2/a242510.pdf).
 - `TSP-v0`: travelling salesman problem with bi-directional connections and uniform cost.
 - `TSP-v1`: travelling salesman problem with bi-directional connections.
 
