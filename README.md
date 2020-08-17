@@ -19,6 +19,13 @@ pip install -e .
 ```
 
 ## Citation
+```
+@misc{HubbsOR-Gym,
+    author={Christian D. Hubbs and Hector D. Perez and Owais Sarwar and Nikolaos V. Sahinidis and Ignacio E. Grossmann and John M. Wassick},
+    title={OR-Gym: A Reinforcement Learning Library for Operations Research Problems},
+    year={2020},
+    Eprint={arXiv:2008.06319}}
+```
 
 ## Environments
 
