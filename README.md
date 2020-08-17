@@ -42,8 +42,8 @@ pip install -e .
 - `InvManagement-v0`: multi-echelon supply chain re-order problem with backlogs.
 - `InvManagement-v1`: multi-echelon supply chain re-order problem without backlog.
 - `PortfolioOpt-v0`: Multi-period asset allocation problem for managing investment decisions taken from [Dantzig and Infanger](https://apps.dtic.mil/dtic/tr/fulltext/u2/a242510.pdf).
-- `TSP-v0`: travelling salesman problem with bi-directional connections and uniform cost.
-- `TSP-v1`: travelling salesman problem with bi-directional connections.
+- `TSP-v0`: traveling salesman problem with bi-directional connections and uniform cost.
+- `TSP-v1`: traveling salesman problem with bi-directional connections.
 
 ## Resources
 
