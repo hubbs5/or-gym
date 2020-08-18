@@ -51,8 +51,8 @@ class KnapsackEnv(gym.Env):
         self.mask = True
         self.seed = 0
         self.item_numbers = np.arange(self.N)
-        self.item_weights = np.random.randint(1, 100, size=N)
-        self.item_values = np.random.randint(0, 100, size=N)
+        self.item_weights = np.random.randint(1, 100, size=self.N)
+        self.item_values = np.random.randint(0, 100, size=self.N)
         self.randomize_params_on_reset = False
         # Add env_config, if any
         assign_env_config(self, kwargs)
