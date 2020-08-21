@@ -53,6 +53,7 @@ class KnapsackEnv(gym.Env):
         self.item_numbers = np.arange(self.N)
         self.item_weights = np.random.randint(1, 100, size=self.N)
         self.item_values = np.random.randint(0, 100, size=self.N)
+        self.over_packed_penalty = 0
         self.randomize_params_on_reset = False
         # Add env_config, if any
         assign_env_config(self, kwargs)
@@ -84,7 +85,7 @@ class KnapsackEnv(gym.Env):
                 done = False
         else:
             # End trial if over weight
-            reward = 0
+            reward = self.over_packed_penalty
             done = True
             
         self._update_state()
