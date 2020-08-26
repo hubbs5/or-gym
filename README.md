@@ -48,3 +48,7 @@ pip install -e .
 ## Resources
 
 Information on results and supporting models can be found [here](https://arxiv.org/abs/2008.06319).
+
+## Examples
+
+- [Action Masking with RLlib using the Knapsack Environment](https://www.datahubbs.com/action-masking-with-rllib/)
