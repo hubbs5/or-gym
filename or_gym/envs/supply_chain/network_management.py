@@ -282,7 +282,7 @@ class NetInvMgmtMasterEnv(gym.Env):
         if seed != None:
             np.random.seed(seed=int(seed))
         
-    def reset(self):
+    def _RESET(self):
         '''
         Create and initialize all variables and containers.
         Nomenclature:
@@ -358,7 +358,7 @@ class NetInvMgmtMasterEnv(gym.Env):
         pipeline = np.hstack(pipeline)
         self.state = np.hstack([demand, inventory, pipeline])
     
-    def step(self, action):
+    def _STEP(self, action):
         '''
         Take a step in time in the multiperiod inventory management problem.
         action = number of units to request from each supplier.
@@ -471,6 +471,12 @@ class NetInvMgmtMasterEnv(gym.Env):
         Generate an action by sampling from the action_space
         '''
         return self.action_space.sample()
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
 
     def plot_network(self):
         colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
