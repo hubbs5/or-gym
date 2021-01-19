@@ -17,9 +17,9 @@ setup(name='or-gym',
 	install_requires=[
 		'gym>=0.15.0',
 		'numpy>=1.16.1',
-		'scipy>=1.4.1',
-		'matplotlib>=3.0',
-		'networkx>=2.5'],
+		'scipy>=1.0',
+		'matplotlib',
+		'networkx'],
 	zip_safe=False,
 	python_requires='>=3.5',
 	classifiers=[
