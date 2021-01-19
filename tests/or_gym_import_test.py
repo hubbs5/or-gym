@@ -1,6 +1,5 @@
 #!usr/bin/env python
 
-import gym
 import or_gym
 import sys
 from argparse import ArgumentParser
