@@ -7,7 +7,7 @@ import gym
 from gym import spaces
 import itertools
 import numpy as np
-from collections import Iterable
+from collections.abc import Iterable
 from or_gym.utils import assign_env_config
 
 class NewsvendorEnv(gym.Env):

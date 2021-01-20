@@ -179,6 +179,9 @@ class NetInvMgmtMasterEnv(gym.Env):
                 self.graph.edges[link]['user_D'] = d
                 if link in self.sample_path.keys():
                     self.graph.edges[link]['sample_path'] = self.sample_path[link]
+            else:
+                # Placeholder to avoid key errors
+                self.graph.edges[link]['user_D'] = 0
         
         self.num_nodes = self.graph.number_of_nodes()
         self.adjacency_matrix = np.vstack(self.graph.edges())
@@ -232,8 +235,6 @@ class NetInvMgmtMasterEnv(gym.Env):
                 assert self.graph.edges[e]['b'] >= 0, "The unfulfilled demand costs joining nodes {} cannot be negative.".format(e)
             if 'g' in self.graph.edges[e]:
                 assert self.graph.edges[e]['g'] >= 0, "The pipeline inventory holding costs joining nodes {} cannot be negative.".format(e)
-            if 'user_D' in self.graph.edges[e]:
-                assert len(self.graph.edges[e]['user_D']) == self.num_periods, "The user specified demand joining (retailer, market): {} must be of length {}.".format(e,self.num_periods)
             if 'sample_path' in self.graph.edges[e]:
                 assert isinstance(self.graph.edges[e]['sample_path'], bool), "When specifying if a user specified demand joining (retailer, market): {} is sampled from a distribution, sample_path must be a Boolean.".format(e)
             if 'demand_dist' in self.graph.edges[e]:
@@ -420,7 +421,8 @@ class NetInvMgmtMasterEnv(gym.Env):
                     self.D.loc[t,(j,k)] = Demand[t]
                 else:
                     Demand = self.graph.edges[(j,k)]['demand_dist']
-                    self.D.loc[t,(j,k)] = Demand.rvs(**self.graph.edges[(j,k)]['dist_param'])
+                    self.D.loc[t,(j,k)] = Demand.rvs(
+                        **self.graph.edges[(j,k)]['dist_param'])
                 if self.backlog and t >= 1:
                     D = self.D.loc[t,(j,k)] + self.U.loc[t-1,(j,k)]
                 else:

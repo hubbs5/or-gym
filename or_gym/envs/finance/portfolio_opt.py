@@ -82,7 +82,7 @@ class PortfolioOptEnv(gym.Env):
         
         self.reset()
         
-    def reset(self):
+    def _RESET(self):
         self.step_count = 0
         self.asset_prices = self._generate_asset_prices()
         self.holdings = np.zeros(self.num_assets)
@@ -106,7 +106,7 @@ class PortfolioOptEnv(gym.Env):
             asset_prices[c,first_zero:] = 0
         return asset_prices
     
-    def step(self, action):
+    def _STEP(self, action):
         
         assert self.action_space.contains(action)
     
@@ -154,3 +154,9 @@ class PortfolioOptEnv(gym.Env):
             self.asset_prices[:, self.step_count],
             self.holdings
         ])
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()

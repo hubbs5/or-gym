@@ -128,7 +128,7 @@ class VehicleRoutingEnv(gym.Env):
         
         self.reset()
         
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         self.reward = 0
         self.late_penalty = 0
@@ -283,7 +283,7 @@ class VehicleRoutingEnv(gym.Env):
 
         return action_mask
 
-    def reset(self):
+    def _RESET(self):
         self.step_count = 0
         self.vehicle_load = 0
         self.randomize_locations()
@@ -410,3 +410,9 @@ class VehicleRoutingEnv(gym.Env):
                 except ValueError:
                     pass
         return zones
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()

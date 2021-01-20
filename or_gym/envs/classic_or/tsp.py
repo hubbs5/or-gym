@@ -66,7 +66,7 @@ class TSPEnv(gym.Env):
         
         self.reset()
         
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         connections = self.node_dict[self.current_node]
         # Invalid action
@@ -91,7 +91,7 @@ class TSPEnv(gym.Env):
             
         return self.state, reward, done, {}
         
-    def reset(self):
+    def _RESET(self):
         self.step_count = 0
         self._generate_connections()
         self.current_node = np.random.choice(self.nodes)
@@ -178,6 +178,12 @@ class TSPEnv(gym.Env):
         ax.yaxis.set_visible(False)
         plt.show()
 
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
+
 class TSPDistCost(TSPEnv):
     '''
     Fully connected network with distance-based cost.
@@ -240,7 +246,7 @@ class TSPDistCost(TSPEnv):
         
         self.reset()
 
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         if self.visit_log[action] > 0:
             # Node already visited
@@ -259,7 +265,7 @@ class TSPDistCost(TSPEnv):
             
         return self.state, reward, done, {}
 
-    def reset(self):
+    def _RESET(self):
         self.step_count = 0
         self.current_node = np.random.choice(self.nodes)
         self.visit_log = np.zeros(self.N)
@@ -297,4 +303,10 @@ class TSPDistCost(TSPEnv):
         else:
             state = obs.copy()
         return state
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
     
