@@ -179,7 +179,7 @@ class InvManagementMasterEnv(gym.Env):
         if seed != None:
             np.random.seed(seed=int(seed))
         
-    def reset(self):
+    def _RESET(self):
         '''
         Create and initialize all variables and containers.
         Nomenclature:
@@ -250,7 +250,7 @@ class InvManagementMasterEnv(gym.Env):
             IP = np.cumsum(self.I[n,:] + self.T[n,:])
         self.state = IP
     
-    def step(self,action):
+    def _STEP(self,action):
         '''
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
@@ -384,6 +384,12 @@ class InvManagementMasterEnv(gym.Env):
         R = np.min(A, axis = 1) # replenishmet order to reach zopt (capacity constrained)
         
         return R
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
         
 class InvManagementBacklogEnv(InvManagementMasterEnv):
     def __init__(self, *args, **kwargs):

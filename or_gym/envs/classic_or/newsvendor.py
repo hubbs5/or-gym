@@ -7,7 +7,7 @@ import gym
 from gym import spaces
 import itertools
 import numpy as np
-from collections import Iterable
+from collections.abc import Iterable
 from or_gym.utils import assign_env_config
 
 class NewsvendorEnv(gym.Env):
@@ -70,7 +70,7 @@ class NewsvendorEnv(gym.Env):
 
         self.reset()
 
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         order_qty = max(0, # Ensure order > 0
             min(action, self.max_inventory - self.state[5:].sum())) # Cap inventory
@@ -104,7 +104,7 @@ class NewsvendorEnv(gym.Env):
 
         return self.state, reward, done, {}
 
-    def reset(self):
+    def _RESET(self):
         # Randomize costs
         self.price = max(1, np.random.rand() * self.p_max)
         self.cost = max(1, np.random.rand() * self.price)
@@ -118,3 +118,9 @@ class NewsvendorEnv(gym.Env):
         self.step_count = 0
 
         return self.state
+
+    def reset(self):
+        return self._RESET()
+
+    def step(self, action):
+        return self._STEP(action)

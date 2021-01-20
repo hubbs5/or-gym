@@ -61,7 +61,7 @@ class VMPackingEnv(gym.Env):
             self.observation_space = spaces.Box(0, 1, shape=(self.n_pms+1, 3))
         self.reset()
         
-    def reset(self):
+    def _RESET(self):
         self.demand = self.generate_demand()
         self.current_step = 0
         self.state = {
@@ -74,7 +74,7 @@ class VMPackingEnv(gym.Env):
         self.assignment = {}
         return self.state
     
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         pm_state = self.state["state"][:-1]
         demand = self.state["state"][-1, 1:]
@@ -127,6 +127,12 @@ class VMPackingEnv(gym.Env):
         cpu_demand = np.where(cpu_demand<=0, mu_cpu, cpu_demand) # Ensure demand isn't negative
         mem_demand = np.random.choice(mem_bins, p=mem_probs, size=n)
         return np.vstack([np.arange(n)/n, cpu_demand/100, mem_demand]).T
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
 
 class TempVMPackingEnv(VMPackingEnv):
     '''
@@ -214,13 +220,19 @@ class TempVMPackingEnv(VMPackingEnv):
             action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
             self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
         
-    def reset(self):
+    def _RESET(self):
         self.current_step = 0
         self.assignment = {}
         self.demand = self.generate_demand()
         self.durations = generate_durations(self.demand)
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
         return self.state
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()
 
 def generate_durations(demand):
     # duration_params = np.array([ 6.53563303e-02,  5.16222242e+01,  4.05028032e+06, -4.04960880e+06])

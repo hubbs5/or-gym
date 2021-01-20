@@ -70,7 +70,7 @@ class BinPackingEnv(gym.Env):
         self.seed()
         self.state = self.reset()
         
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         if action >= self.bin_capacity:
             raise ValueError('{} is an invalid action. Must be between {} and {}'.format(
@@ -132,7 +132,7 @@ class BinPackingEnv(gym.Env):
     def sample_action(self):
         return self.action_space.sample()
     
-    def reset(self):
+    def _RESET(self):
         self.current_weight = 0
         self.step_count = 0        
         self.num_full_bins = 0
@@ -174,6 +174,12 @@ class BinPackingEnv(gym.Env):
             'Dimension mismatch between item probabilities' + \
                 ' ({}) and sizes ({})'.format(
                 len(self.item_probs), len(self.item_sizes))
+
+    def reset(self):
+        return self._RESET()
+
+    def step(self, action):
+        return self._STEP(action)
 
 class BinPackingLW1(BinPackingEnv):
     '''

@@ -74,7 +74,7 @@ class KnapsackEnv(gym.Env):
         
         self.reset()
         
-    def step(self, item):
+    def _STEP(self, item):
         # Check that item will fit
         if self.item_weights[item] + self.current_weight <= self.max_weight:
             self.current_weight += self.item_weights[item]
@@ -119,7 +119,7 @@ class KnapsackEnv(gym.Env):
                      [self.current_weight]])
                 ])        
     
-    def reset(self):
+    def _RESET(self):
         if self.randomize_params_on_reset:
             self.item_weights = np.random.randint(1, 100, size=self.N)
             self.item_values = np.random.randint(0, 100, size=self.N)
@@ -135,6 +135,12 @@ class KnapsackEnv(gym.Env):
             seed = np.random.randint(0, np.iinfo(np.int32).max)        
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    def reset(self):
+        return self._RESET()
+
+    def step(self, action):
+        return self._STEP(action)
 
 class BinaryKnapsackEnv(KnapsackEnv):
     '''
@@ -190,7 +196,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
 
         self.reset()
 
-    def step(self, item):
+    def _STEP(self, item):
         # Check item limit
         if self.item_limits[item] > 0:
             # Check that item will fit
@@ -244,7 +250,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
         return np.random.choice(
             self.item_numbers[np.where(self.item_limits!=0)])
     
-    def reset(self):
+    def _RESET(self):
         self.current_weight = 0
         self.item_limits = np.ones(self.N)
         self._update_state()
@@ -289,6 +295,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         Full knapsack or selection that puts the knapsack over the limit.
     '''
     def __init__(self, *args, **kwargs):
+        self.N = 200
         self.item_limits_init = np.random.randint(1, 10, size=self.N)
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
@@ -307,10 +314,8 @@ class BoundedKnapsackEnv(KnapsackEnv):
             })
         else:
             self.observation_space = obs_space
-
-        self._max_reward = 1800 # Used for VF clipping
         
-    def step(self, item):
+    def _STEP(self, item):
         # Check item limit
         if self.item_limits[item] > 0:
             # Check that item will fit
@@ -364,7 +369,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         return np.random.choice(
             self.item_numbers[np.where(self.item_limits!=0)])
     
-    def reset(self):
+    def _RESET(self):
         self.current_weight = 0
         self.item_limits = self.item_limits_init.copy()
         self._update_state()
@@ -431,7 +436,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self.state = self.reset()
         self._max_reward = 600
         
-    def step(self, action):
+    def _STEP(self, action):
         if bool(action):
             # Check that item will fit
             if self.item_weights[self.current_item] + self.current_weight <= self.max_weight:
@@ -480,7 +485,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     def sample_action(self):
         return np.random.choice([0, 1])
     
-    def reset(self):
+    def _RESET(self):
         if not hasattr(self, 'item_probs'):
             self.item_probs = self.item_limits_init / self.item_limits_init.sum()
         self.current_weight = 0
