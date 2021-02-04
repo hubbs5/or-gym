@@ -6,6 +6,7 @@ This library contains environments consisting of operations research problems wh
 ## Installation
 
 This library requires Python 3.5+ in order to function.
+
 For the RL algorithms, Ray 1.0.0 is required.
 Installation is possible via `pip`:
 
