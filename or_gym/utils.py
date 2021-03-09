@@ -70,3 +70,6 @@ def create_env(config, *args, **kwargs):
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env
+
+def softmax(x, temperature=1):
+	return np.exp(x/temperature) / np.exp(x/temperature).sum()
