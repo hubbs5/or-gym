@@ -91,3 +91,8 @@ register(id='NetworkManagement-v1',
 register(id='PortfolioOpt-v0',
 	entry_point='or_gym.envs.finance.portfolio_opt:PortfolioOptEnv'
 )
+
+# Scheduling Envs
+register(id='Scheduling-v0',
+	entry_point='or_gym.envs.supply_chain.scheduling:SingleStageSchedEnv'
+)

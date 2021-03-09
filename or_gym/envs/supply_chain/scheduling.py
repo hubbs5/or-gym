@@ -4,7 +4,7 @@ from gym import spaces
 from abc import ABC, abstractmethod
 from or_gym import utils
 
-class SchedulingBaseEnv(gym.Env, ABC):
+class BaseSchedEnv(gym.Env, ABC):
     '''
     Base scheduling environment. Additional models can be built on 
     top of this class.
@@ -45,7 +45,7 @@ class SchedulingBaseEnv(gym.Env, ABC):
         self.product_ids = np.arange(self.n_fin_products + self.n_int_products)
         self.init_inventory = np.zeros(self.n_fin_products + self.n_int_products)
         self.n_stages = 1
-        self._run_rate = 12 # MT/hour
+        self._run_rate = 10 # MT/hour
         self._product_value = 10 # $/MT
         self._min_production_qty = 100 # MT
         self.ship_by_time = 17 # Orders ship by 5 pm each day
@@ -60,7 +60,7 @@ class SchedulingBaseEnv(gym.Env, ABC):
         self.min_product_qtys = {i: self._min_production_qty
             for i in self.product_ids}
         self.cure_times = {i: self._cure_time 
-            for i in self._cure_time}
+            for i in self.product_ids}
         self.holding_costs = {i: self._holding_cost
             for i in self.product_ids}
         self.conversion_rates = {i: self._conversion_rate
@@ -86,6 +86,9 @@ class SchedulingBaseEnv(gym.Env, ABC):
     def get_demand(self):
         pass
 
+    def get_state(self):
+        pass
+
     @abstractmethod
     def step(self, action):
         raise NotImplementedError("step() method not implemented.")
@@ -93,3 +96,17 @@ class SchedulingBaseEnv(gym.Env, ABC):
     @abstractmethod
     def reset(self):
         raise NotImplementedError("reset() method not implemented.")
+
+class SingleStageSchedEnv(BaseSchedEnv):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        utils.assign_env_config(self, kwargs)
+
+        self.reset()
+
+    def step(self, action):
+        return self._STEP(action)
+
+    def reset(self):
+        return self._RESET()

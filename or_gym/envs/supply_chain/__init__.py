@@ -2,3 +2,4 @@ from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEn
 from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv
 from or_gym.envs.supply_chain.network_management import NetInvMgmtBacklogEnv
 from or_gym.envs.supply_chain.network_management import NetInvMgmtLostSalesEnv
+from or_gym.envs.supply_chain.scheduling import SingleStageSchedEnv

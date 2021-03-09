@@ -1,4 +1,12 @@
 import numpy as np
+from collections import namedtuple
+
+ProdToBook = namedtuple('ProdToBook', 
+  ['Stage', 'Train', 'ProdReleaseTime', 'BatchNumber', 'GMID', 'BatchSize'])
+
+ProdToStart = namedtuple('ProdToStart',
+  ['Stage', 'Train', 'ProdStartTime', 'ProdReleaseTime', 
+  'BatchNumber', 'GMID', 'BatchSize'])
 
 def assign_env_config(self, kwargs):
     for key, value in kwargs.items():
