@@ -1,12 +1,9 @@
 import numpy as np
 from collections import namedtuple
 
-ProdToBook = namedtuple('ProdToBook', 
-  ['Stage', 'Train', 'ProdReleaseTime', 'BatchNumber', 'GMID', 'BatchSize'])
-
-ProdToStart = namedtuple('ProdToStart',
+ProdTuple = namedtuple('ProdTUple', 
   ['Stage', 'Train', 'ProdStartTime', 'ProdReleaseTime', 
-  'BatchNumber', 'GMID', 'BatchSize'])
+   'BatchNumber', 'GMID', 'BatchSize'])
 
 def assign_env_config(self, kwargs):
     for key, value in kwargs.items():
@@ -68,6 +65,8 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv as env
 	elif env_name == 'InvManagement-v1':
 		from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv as env
+	elif env_name == 'Scheduling-v0':
+		from or_gym.envs.supply_chain.scheduling import SingleStageSchedEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
 	return env
