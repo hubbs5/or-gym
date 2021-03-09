@@ -20,7 +20,6 @@ class TSPEnv(gym.Env):
     the nominal movement cost.
 
     Observation:
-        
 
     Actions:
         Type: Discrete
@@ -169,8 +168,6 @@ class TSPEnv(gym.Env):
             for k in c:
                 line = np.vstack([coords[:, n], coords[:, k]])
                 dis = self._get_node_distance(line[0], line[1])
-                # dis = np.sqrt(np.power(line[0, 0] - line[1, 0], 2) + 
-                #               np.power(line[0, 1] - line[1, 1], 2))
                 ax.plot(line[:,0], line[:,1], c='g', zorder=-1)
         #         ax.arrow(line[0, 0], line[0, 1], line[1, 0], line[1, 1])
             ax.annotate(r"$N_{:d}$".format(n), xy=(line[0]+offset), zorder=2)
