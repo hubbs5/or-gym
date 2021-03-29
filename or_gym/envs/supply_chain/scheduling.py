@@ -49,10 +49,9 @@ class BaseSchedEnv(gym.Env, ABC):
         self.time_limit = self.simulation_days * 24 # Hours
         self.n_fin_products = 10 # Finished products
         self.n_int_products = 0  # Intermediate products
-        self.product_ids = np.arange(self.n_fin_products + 
-            self.n_int_products)
-        self.init_inventory = np.ones(self.n_fin_products + 
-            self.n_int_products) * 100
+        self.tot_products = self.n_fin_products + self.n_int_products
+        self.product_ids = np.arange(self.tot_products)
+        self.init_inventory = np.ones(self.tot_products) * 100
         self.n_stages = 1
         self._run_rate = 10 # Units/hour
         self._product_value = 10 # $/Unit
@@ -63,6 +62,9 @@ class BaseSchedEnv(gym.Env, ABC):
         self._conversion_rate = 1 # Applicable for multi-stage models
         self.avg_lead_time = 7 # Days
         self.min_schedule_length = 7 * 24 # Hours
+        self._transition_matrix = np.random.choice(np.arange(13), 
+            size=(self.tot_products, self.tot_products))
+        np.fill_diagonal(self._transition_matrix, 0)
         
         self.run_rates = {i: self._run_rate 
             for i in self.product_ids}
@@ -77,6 +79,9 @@ class BaseSchedEnv(gym.Env, ABC):
         self.conversion_rates = {i: self._conversion_rate
             for i in self.product_ids}
         self.prod_inv_idx = {j: i 
+            for i, j in enumerate(self.product_ids)}
+        self.transition_dict = {(j, l): self._transition_matrix[i, k] 
+            for k, l in enumerate(self.product_ids) 
             for i, j in enumerate(self.product_ids)}
 
         self.order_book_cols = ['Num', 'ProductID', 'CreateDate', 'DueDate', 
@@ -241,9 +246,9 @@ class BaseSchedEnv(gym.Env, ABC):
         # Changes booked column from 0 to 1
         sched = self.schedules[prod_tuple.Stage][prod_tuple.Line]
         row_to_book = np.where(
-            sched[:, self.sched_idx['Num']]==prod_tuple.Number)
-        sched[row_to_book, self.sched_idx['Booked']] = 1
-        sched[row_to_book, self.sched_idx['Quantity']] = prod_tuple.Quantity
+            sched[:, self.sched_col_idx['Num']]==prod_tuple.Number)
+        sched[row_to_book, self.sched_col_idx['Booked']] = 1
+        sched[row_to_book, self.sched_col_idx['Quantity']] = prod_tuple.Quantity
         self.schedules[prod_tuple.Stage][prod_tuple.Line] = sched.copy()
 
     def append_schedules(self, action):
@@ -252,72 +257,82 @@ class BaseSchedEnv(gym.Env, ABC):
             # action = action.values()
         # Ray passes actions as dictionary values
         if type(action) is dict or type(action) is OrderedDict:
-            for k, v in action.items():
-                stage, train = k.split('_')
-                schedule = self.schedules[stage][train]
-                self._append_schedule(v, stage, train, schedule)
+            for stage, _l in action.items():
+                for line, act in _l.items():
+                    schedule = self.schedules[stage][line]
+                    self._append_schedule(stage, line, act, schedule)
         else:
-            for a, (stage, train, _) in zip(action, self.stage_train_list):
-                schedule = self.schedules[stage][train]
-                self._append_schedule(a, stage, train, schedule)
+            # If actions passed as array, it must be ordered correctly
+            c = 0
+            for stage, _l in self._stage_line_dict.items():
+                for line in _l.keys():
+                    schedule = self.schedules[stage][line]
+                    act = action[c]
+                    self._append_schedule(stage, line, act, schedule)
+                    c += 1
             
-    def _append_schedule(self, action, stage, train, schedule):
-        stage_num = utils.get_digits(stage)
-        train_num = utils.get_digits(train)
-
+    def _append_schedule(self, stage, line, action, schedule):
         # Get values from mappings
-        gmid = self.map_action_to_gmid(stage, train, action, stage_num)
-        if gmid is None:
-            return None
-        batch_size = self.get_batch_size(stage, train, gmid)
-        booked = 0
+        prod_id = self.get_prod_id_from_action(stage, line, action)
+        qty = self.get_prod_qty(stage, line, prod_id)
+        completed = 0
         if schedule is None:
             num = 1
-            start_time = self.sim_time
-            last_gmid = 0 # Map to startup
+            start_time = self.env_time
+            last_prod_id = prod_id # Assume no transition at start
         else:
-            last_gmid = schedule[-1, self.sched_idx['ProdID']]
-            if gmid == last_gmid:
+            last_prod_id = schedule[-1, self.sched_col_idx['ProdID']]
+            if prod_id == last_prod_id:
                 # TODO: Extend current entry by some discrete amount
                 # be it minimum batch size or some other value.
                 pass
-            num = schedule[-1, self.sched_idx['Num']] + 1
-            start_time = schedule[-1, self.sched_idx['ProdEndTime']]  
+            num = schedule[-1, self.sched_col_idx['Num']] + 1
+            start_time = schedule[-1, self.sched_col_idx['ProdEndTime']]  
         
-        off_grade = self.get_off_grade(stage, train, gmid, last_gmid)
-        if (gmid == 0 or gmid == '0') and stage_num > 0:
-            end_time = start_time + self.wait_time
-            release_time = end_time
-        else:
-            try:
-                end_time = np.ceil(start_time + 
-                    (batch_size + off_grade) / self.get_production_rate(
-                        stage, train, gmid))
-            except ZeroDivisionError:
-                # Occurs in some test cases without action masking, 
-                # set end_time = start_time...I think...
-                end_time = start_time
-                # print("stage: {}\ttrain: {}\tgmid: {}".format(
-                #     stage, train, gmid))
-            release_time = end_time + self.get_cure_time(stage, train, gmid)
+        off_grade_hrs = self.get_off_grade_time(stage, line, last_prod_id, prod_id)
+        prod_rate = self.get_production_rate(stage, line, prod_id)
+        off_grade = off_grade_hrs * prod_rate
+        end_time = np.ceil(start_time + off_grade_hrs + qty / prod_rate)
+        release_time = end_time + self.get_cure_time(stage, line, prod_id)
         
-        new_entry = np.zeros(len(self.sched_idx)) # Next line in schedule
+        new_entry = np.zeros(len(self.sched_col_idx)) # Next line in schedule
         # Add values to new_entry
-        new_entry[self.sched_idx['Stage']] = stage_num
-        new_entry[self.sched_idx['Line']] = line_num
-        new_entry[self.sched_idx['Num']] = num
-        new_entry[self.sched_idx['ProdID']] = prod_id
-        new_entry[self.sched_idx['Quantity']] = qty
-        new_entry[self.sched_idx['StartTime']] = start_time
-        new_entry[self.sched_idx['EndTime']] = end_time
-        new_entry[self.sched_idx['ReleaseTime']] = release_time
-        new_entry[self.sched_idx['OffGrade']] = off_grade
-        new_entry[self.sched_idx['Completed']] = completed
+        new_entry[self.sched_col_idx['Stage']] = stage
+        new_entry[self.sched_col_idx['Line']] = line
+        new_entry[self.sched_col_idx['Num']] = num
+        new_entry[self.sched_col_idx['ProductID']] = prod_id
+        new_entry[self.sched_col_idx['Quantity']] = qty
+        new_entry[self.sched_col_idx['StartTime']] = start_time
+        new_entry[self.sched_col_idx['EndTime']] = end_time
+        new_entry[self.sched_col_idx['ReleaseTime']] = release_time
+        new_entry[self.sched_col_idx['OffGrade']] = off_grade
+        new_entry[self.sched_col_idx['Completed']] = completed
         
         if schedule is None:
-            self.schedules[stage][train] = new_entry.reshape(1, -1).copy().astype(int)
+            self.schedules[stage][line] = new_entry.reshape(1, -1).copy().astype(int)
         else:
-            self.schedules[stage][train] = np.vstack([schedule, new_entry.astype(int)])
+            self.schedules[stage][line] = np.vstack([schedule, new_entry.astype(int)])
+
+    #########################################################################
+    # The following functions are set up to be ammenable for multi-stage/multi-line
+    # environments, so many of the arguments currently go unused.
+    # Will make more consistent in the future.
+    #########################################################################
+    def get_prod_qty(self, stage, line, prod_id):
+        return self.min_product_qtys[prod_id]
+
+    def get_prod_id_from_action(self, stage, line, action):
+        idx = np.where(action==self._stage_line_dict[stage][line])[0].take(0)
+        return self.product_ids[idx]
+
+    def get_off_grade_time(self, stage, line, prod_from, prod_to):
+        return self.transition_dict[(prod_from, prod_to)]
+
+    def get_production_rate(self, stage, line, prod_id):
+        return self.run_rates[prod_id]
+
+    def get_cure_time(self, stage, line, prod_id):
+        return self.cure_times[prod_id]
 
     def get_demand(self):
         return self._run_demand_model()
@@ -367,14 +382,15 @@ class SingleStageSchedEnv(BaseSchedEnv):
         utils.assign_env_config(self, kwargs)
         super().__init__()
 
+        # Nested dictionary to link products to stages and lines
         self._stage_line_dict = {0: 
             {0: self.product_ids}
         }
 
-        self.action_space = spaces.Dict({k: 
-            spaces.Dict({k1: spaces.Discrete(len(v1)) 
+        self.action_space = spaces.Dict({k:
+            spaces.Dict({k1: spaces.Discrete(len(v1))
                 for k1, v1 in v.items()})
-            for k, v in _stage_line_dict.items()})
+            for k, v in self._stage_line_dict.items()})
 
         self.observation_space = None
 
@@ -384,4 +400,6 @@ class SingleStageSchedEnv(BaseSchedEnv):
         return self._STEP(action)
 
     def reset(self):
+        self.schedules = {k: {k1: None for k1 in v.keys()} 
+            for k, v in self._stage_line_dict.items()}
         return self._RESET()

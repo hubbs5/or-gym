@@ -65,32 +65,51 @@ class TestSchedEnvs:
             success = False
         assert success, "".join(traceback.format_tb(tb))
 
-    def test_init_demand_model(self, conf):
-        env = SchedEnv()
-
-
     def test_book_inventory(self, conf):
         env = self._build_env(conf)
         env.inventory *= 0
         prod_tuple = utils.ProdTuple(
             Stage=0,
-            Train=0,
-            BatchNumber=0,
+            Line=0,
+            Number=0,
             ProdStartTime=0,
             ProdReleaseTime=48,
             ProdID=0,
-            BatchSize=100
+            Quantity=100
         )
         env.env_time = prod_tuple.ProdReleaseTime
-        env.book_inventory(prod_tuple)
+        try:
+            env.book_inventory(prod_tuple)
+        except TypeError:
+            # Ignore error from having no schedule in submodule
+            pass
         exp_inv = np.zeros(env.inventory.shape)
-        exp_inv[prod_tuple.ProdID] += prod_tuple.BatchSize
-        assert env.inventory[prod_tuple.ProdID] == prod_tuple.BatchSize, (
+        exp_inv[prod_tuple.ProdID] += prod_tuple.Quantity
+        assert env.inventory[prod_tuple.ProdID] == prod_tuple.Quantity, (
             f"Actual Inventory: {env.inventory}\n" +
             f"Excpected Inventory: {exp_inv}"
         )
 
     def test_append_schedule(self, conf):
         env = self._build_env(conf)
-        action = 1
-        
+        action = [1] # Must be iterable
+        prod_time = env._min_production_qty / env._run_rate
+        off_grade_time = 0
+        release_time = prod_time + env._cure_time
+        sched = np.zeros(len(env.sched_cols))
+        sched[env.sched_col_idx['Num']] += 1
+        sched[env.sched_col_idx['Quantity']] += env._min_production_qty
+        sched[env.sched_col_idx['ProductID']] += action
+        sched[env.sched_col_idx['StartTime']] += env.env_time
+        sched[env.sched_col_idx['EndTime']] += env.env_time + prod_time
+        sched[env.sched_col_idx['ReleaseTime']] += env.env_time + release_time
+
+        env.append_schedules(action)
+
+        assert np.allclose(env.schedules[0][0], sched), ("Schedules don't match:\n" +
+            f"Col\t\tActual\tExpected\n" +
+            f"{env.sched_cols}\n" +
+            f"{env.schedules[0][0]}\n" +
+            f"{sched}")
+            # [print(f"{c}\t\t{a}\t{e}\n")
+            # for c, a, e in zip(env.sched_cols, env.schedules[0][0], sched)])
