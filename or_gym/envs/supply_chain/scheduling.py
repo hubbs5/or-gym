@@ -124,7 +124,7 @@ class BaseSchedEnv(gym.Env, ABC):
             # Begin production
             try:
                 while self.production_start_deque[0].ProdStartTime == self.env_time:
-                    self.start_production(self.production_deque[0])
+                    self._start_production(self.production_deque[0])
                     self.production_deque.popleft()
             except IndexError:
                 pass
@@ -135,7 +135,7 @@ class BaseSchedEnv(gym.Env, ABC):
             # Release products to inventory
             try:
                 while self.production_release_deque[0].ProdReleaseTime == self.env_time:
-                    self.book_inventory(self.production_release_deque[0])
+                    self._book_inventory(self.production_release_deque[0])
                     self.production_release_deque.popleft()
             except IndexError:
                 pass
@@ -167,6 +167,29 @@ class BaseSchedEnv(gym.Env, ABC):
         self.env_time = 0
         self.order_book = self.get_demand()
         return self.get_state()
+
+    def _get_latest_start_time(self):
+        # Returns the latest start times from all schedules unless schedules
+        # are None, then returns current time.
+        return np.array([v1[-1, self.sched_col_idx['ProdStartTime']]
+            if v1 is not None else self.sim_time
+            for k, v in self.schedules.items()
+            for k1, v1 in v.items()]).min()
+
+    def _get_next_end_time(self):
+        # Returns earliest production end time across schedules
+        return np.array([v1[-1, self.sched_idx['ProdEndTime']]
+            if v1 is not None else self.sim_time
+            for k, v in self.schedules.items()
+            for k1, v1 in v.items()])
+
+    def _start_production(self, prod_tuple):
+        # TODO: Update to make multi-stage compatible
+        self.current_production_dict[prod_tuple.Stage][prod_tuple.Train] = prod_tuple
+        self.prod_end_deque.append(prod_tuple)
+
+    def ship_orders(self):
+        pass
 
     def _calculate_reward(self):
         pass
@@ -231,13 +254,8 @@ class BaseSchedEnv(gym.Env, ABC):
     def run_maintentance_model(self):
         return self._maintentance_model()
 
-    def start_production(self, prod_tuple):
-        pass
-
-    def book_inventory(self, prod_tuple):
-        '''
-        Moves completed production into inventory.
-        '''
+    def _book_inventory(self, prod_tuple):
+        # Moves completed production into inventory.
         prod_idx = self.prod_inv_idx[prod_tuple.ProdID]
         self.inventory[prod_idx] += prod_tuple.Quantity
         self._mark_booked_in_schedule(prod_tuple)

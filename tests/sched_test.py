@@ -79,7 +79,7 @@ class TestSchedEnvs:
         )
         env.env_time = prod_tuple.ProdReleaseTime
         try:
-            env.book_inventory(prod_tuple)
+            env._book_inventory(prod_tuple)
         except TypeError:
             # Ignore error from having no schedule in submodule
             pass
@@ -111,5 +111,6 @@ class TestSchedEnvs:
             f"{env.sched_cols}\n" +
             f"{env.schedules[0][0]}\n" +
             f"{sched}")
-            # [print(f"{c}\t\t{a}\t{e}\n")
-            # for c, a, e in zip(env.sched_cols, env.schedules[0][0], sched)])
+
+    def test_ship_orders(self, conf):
+        env = self._build_env(conf)
