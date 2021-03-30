@@ -43,6 +43,9 @@ class BaseSchedEnv(gym.Env, ABC):
         order_qty: int, fixed quantity for orders.
         min_schedule_length: int, minimum time the schedule needs to be
             maintained in hours.
+        late_penalty: float, fraction of value that an order declines each
+            day it is late. This penalty is assessed every day, so can exceed
+            the value of the order.
     '''
     def __init__(self, *args, **kwargs):
         self.simulation_days = 365
@@ -62,6 +65,7 @@ class BaseSchedEnv(gym.Env, ABC):
         self._conversion_rate = 1 # Applicable for multi-stage models
         self.avg_lead_time = 7 # Days
         self.min_schedule_length = 7 * 24 # Hours
+        self.late_penalty = 0.1
         self._transition_matrix = np.random.choice(np.arange(13), 
             size=(self.tot_products, self.tot_products))
         np.fill_diagonal(self._transition_matrix, 0)
@@ -97,12 +101,16 @@ class BaseSchedEnv(gym.Env, ABC):
         self._init_demand = False
         self._initialize_demand_model()
         self._vectorize_mappings()
+        self._build_hc_array()
 
     def _check_unique_prods(self):
         # Product IDs must be unique.
         _, count = np.unique(self.product_ids, return_counts=True)
         assert count.max() == 1, "Non-unique products found: {}".format(
             self.product_ids[np.where(count>1)])
+
+    def _build_hc_array(self):
+        self._holding_cost_array = np.array([v for v in self.holding_costs.values()])
 
     def _STEP(self, action):
         if not isinstance(action, Iterable):
@@ -147,9 +155,10 @@ class BaseSchedEnv(gym.Env, ABC):
             if self.run_maintentance_model():
                 break
 
-            # Get totals every 24-hours
+            # Get rewards every 24-hours
             if self.env_time % 24 == 0:
-                pass
+                self._holding_costs = self._calc_holding_cost()
+                reward += self._calc_reward()
 
             self.env_time += 1
 
@@ -166,6 +175,8 @@ class BaseSchedEnv(gym.Env, ABC):
         self.production_deque = deque()
         self.inventory = self.init_inventory.copy()
         self.env_time = 0
+        self._revenue = 0
+        self._holding_cost = 0
         self.order_book = self.get_demand()
         return self.get_state()
 
@@ -242,7 +253,8 @@ class BaseSchedEnv(gym.Env, ABC):
             shipped_agit, shipped_pgit), self.ob_col_idx['Num']]
         self.order_book[np.isin(self.order_book[:, self.ob_col_idx['Num']], 
             shipped_on_time_nums), self.ob_col_idx['OnTime']] = 1
-        # self.calc_revenue(mark_shipped, mark_late)
+        self._revenue += self._calc_revenue(mark_shipped, mark_late)
+        self._late_penalties += self._calc_late_penalties()
         # Append shipment volumes
         agg_shipped_array = np.zeros(self.tot_products)
         unique_pid, unique_id = np.unique(
@@ -252,8 +264,33 @@ class BaseSchedEnv(gym.Env, ABC):
             agg_shipped_array[self._vmap_pid_inventory(unique_pid)] += agg_shipped
         # self.containers.quantity_shipped.append(agg_shipped_array)
 
-    def _calculate_reward(self):
-        pass
+    def _calc_reward(self):
+        reward = self._revenue - self._late_penalties - self._holding_costs
+        self._revenue, self._late_penalties, self._holding_costs = 0, 0, 0
+        return reward
+
+    def _calc_revenue(self, shipped_orders, late_orders):
+        shipped_this_period = self.order_book[shipped_orders]
+        revenue = np.dot(
+            shipped_this_period[:, self.ob_col_idx['Quantity']],
+            shipped_this_period[:, self.ob_col_idx['Value']]
+        )
+        return revenue
+
+    def _calc_holding_cost(self):
+        holding_costs = np.dot(self.inventory, self._holding_cost_array)
+        return holding_costs
+
+    def _calc_late_penalties(self):
+        un_shipped_late = self.order_book[np.where(
+            (self.order_book[:, self.ob_col_idx['Shipped']]==0) &
+            (self.order_book[:, self.ob_col_idx['OnTime']]<0)
+        )]
+        late_penalties = np.dot(
+            un_shipped_late[:, self.ob_col_idx['Quantity']],
+            un_shipped_late[:, self.ob_col_idx['Value']]
+        ) * self.late_penalty
+        return late_penalties
 
     def _get_state(self):
         pass
