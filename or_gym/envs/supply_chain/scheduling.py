@@ -85,7 +85,7 @@ class BaseSchedEnv(gym.Env, ABC):
             for i, j in enumerate(self.product_ids)}
 
         self.order_book_cols = ['Num', 'ProductID', 'CreateDate', 'DueDate', 
-            'Value', 'Shipped', 'ShipDate', 'OnTime']
+            'Quantity', 'Value', 'Shipped', 'ShipDate', 'OnTime']
         self.ob_col_idx = {j: i for i, j in enumerate(self.order_book_cols)}
 
         self.sched_cols = ['Num', 'ProductID', 'Stage', 'Line', 
@@ -96,6 +96,7 @@ class BaseSchedEnv(gym.Env, ABC):
         self._check_unique_prods()
         self._init_demand = False
         self._initialize_demand_model()
+        self._vectorize_mappings()
 
     def _check_unique_prods(self):
         # Product IDs must be unique.
@@ -172,14 +173,14 @@ class BaseSchedEnv(gym.Env, ABC):
         # Returns the latest start times from all schedules unless schedules
         # are None, then returns current time.
         return np.array([v1[-1, self.sched_col_idx['ProdStartTime']]
-            if v1 is not None else self.sim_time
+            if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()]).min()
 
     def _get_next_end_time(self):
         # Returns earliest production end time across schedules
         return np.array([v1[-1, self.sched_idx['ProdEndTime']]
-            if v1 is not None else self.sim_time
+            if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()])
 
@@ -189,13 +190,79 @@ class BaseSchedEnv(gym.Env, ABC):
         self.prod_end_deque.append(prod_tuple)
 
     def ship_orders(self):
-        pass
+        shipped_orders = None
+        late_orders = None
+        # Orders to Ship
+        ots = self.order_book[np.logical_and(
+            self.order_book[:,self.ob_col_idx['Shipped']]==0,
+            self.order_book[:,self.ob_col_idx['DueDate']]<=self.env_time)]
+        # Sort by due date
+        ots = ots[np.argsort(ots[:,self.ob_col_idx['DueDate']])]
+        # Ship by product
+        if len(ots) > 0:
+            for p, inv in zip(self.product_ids, self.inventory):
+                idx = self.prod_inv_idx[p]
+                ots_prods = ots[np.where(ots[:,self.ob_col_idx['ProductID']].astype(int)==int(p))]
+                cum_vol = ots_prods[:,self.ob_col_idx['Quantity']].cumsum()
+                shipped_order_idx = np.where(cum_vol <= inv)[0]
+                if len(shipped_order_idx) > 0:
+                    self.inventory[idx] -= cum_vol[shipped_order_idx[-1]]                
+                # Get shipped and late order numbers
+                if shipped_orders is None:
+                    shipped_orders = ots_prods[
+                        shipped_order_idx,self.ob_col_idx['Num']]
+                else:
+                    shipped_orders = np.hstack([shipped_orders,
+                        ots_prods[shipped_order_idx,self.ob_col_idx['Num']]])
+                # Get late orders by keeping remaining OTS document numbers
+                # TODO: if ship time != 24, then the current setup punishes
+                # orders if they ship same day, but at a later time of day, 
+                # e.g. shipment due at 17hrs, check at 24 hrs -> order late.
+                if late_orders is None:
+                    late_orders = np.delete(ots_prods[:,
+                        self.ob_col_idx['Num']], shipped_order_idx)
+                else:
+                    late_orders = np.hstack([late_orders,
+                        np.delete(ots_prods[:, self.ob_col_idx['Num']],
+                            shipped_order_idx)])
+        # Mark order as shipped, late, and on_time
+        mark_shipped = np.isin(self.order_book[:,self.ob_col_idx['Num']], 
+            shipped_orders)
+        self.order_book[mark_shipped, self.ob_col_idx['Shipped']] = 1
+        self.order_book[mark_shipped, self.ob_col_idx['ShipDate']] = self.env_time
+        mark_late = np.isin(self.order_book[:,self.ob_col_idx['Num']],
+            late_orders)
+        self.order_book[mark_late, self.ob_col_idx['OnTime']] = -1
+        # Mark on time if shipped and ActualGITime <= DueDate
+        # Subset by current period shipments to avoid changing prev orders
+        shipped_orders = self.order_book[mark_shipped]
+        shipped_agit = shipped_orders[:, self.ob_col_idx['ShipDate']]
+        shipped_pgit = shipped_orders[:, self.ob_col_idx['DueDate']]
+        shipped_on_time_nums = shipped_orders[np.less_equal(
+            shipped_agit, shipped_pgit), self.ob_col_idx['Num']]
+        self.order_book[np.isin(self.order_book[:, self.ob_col_idx['Num']], 
+            shipped_on_time_nums), self.ob_col_idx['OnTime']] = 1
+        # self.calc_revenue(mark_shipped, mark_late)
+        # Append shipment volumes
+        agg_shipped_array = np.zeros(self.tot_products)
+        unique_pid, unique_id = np.unique(
+            shipped_orders[:, self.ob_col_idx['ProductID']], return_inverse=True)
+        if len(unique_pid) > 0:
+            agg_shipped = np.bincount(unique_id, shipped_orders[:, self.ob_col_idx['Quantity']])
+            agg_shipped_array[self._vmap_pid_inventory(unique_pid)] += agg_shipped
+        # self.containers.quantity_shipped.append(agg_shipped_array)
 
     def _calculate_reward(self):
         pass
 
     def _get_state(self):
         pass
+
+    def __map_pid_to_inventory(self, prod_id):
+        return self.prod_inv_idx[prod_id]
+
+    def _vectorize_mappings(self):
+        self._vmap_pid_inventory = np.vectorize(self.__map_pid_to_inventory)  
 
     def _initialize_demand_model(self):
         # Only initialize at beginning of model

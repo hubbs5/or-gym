@@ -114,3 +114,21 @@ class TestSchedEnvs:
 
     def test_ship_orders(self, conf):
         env = self._build_env(conf)
+        qty = 100
+        # Set order book and inventory such that all orders will be shipped
+        env.inventory = np.ones(env.inventory.shape) * qty
+        order_book = np.zeros((env.n_fin_products, len(env.order_book_cols)))
+        order_book[:, env.ob_col_idx['Num']] = np.arange(env.n_fin_products)
+        order_book[:, env.ob_col_idx['ProductID']] = env.product_ids
+        order_book[:, env.ob_col_idx['CreateDate']] = env.env_time
+        order_book[:, env.ob_col_idx['DueDate']] = env.env_time
+        order_book[:, env.ob_col_idx['Quantity']] = qty
+        env.order_book = order_book.copy()
+
+        env.ship_orders()
+        # Ensure final products have all been shipped
+        # TODO: Update for multi-stage models
+        assert env.inventory.sum() == 0, (
+            f"Discrepancy in inventory levels:\n" +
+            f"Expected = 0\tActual = {env.inventory.sum()}\n" +
+            f"{env.inventory}")
