@@ -67,6 +67,7 @@ class BaseSchedEnv(gym.Env):
         self._holding_cost = 1 # $/Units
         self._conversion_rate = 1 # Applicable for multi-stage models
         self.avg_lead_time = 7 # Days
+        self.avg_order_qty = 50 # Units
         self.min_schedule_length = 7 * 24 # Hours
         self.late_penalty = 0.1
         self._transition_matrix = np.random.choice(np.arange(13), 
@@ -356,7 +357,6 @@ class BaseSchedEnv(gym.Env):
         # Return deque ordered by start time
         return deque(sorted(production_starts, key=attrgetter('ProdStartTime')))
 
-
     def _run_demand_model(self):
         '''
         Base model calculates mean run rate for the products, multiplies
@@ -370,20 +370,20 @@ class BaseSchedEnv(gym.Env):
         Returns order_book object containing demand data for the episode.
         '''
         self._initialize_demand_model()
-        order_book = np.zeros((self.product_demand.sum(), 
-            len(self.order_book_cols)))
-        order_book[:, self.ob_col_idx['Number']] = np.arange(
-            self.product_demand.sum())
-        prods = np.hstack([np.repeat(i, j)
-            for i, j in zip(self.product_ids, self.product_demand)])
-        order_book[:, self.ob_col_idx['ProductID']] = prods
-        due_dates = np.hstack([np.random.choice(np.arange(0, self.simulation_days),
-            p=self._p_seas, size=i)
-            for i in self.product_demand])
-        order_book[:, self.ob_col_idx['DueTime']] = due_dates
-        order_book[:, self.ob_col_idx['CreateTime']] = due_dates - \
-            np.random.poisson(lam=self.avg_lead_time, 
-                size=self.product_demand.sum())
+        last_num = 0
+        order_book = np.zeros((0, len(self.order_book_cols)))
+        for p, d in zip(self.product_ids, self.product_demand):
+            n = int(d / self.avg_order_qty)
+            _order_book = np.zeros((n, len(self.order_book_cols)))
+            _order_book[:, self.ob_col_idx['Number']] = np.arange(
+                n) + last_num + 1
+            _order_book[:, self.ob_col_idx['ProductID']] = p
+            due_dates = np.random.choice(np.arange(self.simulation_days),
+                p=self._p_seas, size=n)
+            _order_book[:, self.ob_col_idx['DueTime']] = due_dates
+            _order_book[:, self.ob_col_idx['CreateTime']] = due_dates - \
+                np.random.poisson(lam=self.avg_lead_time, size=n)
+            order_book = np.vstack([order_book, _order_book])
 
         return order_book
 
@@ -410,8 +410,6 @@ class BaseSchedEnv(gym.Env):
 
     def append_schedules(self, action):
         # Sampling passes actions as OrderedDict
-        # if type(action) is OrderedDict:
-            # action = action.values()
         # Ray passes actions as dictionary values
         if type(action) is dict or type(action) is OrderedDict:
             for stage, _l in action.items():
