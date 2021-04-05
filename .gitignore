@@ -132,3 +132,6 @@ dmypy.json
 
 # Output files
 nohup.out
+
+# Notebooks for local dev
+/notebooks
