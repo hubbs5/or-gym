@@ -88,8 +88,8 @@ class BaseSchedEnv(gym.Env, ABC):
             for k, l in enumerate(self.product_ids) 
             for i, j in enumerate(self.product_ids)}
 
-        self.order_book_cols = ['Num', 'ProductID', 'CreateDate', 'DueDate', 
-            'Quantity', 'Value', 'Shipped', 'ShipDate', 'OnTime']
+        self.order_book_cols = ['Num', 'ProductID', 'CreateTime', 'DueTime', 
+            'Quantity', 'Value', 'Shipped', 'ShipTime', 'OnTime']
         self.ob_col_idx = {j: i for i, j in enumerate(self.order_book_cols)}
 
         self.sched_cols = ['Num', 'ProductID', 'Stage', 'Line', 
@@ -150,7 +150,7 @@ class BaseSchedEnv(gym.Env, ABC):
                 pass
             
             # Ship orders to fulfill demand
-            if self.env_time % sef.ship_by_time == 0:
+            if self.env_time % self.ship_by_time == 0:
                 self.ship_orders()
             if self.run_maintentance_model():
                 break
@@ -179,19 +179,20 @@ class BaseSchedEnv(gym.Env, ABC):
         self._holding_cost = 0
         self._late_penalties = 0
         self.order_book = self.get_demand()
+        self.schedules = {}
         return self.get_state()
 
     def _get_latest_start_time(self):
         # Returns the latest start times from all schedules unless schedules
         # are None, then returns current time.
-        return np.array([v1[-1, self.sched_col_idx['ProdStartTime']]
+        return np.array([v1[-1, self.sched_col_idx['StartTime']]
             if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()]).min()
 
     def _get_next_end_time(self):
         # Returns earliest production end time across schedules
-        return np.array([v1[-1, self.sched_idx['ProdEndTime']]
+        return np.array([v1[-1, self.sched_col_idx['EndTime']]
             if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()])
@@ -207,9 +208,9 @@ class BaseSchedEnv(gym.Env, ABC):
         # Orders to Ship
         ots = self.order_book[np.logical_and(
             self.order_book[:,self.ob_col_idx['Shipped']]==0,
-            self.order_book[:,self.ob_col_idx['DueDate']]<=self.env_time)]
+            self.order_book[:,self.ob_col_idx['DueTime']]<=self.env_time)]
         # Sort by due date
-        ots = ots[np.argsort(ots[:,self.ob_col_idx['DueDate']])]
+        ots = ots[np.argsort(ots[:,self.ob_col_idx['DueTime']])]
         # Ship by product
         if len(ots) > 0:
             for p, inv in zip(self.product_ids, self.inventory):
@@ -241,15 +242,15 @@ class BaseSchedEnv(gym.Env, ABC):
         mark_shipped = np.isin(self.order_book[:,self.ob_col_idx['Num']], 
             shipped_orders)
         self.order_book[mark_shipped, self.ob_col_idx['Shipped']] = 1
-        self.order_book[mark_shipped, self.ob_col_idx['ShipDate']] = self.env_time
+        self.order_book[mark_shipped, self.ob_col_idx['ShipTime']] = self.env_time
         mark_late = np.isin(self.order_book[:,self.ob_col_idx['Num']],
             late_orders)
         self.order_book[mark_late, self.ob_col_idx['OnTime']] = -1
-        # Mark on time if shipped and ActualGITime <= DueDate
+        # Mark on time if shipped and ActualGITime <= DueTime
         # Subset by current period shipments to avoid changing prev orders
         shipped_orders = self.order_book[mark_shipped]
-        shipped_agit = shipped_orders[:, self.ob_col_idx['ShipDate']]
-        shipped_pgit = shipped_orders[:, self.ob_col_idx['DueDate']]
+        shipped_agit = shipped_orders[:, self.ob_col_idx['ShipTime']]
+        shipped_pgit = shipped_orders[:, self.ob_col_idx['DueTime']]
         shipped_on_time_nums = shipped_orders[np.less_equal(
             shipped_agit, shipped_pgit), self.ob_col_idx['Num']]
         self.order_book[np.isin(self.order_book[:, self.ob_col_idx['Num']], 
@@ -294,7 +295,18 @@ class BaseSchedEnv(gym.Env, ABC):
         return late_penalties
 
     def _get_state(self):
-        pass
+        '''
+        Base method that returns inventory, order book, times, and schedules,
+        as a dictionary for further processing.
+        '''
+        state_dict = {}
+        state_dict = {'env_time': self.env_time}
+        state_dict['schedules'] = {k: v.copy() for k, v in self.schedules.items()}
+        state_dict['order_book'] = self.order_book[np.where(
+            self.order_book[:, self.ob_col_idx['CreateTime']]<=self.env_time)[0]]
+        state_dict['inventory'] = self.inventory.copy()
+
+        return state_dict
 
     def __map_pid_to_inventory(self, prod_id):
         return self.prod_inv_idx[prod_id]
@@ -346,8 +358,8 @@ class BaseSchedEnv(gym.Env, ABC):
         due_dates = np.hstack([np.random.choice(np.arange(0, self.simulation_days),
             p=self._p_seas, size=i)
             for i in self.product_demand])
-        order_book[:, self.ob_col_idx['DueDate']] = due_dates
-        order_book[:, self.ob_col_idx['CreateDate']] = due_dates - \
+        order_book[:, self.ob_col_idx['DueTime']] = due_dates
+        order_book[:, self.ob_col_idx['CreateTime']] = due_dates - \
             np.random.poisson(lam=self.avg_lead_time, 
                 size=self.product_demand.sum())
 
@@ -410,7 +422,7 @@ class BaseSchedEnv(gym.Env, ABC):
                 # be it minimum batch size or some other value.
                 pass
             num = schedule[-1, self.sched_col_idx['Num']] + 1
-            start_time = schedule[-1, self.sched_col_idx['ProdEndTime']]  
+            start_time = schedule[-1, self.sched_col_idx['EndTime']]  
         
         off_grade_hrs = self.get_off_grade_time(stage, line, last_prod_id, prod_id)
         prod_rate = self.get_production_rate(stage, line, prod_id)
