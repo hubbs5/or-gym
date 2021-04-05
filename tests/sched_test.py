@@ -74,7 +74,7 @@ class TestSchedEnvs:
             Number=0,
             ProdStartTime=0,
             ProdReleaseTime=48,
-            ProdID=0,
+            ProductID=0,
             Quantity=100
         )
         env.env_time = prod_tuple.ProdReleaseTime
@@ -84,8 +84,8 @@ class TestSchedEnvs:
             # Ignore error from having no schedule in submodule
             pass
         exp_inv = np.zeros(env.inventory.shape)
-        exp_inv[prod_tuple.ProdID] += prod_tuple.Quantity
-        assert env.inventory[prod_tuple.ProdID] == prod_tuple.Quantity, (
+        exp_inv[prod_tuple.ProductID] += prod_tuple.Quantity
+        assert env.inventory[prod_tuple.ProductID] == prod_tuple.Quantity, (
             f"Actual Inventory: {env.inventory}\n" +
             f"Excpected Inventory: {exp_inv}"
         )
@@ -97,12 +97,12 @@ class TestSchedEnvs:
         off_grade_time = 0
         release_time = prod_time + env._cure_time
         sched = np.zeros(len(env.sched_cols))
-        sched[env.sched_col_idx['Num']] += 1
+        sched[env.sched_col_idx['Number']] += 1
         sched[env.sched_col_idx['Quantity']] += env._min_production_qty
         sched[env.sched_col_idx['ProductID']] += action
-        sched[env.sched_col_idx['StartTime']] += env.env_time
-        sched[env.sched_col_idx['EndTime']] += env.env_time + prod_time
-        sched[env.sched_col_idx['ReleaseTime']] += env.env_time + release_time
+        sched[env.sched_col_idx['ProdStartTime']] += env.env_time
+        sched[env.sched_col_idx['ProdEndTime']] += env.env_time + prod_time
+        sched[env.sched_col_idx['ProdReleaseTime']] += env.env_time + release_time
 
         env.append_schedules(action)
 
@@ -118,10 +118,10 @@ class TestSchedEnvs:
         # Set order book and inventory such that all orders will be shipped
         env.inventory = np.ones(env.inventory.shape) * qty
         order_book = np.zeros((env.n_fin_products, len(env.order_book_cols)))
-        order_book[:, env.ob_col_idx['Num']] = np.arange(env.n_fin_products)
+        order_book[:, env.ob_col_idx['Number']] = np.arange(env.n_fin_products)
         order_book[:, env.ob_col_idx['ProductID']] = env.product_ids
-        order_book[:, env.ob_col_idx['CreateDate']] = env.env_time
-        order_book[:, env.ob_col_idx['DueDate']] = env.env_time
+        order_book[:, env.ob_col_idx['CreateTime']] = env.env_time
+        order_book[:, env.ob_col_idx['DueTime']] = env.env_time
         order_book[:, env.ob_col_idx['Quantity']] = qty
         env.order_book = order_book.copy()
 
@@ -132,3 +132,17 @@ class TestSchedEnvs:
             f"Discrepancy in inventory levels:\n" +
             f"Expected = 0\tActual = {env.inventory.sum()}\n" +
             f"{env.inventory}")
+
+    def test_run_episode(self, conf):
+        env = self._build_env(conf)
+        limit = 1E6
+        c = 0
+        while True:
+            action = env.action_space.sample()
+            s, r, d, _ = env.step(action)
+            c += 1
+            if d:
+                break
+            if c > limit:
+                break
+        assert c < limit

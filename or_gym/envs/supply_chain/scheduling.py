@@ -1,13 +1,13 @@
 import numpy as np
 import gym
 from gym import spaces
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from collections import namedtuple, deque, OrderedDict
 from collections.abc import Iterable
 from operator import attrgetter
 from or_gym import utils
 
-class BaseSchedEnv(gym.Env, ABC):
+class BaseSchedEnv(gym.Env):
     '''
     Base scheduling environment. Additional models can be built on 
     top of this class.
@@ -47,6 +47,9 @@ class BaseSchedEnv(gym.Env, ABC):
             day it is late. This penalty is assessed every day, so can exceed
             the value of the order.
     '''
+
+    __metaclass__ = ABCMeta
+
     def __init__(self, *args, **kwargs):
         self.simulation_days = 365
         self.time_limit = self.simulation_days * 24 # Hours
@@ -88,12 +91,12 @@ class BaseSchedEnv(gym.Env, ABC):
             for k, l in enumerate(self.product_ids) 
             for i, j in enumerate(self.product_ids)}
 
-        self.order_book_cols = ['Num', 'ProductID', 'CreateTime', 'DueTime', 
+        self.order_book_cols = ['Number', 'ProductID', 'CreateTime', 'DueTime', 
             'Quantity', 'Value', 'Shipped', 'ShipTime', 'OnTime']
         self.ob_col_idx = {j: i for i, j in enumerate(self.order_book_cols)}
 
-        self.sched_cols = ['Num', 'ProductID', 'Stage', 'Line', 
-            'StartTime', 'EndTime', 'ReleaseTime', 'Quantity', 
+        self.sched_cols = ['Number', 'ProductID', 'Stage', 'Line', 
+            'ProdStartTime', 'ProdEndTime', 'ProdReleaseTime', 'Quantity', 
             'OffGrade', 'Completed']
         self.sched_col_idx = {j: i for i, j in enumerate(self.sched_cols)}
 
@@ -102,6 +105,7 @@ class BaseSchedEnv(gym.Env, ABC):
         self._initialize_demand_model()
         self._vectorize_mappings()
         self._build_hc_array()
+        self._stage_line_dict = self._init_stage_line_dict()
 
     def _check_unique_prods(self):
         # Product IDs must be unique.
@@ -127,12 +131,12 @@ class BaseSchedEnv(gym.Env, ABC):
         # the environment pushes new product through the reactors, updates
         # inventory, and ships orders.
         while self._next_end_time > self.env_time + self.min_schedule_length:
-            if len(self.production_start_deque) < self.action_inputs:
-                self.production_start_deque = self._get_next_production_starts()
+            if len(self.production_deque) < self._action_inputs:
+                self.production_deque = self._get_next_production_starts()
             
             # Begin production
             try:
-                while self.production_start_deque[0].ProdStartTime == self.env_time:
+                while self.production_deque[0].ProdStartTime == self.env_time:
                     self._start_production(self.production_deque[0])
                     self.production_deque.popleft()
             except IndexError:
@@ -173,22 +177,25 @@ class BaseSchedEnv(gym.Env, ABC):
     def _get_latest_start_time(self):
         # Returns the latest start times from all schedules unless schedules
         # are None, then returns current time.
-        return np.array([v1[-1, self.sched_col_idx['StartTime']]
+        return np.array([v1[-1, self.sched_col_idx['ProdStartTime']]
             if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()]).min()
 
     def _get_next_end_time(self):
         # Returns earliest production end time across schedules
-        return np.array([v1[-1, self.sched_col_idx['EndTime']]
+        return np.array([v1[-1, self.sched_col_idx['ProdEndTime']]
             if v1 is not None else self.env_time
             for k, v in self.schedules.items()
             for k1, v1 in v.items()])
 
     def _start_production(self, prod_tuple):
-        # TODO: Update to make multi-stage compatible
-        self.current_production_dict[prod_tuple.Stage][prod_tuple.Train] = prod_tuple
-        self.prod_end_deque.append(prod_tuple)
+        '''
+        Begins production based on the schedule. 
+        TODO: Add raw material checks for multi-stage models.
+        '''
+        self.current_production[prod_tuple.Stage][prod_tuple.Line] = prod_tuple
+        self.production_release_deque.append(prod_tuple)
 
     def ship_orders(self):
         shipped_orders = None
@@ -211,27 +218,27 @@ class BaseSchedEnv(gym.Env, ABC):
                 # Get shipped and late order numbers
                 if shipped_orders is None:
                     shipped_orders = ots_prods[
-                        shipped_order_idx,self.ob_col_idx['Num']]
+                        shipped_order_idx,self.ob_col_idx['Number']]
                 else:
                     shipped_orders = np.hstack([shipped_orders,
-                        ots_prods[shipped_order_idx,self.ob_col_idx['Num']]])
+                        ots_prods[shipped_order_idx,self.ob_col_idx['Number']]])
                 # Get late orders by keeping remaining OTS document numbers
                 # TODO: if ship time != 24, then the current setup punishes
                 # orders if they ship same day, but at a later time of day, 
                 # e.g. shipment due at 17hrs, check at 24 hrs -> order late.
                 if late_orders is None:
                     late_orders = np.delete(ots_prods[:,
-                        self.ob_col_idx['Num']], shipped_order_idx)
+                        self.ob_col_idx['Number']], shipped_order_idx)
                 else:
                     late_orders = np.hstack([late_orders,
-                        np.delete(ots_prods[:, self.ob_col_idx['Num']],
+                        np.delete(ots_prods[:, self.ob_col_idx['Number']],
                             shipped_order_idx)])
         # Mark order as shipped, late, and on_time
-        mark_shipped = np.isin(self.order_book[:,self.ob_col_idx['Num']], 
+        mark_shipped = np.isin(self.order_book[:,self.ob_col_idx['Number']], 
             shipped_orders)
         self.order_book[mark_shipped, self.ob_col_idx['Shipped']] = 1
         self.order_book[mark_shipped, self.ob_col_idx['ShipTime']] = self.env_time
-        mark_late = np.isin(self.order_book[:,self.ob_col_idx['Num']],
+        mark_late = np.isin(self.order_book[:,self.ob_col_idx['Number']],
             late_orders)
         self.order_book[mark_late, self.ob_col_idx['OnTime']] = -1
         # Mark on time if shipped and ActualGITime <= DueTime
@@ -240,8 +247,8 @@ class BaseSchedEnv(gym.Env, ABC):
         shipped_agit = shipped_orders[:, self.ob_col_idx['ShipTime']]
         shipped_pgit = shipped_orders[:, self.ob_col_idx['DueTime']]
         shipped_on_time_nums = shipped_orders[np.less_equal(
-            shipped_agit, shipped_pgit), self.ob_col_idx['Num']]
-        self.order_book[np.isin(self.order_book[:, self.ob_col_idx['Num']], 
+            shipped_agit, shipped_pgit), self.ob_col_idx['Number']]
+        self.order_book[np.isin(self.order_book[:, self.ob_col_idx['Number']], 
             shipped_on_time_nums), self.ob_col_idx['OnTime']] = 1
         self._revenue += self._calc_revenue(mark_shipped, mark_late)
         self._late_penalties += self._calc_late_penalties()
@@ -323,6 +330,33 @@ class BaseSchedEnv(gym.Env, ABC):
         shares = utils.softmax(s)
         return np.round(shares * self.mean_total_demand, 0).astype(int)
 
+    def _get_next_production_starts(self):
+        '''
+        Returns a deque of starting times to push through each stage.
+        '''
+        production_starts =[]
+        for stage, _line in self._stage_line_dict.items():
+            for line in _line.keys():
+                schedule = self.schedules[stage][line].copy()
+                if schedule is None:
+                    continue
+                current_batch = self.current_production[stage][line].Number
+                next_prod = schedule[np.where(
+                    (schedule[:, self.sched_col_idx['Completed']]==0) &
+                    (schedule[:, self.sched_col_idx['ProdStartTime']]>=self.env_time) &
+                    (schedule[:, self.sched_col_idx['Number']]!=current_batch))][0]
+                production_starts.append(utils.ProdTuple(
+                    Stage=stage,
+                    Line=line,
+                    Number=next_prod[self.sched_col_idx['Number']],
+                    ProdStartTime=next_prod[self.sched_col_idx['ProdStartTime']],
+                    ProdReleaseTime=next_prod[self.sched_col_idx['ProdReleaseTime']], 
+                    ProductID=next_prod[self.sched_col_idx['ProductID']],
+                    Quantity=next_prod[self.sched_col_idx['Quantity']]))
+        # Return deque ordered by start time
+        return deque(sorted(production_starts, key=attrgetter('ProdStartTime')))
+
+
     def _run_demand_model(self):
         '''
         Base model calculates mean run rate for the products, multiplies
@@ -338,7 +372,7 @@ class BaseSchedEnv(gym.Env, ABC):
         self._initialize_demand_model()
         order_book = np.zeros((self.product_demand.sum(), 
             len(self.order_book_cols)))
-        order_book[:, self.ob_col_idx['Num']] = np.arange(
+        order_book[:, self.ob_col_idx['Number']] = np.arange(
             self.product_demand.sum())
         prods = np.hstack([np.repeat(i, j)
             for i, j in zip(self.product_ids, self.product_demand)])
@@ -361,7 +395,7 @@ class BaseSchedEnv(gym.Env, ABC):
 
     def _book_inventory(self, prod_tuple):
         # Moves completed production into inventory.
-        prod_idx = self.prod_inv_idx[prod_tuple.ProdID]
+        prod_idx = self.prod_inv_idx[prod_tuple.ProductID]
         self.inventory[prod_idx] += prod_tuple.Quantity
         self._mark_booked_in_schedule(prod_tuple)
 
@@ -369,8 +403,8 @@ class BaseSchedEnv(gym.Env, ABC):
         # Changes booked column from 0 to 1
         sched = self.schedules[prod_tuple.Stage][prod_tuple.Line]
         row_to_book = np.where(
-            sched[:, self.sched_col_idx['Num']]==prod_tuple.Number)
-        sched[row_to_book, self.sched_col_idx['Booked']] = 1
+            sched[:, self.sched_col_idx['Number']]==prod_tuple.Number)
+        sched[row_to_book, self.sched_col_idx['Completed']] = 1
         sched[row_to_book, self.sched_col_idx['Quantity']] = prod_tuple.Quantity
         self.schedules[prod_tuple.Stage][prod_tuple.Line] = sched.copy()
 
@@ -404,13 +438,13 @@ class BaseSchedEnv(gym.Env, ABC):
             start_time = self.env_time
             last_prod_id = prod_id # Assume no transition at start
         else:
-            last_prod_id = schedule[-1, self.sched_col_idx['ProdID']]
+            last_prod_id = schedule[-1, self.sched_col_idx['ProductID']]
             if prod_id == last_prod_id:
                 # TODO: Extend current entry by some discrete amount
                 # be it minimum batch size or some other value.
                 pass
-            num = schedule[-1, self.sched_col_idx['Num']] + 1
-            start_time = schedule[-1, self.sched_col_idx['EndTime']]  
+            num = schedule[-1, self.sched_col_idx['Number']] + 1
+            start_time = schedule[-1, self.sched_col_idx['ProdEndTime']]  
         
         off_grade_hrs = self.get_off_grade_time(stage, line, last_prod_id, prod_id)
         prod_rate = self.get_production_rate(stage, line, prod_id)
@@ -422,12 +456,12 @@ class BaseSchedEnv(gym.Env, ABC):
         # Add values to new_entry
         new_entry[self.sched_col_idx['Stage']] = stage
         new_entry[self.sched_col_idx['Line']] = line
-        new_entry[self.sched_col_idx['Num']] = num
+        new_entry[self.sched_col_idx['Number']] = num
         new_entry[self.sched_col_idx['ProductID']] = prod_id
         new_entry[self.sched_col_idx['Quantity']] = qty
-        new_entry[self.sched_col_idx['StartTime']] = start_time
-        new_entry[self.sched_col_idx['EndTime']] = end_time
-        new_entry[self.sched_col_idx['ReleaseTime']] = release_time
+        new_entry[self.sched_col_idx['ProdStartTime']] = start_time
+        new_entry[self.sched_col_idx['ProdEndTime']] = end_time
+        new_entry[self.sched_col_idx['ProdReleaseTime']] = release_time
         new_entry[self.sched_col_idx['OffGrade']] = off_grade
         new_entry[self.sched_col_idx['Completed']] = completed
         
@@ -466,15 +500,15 @@ class BaseSchedEnv(gym.Env, ABC):
     def _RESET(self):
         # Deque of products to release
         self.production_deque = deque()
+        self.production_release_deque = deque()
         self.inventory = self.init_inventory.copy()
         self.env_time = 0
         self._revenue = 0
         self._holding_cost = 0
         self._late_penalties = 0
         self.order_book = self.get_demand()
-        self.production_start_deque = deque()
         self.schedules = self._init_schedules()
-        self._stage_line_dict = self._init_stage_line_dict()
+        self.current_production = self._init_current_production()
         return self.get_state()
 
     #########################################################################
@@ -496,6 +530,14 @@ class BaseSchedEnv(gym.Env, ABC):
     @abstractmethod
     def _init_stage_line_dict(self):
         raise NotImplementedError("_init_stage_line_dict method not implemented.")
+
+    @abstractmethod
+    def _init_action_inputs(self):
+        raise NotImplementedError("_init_action_inputs method not implemented.")
+
+    @abstractmethod
+    def _init_current_production(self):
+        raise NotImplementedError("_init_current_production method not implemented.")
 
 class SingleStageSchedEnv(BaseSchedEnv):
     '''
@@ -531,24 +573,38 @@ class SingleStageSchedEnv(BaseSchedEnv):
         utils.assign_env_config(self, kwargs)
         super().__init__()
 
-        # Nested dictionary to link products to stages and lines
-        self._stage_line_dict = {0: 
-            {0: self.product_ids}
-        }
-
         self.action_space = spaces.Dict({k:
             spaces.Dict({k1: spaces.Discrete(len(v1))
                 for k1, v1 in v.items()})
             for k, v in self._stage_line_dict.items()})
 
         self.observation_space = None
-
+        
+        self.__init_prod = utils.ProdTuple(None, None, None, None, None, None, None)
+        self._action_inputs = self._init_action_inputs()
         self.reset()
+
+    def _init_stage_line_dict(self):
+        # Nested dictionary to link products to stages and lines
+        return {0: {0: self.product_ids}}
+
+    def _init_schedules(self):
+        '''Returns nested dictionary with empty schedules.'''
+        return {k: {k1: None for k1 in v.keys()} 
+            for k, v in self._stage_line_dict.items()}
+
+    def _init_action_inputs(self):
+        '''Returns dimensionality of action space.'''
+        return len([j for i in self.action_space 
+            for j in self.action_space[i]])
+
+    def _init_current_production(self):
+        return {stage:
+            {line: self.__init_prod for line in v.keys()} 
+                for stage, v in self._stage_line_dict.items()}
 
     def step(self, action):
         return self._STEP(action)
 
     def reset(self):
-        self.schedules = {k: {k1: None for k1 in v.keys()} 
-            for k, v in self._stage_line_dict.items()}
         return self._RESET()

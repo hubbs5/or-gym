@@ -3,7 +3,7 @@ from collections import namedtuple
 
 ProdTuple = namedtuple('ProdTUple', 
   ['Stage', 'Line', 'ProdStartTime', 'ProdReleaseTime', 
-   'Number', 'ProdID', 'Quantity'])
+   'Number', 'ProductID', 'Quantity'])
 
 def assign_env_config(self, kwargs):
     for key, value in kwargs.items():
