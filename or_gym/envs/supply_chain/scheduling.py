@@ -177,6 +177,7 @@ class BaseSchedEnv(gym.Env, ABC):
         self.env_time = 0
         self._revenue = 0
         self._holding_cost = 0
+        self._late_penalties = 0
         self.order_book = self.get_demand()
         return self.get_state()
 
