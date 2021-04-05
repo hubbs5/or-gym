@@ -170,18 +170,6 @@ class BaseSchedEnv(gym.Env, ABC):
         info = {}
         return self.state, reward, done, info
 
-    def _RESET(self):
-        # Deque of products to release
-        self.production_deque = deque()
-        self.inventory = self.init_inventory.copy()
-        self.env_time = 0
-        self._revenue = 0
-        self._holding_cost = 0
-        self._late_penalties = 0
-        self.order_book = self.get_demand()
-        self.schedules = {}
-        return self.get_state()
-
     def _get_latest_start_time(self):
         # Returns the latest start times from all schedules unless schedules
         # are None, then returns current time.
@@ -475,6 +463,24 @@ class BaseSchedEnv(gym.Env, ABC):
     def get_state(self):
         return self._get_state()
 
+    def _RESET(self):
+        # Deque of products to release
+        self.production_deque = deque()
+        self.inventory = self.init_inventory.copy()
+        self.env_time = 0
+        self._revenue = 0
+        self._holding_cost = 0
+        self._late_penalties = 0
+        self.order_book = self.get_demand()
+        self.production_start_deque = deque()
+        self.schedules = self._init_schedules()
+        self._stage_line_dict = self._init_stage_line_dict()
+        return self.get_state()
+
+    #########################################################################
+    # Abstract methods must be defined by the child class, otherwise an error
+    # will be raised.
+    #########################################################################
     @abstractmethod
     def step(self, action):
         raise NotImplementedError("step() method not implemented.")
@@ -482,6 +488,14 @@ class BaseSchedEnv(gym.Env, ABC):
     @abstractmethod
     def reset(self):
         raise NotImplementedError("reset() method not implemented.")
+
+    @abstractmethod
+    def _init_schedules(self):
+        raise NotImplementedError("_init_schedules method not implemented.")
+
+    @abstractmethod
+    def _init_stage_line_dict(self):
+        raise NotImplementedError("_init_stage_line_dict method not implemented.")
 
 class SingleStageSchedEnv(BaseSchedEnv):
     '''
