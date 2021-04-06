@@ -52,12 +52,8 @@ class BaseSchedEnv(gym.Env):
 
     def __init__(self, *args, **kwargs):
         self.simulation_days = 365
-        self.time_limit = self.simulation_days * 24 # Hours
         self.n_fin_products = 10 # Finished products
         self.n_int_products = 0  # Intermediate products
-        self.tot_products = self.n_fin_products + self.n_int_products
-        self.product_ids = np.arange(self.tot_products)
-        self.init_inventory = np.ones(self.tot_products) * 100
         self.n_stages = 1
         self._run_rate = 10 # Units/hour
         self._product_value = 10 # $/Unit
@@ -70,9 +66,18 @@ class BaseSchedEnv(gym.Env):
         self.avg_order_qty = 50 # Units
         self.min_schedule_length = 7 * 24 # Hours
         self.late_penalty = 0.1
+
+        utils.assign_env_config(self, kwargs)
+
+        self.time_limit = self.simulation_days * 24 # Hours
+        self.tot_products = self.n_fin_products + self.n_int_products
+        self.product_ids = np.arange(self.tot_products)
+        self.init_inventory = np.ones(self.tot_products) * 500
         self._transition_matrix = np.random.choice(np.arange(13), 
             size=(self.tot_products, self.tot_products))
         np.fill_diagonal(self._transition_matrix, 0)
+
+
         
         self.run_rates = {i: self._run_rate 
             for i in self.product_ids}
@@ -375,14 +380,16 @@ class BaseSchedEnv(gym.Env):
         for p, d in zip(self.product_ids, self.product_demand):
             n = int(d / self.avg_order_qty)
             _order_book = np.zeros((n, len(self.order_book_cols)))
+            _order_book[:, self.ob_col_idx['Quantity']] = np.random.poisson(
+                lam=self.avg_order_qty, size=n)
             _order_book[:, self.ob_col_idx['Number']] = np.arange(
                 n) + last_num + 1
             _order_book[:, self.ob_col_idx['ProductID']] = p
             due_dates = np.random.choice(np.arange(self.simulation_days),
-                p=self._p_seas, size=n)
+                p=self._p_seas, size=n) * 24
             _order_book[:, self.ob_col_idx['DueTime']] = due_dates
             _order_book[:, self.ob_col_idx['CreateTime']] = due_dates - \
-                np.random.poisson(lam=self.avg_lead_time, size=n)
+                np.random.poisson(lam=self.avg_lead_time, size=n) * 24
             order_book = np.vstack([order_book, _order_book])
 
         return order_book
