@@ -60,9 +60,9 @@ def create_env(config, *args, **kwargs):
 		from or_gym.envs.supply_chain.inventory_management import InvManagementBacklogEnv as env
 	elif env_name == 'InvManagement-v1':
 		from or_gym.envs.supply_chain.inventory_management import InvManagementLostSalesEnv as env
-	elif env_name == 'InvManagement-v3':
+	elif env_name == 'InvManagement-v2':
 		from or_gym.envs.supply_chain.network_management import NetInvMgmtBacklogEnv as env
-	elif env_name == 'InvManagement-v4':
+	elif env_name == 'InvManagement-v3':
 		from or_gym.envs.supply_chain.network_management import NetInvMgmtLostSalesEnv as env
 	else:
 		raise NotImplementedError('Environment {} not recognized.'.format(env_name))
