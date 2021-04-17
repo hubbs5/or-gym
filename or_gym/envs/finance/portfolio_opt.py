@@ -80,7 +80,9 @@ class PortfolioOptEnv(gym.Env):
         self.observation_space = spaces.Box(-20000, 20000, shape=(self.obs_length,))
         self.action_space = spaces.Box(-2000, 2000, shape=(self.num_assets,))
         
+        self.seed()
         self.reset()
+        
         
     def _RESET(self):
         self.step_count = 0
@@ -94,7 +96,7 @@ class PortfolioOptEnv(gym.Env):
         return self.state
     
     def _generate_asset_prices(self):
-        asset_prices = np.array([np.random.normal(mu, sig) for mu, sig in 
+        asset_prices = np.array([self.np_random.normal(mu, sig) for mu, sig in 
             zip(self.asset_price_means.flatten(), self.asset_price_var.flatten())]
             ).reshape(self.asset_price_means.shape)
         # Zero out negative asset prices and all following prices - implies
@@ -160,3 +162,7 @@ class PortfolioOptEnv(gym.Env):
 
     def reset(self):
         return self._RESET()
+    
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
