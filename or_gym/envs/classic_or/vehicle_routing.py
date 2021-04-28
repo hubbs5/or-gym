@@ -11,6 +11,7 @@ import random
 import numpy as np
 from scipy.stats import truncnorm
 
+
 class VehicleRoutingEnv(gym.Env):
     '''
     Dynamic Vehicle Routing Problem
@@ -59,8 +60,8 @@ class VehicleRoutingEnv(gym.Env):
         The agent recieves 1/3 of the order value for accepting an order,
         picking it up, and delivering the order. The cost is comprised of
         three elements: delivery time, delivery distance, and cost of failure
-        (if the driver does not deliver the item).
-        
+        (if the driver does not deliver the item). 
+
     Starting State:
         Restaurant and driver locations are randomized at the start of each
         episode. New orders are generated according to the order probability.
@@ -184,7 +185,7 @@ class VehicleRoutingEnv(gym.Env):
             if self.order_dict[order_idx]['Status'] == 2 and self.driver_loc[0] == restaurant_loc[0] and self.driver_loc[1] == restaurant_loc[1]:
                 if self.vehicle_load < self.vehicle_capacity:
                     self.order_dict[order_idx]['Status'] = 3
-                    self.vehicle_capacity += 1
+                    self.vehicle_load += 1
                     self.reward += self.order_dict[order_idx]['Value'] / 3
 
     def deliver_order(self, action):
