@@ -1,6 +1,6 @@
 VERSION='0.2.0'
 
-ENV_LIST = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2',
+ENV_LIST = ['Knapsack-v0', 'Knapsack-v1', 'Knapsack-v2', 'Knapsack-v3',
             'BinPacking-v0', 'BinPacking-v1', 'BinPacking-v2',
             'BinPacking-v3', 'BinPacking-v4', 'BinPacking-v5',
             'VMPacking-v0',
