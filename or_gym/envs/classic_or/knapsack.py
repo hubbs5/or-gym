@@ -59,6 +59,7 @@ class KnapsackEnv(gym.Env):
         self.item_values = np.random.randint(0, 100, size=self.N)
         self.over_packed_penalty = 0
         self.randomize_params_on_reset = False
+        self._collected_items.clear()
         # Add env_config, if any
         assign_env_config(self, kwargs)
         self.set_seed()
@@ -129,6 +130,7 @@ class KnapsackEnv(gym.Env):
             self.item_weights = np.random.randint(1, 100, size=self.N)
             self.item_values = np.random.randint(0, 100, size=self.N)
         self.current_weight = 0
+        self._collected_items.clear()
         self._update_state()
         return self.state
     

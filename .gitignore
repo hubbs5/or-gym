@@ -134,4 +134,4 @@ dmypy.json
 nohup.out
 
 # .bak files
-.bak
+*.bak
