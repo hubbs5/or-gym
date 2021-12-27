@@ -42,6 +42,10 @@ class KnapsackEnv(gym.Env):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
+    
+    # Internal list of placed items for better rendering
+    _collected_items = []
+    
     def __init__(self, *args, **kwargs):
         # Generate data with consistent random seed to ensure reproducibility
         self.N = 200
@@ -79,6 +83,7 @@ class KnapsackEnv(gym.Env):
         if self.item_weights[item] + self.current_weight <= self.max_weight:
             self.current_weight += self.item_weights[item]
             reward = self.item_values[item]
+            self._collected_items.append(item)
             if self.current_weight == self.max_weight:
                 done = True
             else:
@@ -141,6 +146,15 @@ class KnapsackEnv(gym.Env):
 
     def step(self, action):
         return self._STEP(action)
+        
+    def render(self):
+        total_value = 0
+        total_weight = 0
+        for i in range(self.N) :
+            if i in self._collected_items :
+                total_value += self.item_values[i]
+                total_weight += self.item_weights[i]
+        return self._collected_items, total_value, total_weight
 
 class BinaryKnapsackEnv(KnapsackEnv):
     '''
