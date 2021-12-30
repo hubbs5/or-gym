@@ -65,17 +65,17 @@ class KnapsackEnv(gym.Env):
         self.set_seed()
         
         obs_space = spaces.Box(
-            0, self.max_weight, shape=(2*self.N + 1,), dtype=np.int16)
+            0, self.max_weight, shape=(2*self.N + 1,), dtype=np.int32)
         self.action_space = spaces.Discrete(self.N)
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.N,)),
-                "avail_actions": spaces.Box(0, 1, shape=(self.N,)),
+                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int32),
+                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int16),
                 "state": obs_space
                 })
         else:
             self.observation_space = spaces.Box(
-                0, self.max_weight, shape=(2, self.N + 1), dtype=np.int16)
+                0, self.max_weight, shape=(2, self.N + 1), dtype=np.int32)
         
         self.reset()
         
@@ -111,7 +111,7 @@ class KnapsackEnv(gym.Env):
                 ])
             self.state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N),
+                "avail_actions": np.ones(self.N, dtype=np.int16),
                 "state": state
                 }
         else:
