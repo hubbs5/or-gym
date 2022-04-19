@@ -135,3 +135,6 @@ nohup.out
 
 # .bak files
 *.bak
+
+# wandb output
+wandb/
