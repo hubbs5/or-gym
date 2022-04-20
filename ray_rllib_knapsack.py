@@ -5,7 +5,7 @@ Spyder Editor
 This is a temporary script file.
 """
 import ray
-from ray.rllib import agents
+from ray.rllib.agents.ppo import PPOTrainer
 from ray import tune
 from ray.rllib.models import ModelCatalog
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
@@ -94,8 +94,9 @@ trainer_config = {
 
 # ray.shutdown()
 # Ensure that a ray instance is running, e.g. via http://127.0.0.1:8265/#/
-ray.init(address="auto", ignore_reinit_error = True, local_mode=True)
-trainer = agents.ppo.PPOTrainer(env='Knapsack-v0', config=trainer_config)
+# ray.init(address="auto", ignore_reinit_error = True, local_mode=True)
+ray.init()
+trainer = PPOTrainer(env='Knapsack-v0', config=trainer_config)
 
 # The real action masking logic: disable the agent to take action 0
 env = trainer.env_creator('Knapsack-v0')
@@ -120,3 +121,4 @@ results = tune.run(
     stop=stop
 ) 
 
+ray.shutdown()

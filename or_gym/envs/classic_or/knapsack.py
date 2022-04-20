@@ -156,7 +156,10 @@ class KnapsackEnv(gym.Env):
             if i in self._collected_items :
                 total_value += self.item_values[i]
                 total_weight += self.item_weights[i]
-        return self._collected_items, total_value, total_weight
+        print(self._collected_items, total_value, total_weight)
+        
+        # RlLib requirement: Make sure you either return a uint8/w x h x 3 (RGB) image or handle rendering in a window and then return `True`.
+        return True
 
 class BinaryKnapsackEnv(KnapsackEnv):
     '''
