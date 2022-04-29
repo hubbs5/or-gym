@@ -79,11 +79,11 @@ register(id='InvManagement-v1',
 	entry_point='or_gym.envs.supply_chain.inventory_management:InvManagementLostSalesEnv'
 )
 
-register(id='InvManagement-v2',
+register(id='NetworkManagement-v0',
 	entry_point='or_gym.envs.supply_chain.network_management:NetInvMgmtBacklogEnv'
 )
 
-register(id='InvManagement-v3',
+register(id='NetworkManagement-v1',
 	entry_point='or_gym.envs.supply_chain.network_management:NetInvMgmtLostSalesEnv'
 )
 
