@@ -63,7 +63,7 @@ class KnapsackEnv(gym.Env):
         # Add env_config, if any
         assign_env_config(self, kwargs)
         self.set_seed()
-        
+
         obs_space = spaces.Box(
             0, self.max_weight, shape=(2*self.N + 1,), dtype=np.int32)
         self.action_space = spaces.Discrete(self.N)
@@ -270,6 +270,9 @@ class BinaryKnapsackEnv(KnapsackEnv):
             self.item_numbers[np.where(self.item_limits!=0)])
     
     def _RESET(self):
+        if self.randomize_params_on_reset:
+            self.item_weights = np.random.randint(1, 100, size=self.N)
+            self.item_values = np.random.randint(0, 100, size=self.N)
         self.current_weight = 0
         self.item_limits = np.ones(self.N)
         self._update_state()
@@ -322,7 +325,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
         self.item_values = np.random.randint(0, 100, size=self.N)
 
         assign_env_config(self, kwargs)
-        
+
         obs_space = spaces.Box(
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
         if self.mask:
@@ -389,8 +392,14 @@ class BoundedKnapsackEnv(KnapsackEnv):
             self.item_numbers[np.where(self.item_limits!=0)])
     
     def _RESET(self):
+        if self.randomize_params_on_reset:
+            self.item_weights = np.random.randint(1, 100, size=self.N)
+            self.item_values = np.random.randint(0, 100, size=self.N)
+            self.item_limits = np.random.randint(1, 10, size=self.N)
+        else:
+            self.item_limits = self.item_limits_init.copy()
+
         self.current_weight = 0
-        self.item_limits = self.item_limits_init.copy()
         self._update_state()
         return self.state
 
@@ -401,7 +410,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     The Knapsack Problem (KP) is a combinatorial optimization problem which
     requires the user to select from a range of goods of different values and
     weights in order to maximize the value of the selected items within a 
-    given weight limit. This version is online meaning each item is randonly
+    given weight limit. This version is online meaning each item is randomly
     presented to the algorithm one at a time, at which point the algorithm 
     can either accept or reject the item. After seeing a fixed number of 
     items are shown, the episode terminates. If the weight limit is reached
@@ -434,8 +443,6 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     '''
     def __init__(self, *args, **kwargs):
         BoundedKnapsackEnv.__init__(self)
-        self.item_weights = np.random.randint(1, 100, size=self.N)
-        self.item_values = np.random.randint(0, 100, size=self.N)
         assign_env_config(self, kwargs)
         self.action_space = spaces.Discrete(2)
 
@@ -505,10 +512,16 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         return np.random.choice([0, 1])
     
     def _RESET(self):
+        if self.randomize_params_on_reset:
+            self.item_weights = np.random.randint(1, 100, size=self.N)
+            self.item_values = np.random.randint(0, 100, size=self.N)
+            self.item_limits = np.random.randint(1, 10, size=self.N)
+        else:
+            self.item_limits = self.item_limits_init.copy()
+
         if not hasattr(self, 'item_probs'):
             self.item_probs = self.item_limits_init / self.item_limits_init.sum()
         self.current_weight = 0
         self.step_counter = 0
-        self.item_limits = self.item_limits_init.copy()
         self._update_state()
         return self.state
