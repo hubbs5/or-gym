@@ -100,6 +100,8 @@ class BinPackingEnv(gym.Env):
         
         self.total_reward += reward
         
+        self.step_count += 1 
+        
         if self.step_count >= self.step_limit:
             done = True
         

@@ -472,7 +472,6 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
                     done = True
                 else:
                     done = False
-                self._update_state()
             else:
                 # End if over weight
                 reward = 0
@@ -480,7 +479,8 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         else:
             reward = 0
             done = False
-            
+        
+        self._update_state()
         self.step_counter += 1
         if self.step_counter >= self.step_limit:
             done = True
