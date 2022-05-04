@@ -42,6 +42,10 @@ class KnapsackEnv(gym.Env):
     Episode Termination:
         Full knapsack or selection that puts the knapsack over the limit.
     '''
+    
+    # Internal list of placed items for better rendering
+    _collected_items = []
+    
     def __init__(self, *args, **kwargs):
         # Generate data with consistent random seed to ensure reproducibility
         self.N = 200
@@ -55,22 +59,23 @@ class KnapsackEnv(gym.Env):
         self.item_values = np.random.randint(0, 100, size=self.N)
         self.over_packed_penalty = 0
         self.randomize_params_on_reset = False
+        self._collected_items.clear()
         # Add env_config, if any
         assign_env_config(self, kwargs)
         self.set_seed()
 
         obs_space = spaces.Box(
-            0, self.max_weight, shape=(2*self.N + 1,), dtype=np.int16)
+            0, self.max_weight, shape=(2*self.N + 1,), dtype=np.int32)
         self.action_space = spaces.Discrete(self.N)
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.N,)),
-                "avail_actions": spaces.Box(0, 1, shape=(self.N,)),
+                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int32),
+                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int16),
                 "state": obs_space
                 })
         else:
             self.observation_space = spaces.Box(
-                0, self.max_weight, shape=(2, self.N + 1), dtype=np.int16)
+                0, self.max_weight, shape=(2, self.N + 1), dtype=np.int32)
         
         self.reset()
         
@@ -79,6 +84,7 @@ class KnapsackEnv(gym.Env):
         if self.item_weights[item] + self.current_weight <= self.max_weight:
             self.current_weight += self.item_weights[item]
             reward = self.item_values[item]
+            self._collected_items.append(item)
             if self.current_weight == self.max_weight:
                 done = True
             else:
@@ -105,7 +111,7 @@ class KnapsackEnv(gym.Env):
                 ])
             self.state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N),
+                "avail_actions": np.ones(self.N, dtype=np.int16),
                 "state": state
                 }
         else:
@@ -124,6 +130,7 @@ class KnapsackEnv(gym.Env):
             self.item_weights = np.random.randint(1, 100, size=self.N)
             self.item_values = np.random.randint(0, 100, size=self.N)
         self.current_weight = 0
+        self._collected_items.clear()
         self._update_state()
         return self.state
     
@@ -141,6 +148,18 @@ class KnapsackEnv(gym.Env):
 
     def step(self, action):
         return self._STEP(action)
+        
+    def render(self):
+        total_value = 0
+        total_weight = 0
+        for i in range(self.N) :
+            if i in self._collected_items :
+                total_value += self.item_values[i]
+                total_weight += self.item_weights[i]
+        print(self._collected_items, total_value, total_weight)
+        
+        # RlLib requirement: Make sure you either return a uint8/w x h x 3 (RGB) image or handle rendering in a window and then return `True`.
+        return True
 
 class BinaryKnapsackEnv(KnapsackEnv):
     '''

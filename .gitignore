@@ -133,5 +133,8 @@ dmypy.json
 # Output files
 nohup.out
 
-# .idea
-.idea/
+# .bak files
+*.bak
+
+# wandb output
+wandb/
