@@ -46,12 +46,12 @@ def create_env(config, *args, **kwargs):
     from or_gym.envs.classic_or.vmpacking import VMPackingEnv as env
   elif env_name.lower() == 'vmpacking-v1':
     from or_gym.envs.classic_or.vmpacking import TempVMPackingEnv as env
-  elif env_name.lower() == 'portfolioppt-v0':
+  elif env_name.lower() == 'portfolioopt-v0':
     from or_gym.envs.finance.portfolio_opt import PortfolioOptEnv as env
   elif env_name.lower() == 'tsp-v0':
     from or_gym.envs.classic_or.tsp import TSPEnv as env
   elif env_name.lower() == 'tsp-v1':
-    from or_gym.evns.classic_or.tsp import TSPDistCost as env
+    from or_gym.envs.classic_or.tsp import TSPDistCost as env
   elif env_name.lower() == 'vehiclerouting-v0':
     from or_gym.envs.classic_or.vehicle_routing import VehicleRoutingEnv as env
   elif env_name.lower() == 'newsvendor-v0':

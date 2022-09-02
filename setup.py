@@ -26,11 +26,13 @@ setup(name='or-gym',
 	url='https://github.com/hubbs5/or-gym',
 	packages=find_packages(),
 	install_requires=[
-		'gym>=0.15.0',
+		'gym<=0.19.0',
 		'numpy>=1.16.1',
+		'pandas>=1.2',
 		'scipy>=1.0',
 		'matplotlib>=3.1',
-		'networkx>=2.3'],
+		'networkx>=2.3'
+  ],
 	zip_safe=False,
 	python_requires='>=3.5',
 	classifiers=[
@@ -43,4 +45,4 @@ setup(name='or-gym',
 		'Programming Language :: Python :: 3.8',
 		'Programming Language :: Python :: 3.9',
 	]
-)
+	)
