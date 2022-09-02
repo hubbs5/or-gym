@@ -45,8 +45,7 @@ class TestEnv:
         for ep in range(EPISODES):
             state = env.reset()
             while True:
-                assert env.observation_space.contains(state), \
-                    f"State out of range of observation space: {state}"
+                assert (env.observation_space.contains(state), f"State out of range of observation space: {state}")
                 action = env.action_space.sample()
                 state, reward, done, info = env.step(action)
                 if done:
