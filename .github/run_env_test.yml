@@ -1,0 +1,15 @@
+name: learn-github-actions
+on: [push]
+jobs:
+  check-environments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v3
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 #install the python needed
+      - name: execute py script # run the run.py to get the latest data
+        run: |
+          python tests/env_test.py
