@@ -5,7 +5,18 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'or_gym'))
-from or_gym.version import VERSION
+
+
+with open(os.path.join('or_gym', 'version.py')) as version_file:
+    version = version_file.read().strip()
+
+VERSION = version.split("=")[-1].replace("'", "")
+
+# version = {}
+# with open("or_gym/version.py") as fp:
+    # exec(fp.read(), version)
+# later on we use: version['__version__']
+# from or_gym.version import VERSION
 
 setup(name='or-gym',
 	version=VERSION,
@@ -30,5 +41,6 @@ setup(name='or-gym',
 		'Programming Language :: Python :: 3.6',
 		'Programming Language :: Python :: 3.7',
 		'Programming Language :: Python :: 3.8',
+		'Programming Language :: Python :: 3.9',
 	]
 )
