@@ -5,7 +5,7 @@ This library contains environments consisting of operations research problems wh
 
 ## Installation
 
-This library requires Python 3.5+ in order to function.
+This library requires Python 3.7+ in order to function.
 
 Installation is possible via `pip`:
 
