@@ -14,7 +14,7 @@ authors = [
 description = "OR-Gym: A set of environments for developing reinforcement learning agents for OR problems."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 dependencies = [
     'gym>=0.15.0',
     'numpy>=1.16.1',
