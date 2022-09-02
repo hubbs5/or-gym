@@ -6,18 +6,18 @@ build-backend = "hatchling.build"
 name = "or-gym"
 version = "0.5.0"
 authors = [
-  { name="Christian Hubbs", email="christiandhubbs@gmail.com" },
-  { name="Owais Sarwar", email="owais.sarwar@gmail.com" },
-  { name="Hector Perez", email="christiandhubbs@gmail.com" }
-  
+  { name="Christian Hubbs", email="christiandhubbs@gmail.com"},
+  { name="Owais Sarwar", email="owais.sarwar@gmail.com"},
+  { name="Hector Perez", email="hdperez@cmu.edu"}
 ]
 description = "OR-Gym: A set of environments for developing reinforcement learning agents for OR problems."
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
 dependencies = [
-    'gym>=0.15.0',
+    'gym<=0.19.0',
     'numpy>=1.16.1',
+    'pandas>=1.2',
     'scipy>=1.0',
     'matplotlib>=3.1',
     'networkx>=2.3'
