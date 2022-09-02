@@ -138,3 +138,5 @@ nohup.out
 
 # wandb output
 wandb/
+
+notebooks/

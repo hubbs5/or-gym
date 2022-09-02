@@ -8,4 +8,4 @@ from or_gym.utils import *
 
 from gym.core import Env, Wrapper, ObservationWrapper, ActionWrapper, RewardWrapper
 from gym.envs import make, spec, register
-from or_gym.envs import classic_or
+from or_gym.envs import classic_or, finance, supply_chain
