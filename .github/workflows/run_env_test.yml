@@ -1,4 +1,4 @@
-name: learn-github-actions
+name: run-env-test
 on: [push]
 jobs:
   check-environments:
