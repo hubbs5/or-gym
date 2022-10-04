@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
-from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.algorithms.ppo import PPO
 from ray import tune
 from ray.rllib.models import ModelCatalog
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
@@ -36,7 +36,7 @@ class KP0ActionMaskModel(TFModelV2):
             spaces.Box(0, 1, shape=true_obs_shape), 
                 action_space, action_embed_size,
             model_config, name + "_action_embedding")
-        self.register_variables(self.action_embed_model.variables())
+        # self.register_variables(self.action_embed_model.variables())
  
     def forward(self, input_dict, state, seq_lens):
         
@@ -115,7 +115,7 @@ config = {
 
 
 # Headless start without ray.init()
-trainer = PPOTrainer(config=config)
+trainer = PPO(config=config)
 
 # # The real action masking logic: disable the agent to take action 0
 # env = trainer.env_creator('Knapsack-v0')

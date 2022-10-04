@@ -1,5 +1,5 @@
 import ray
-from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.algorithms.ppo import PPO
 
 ray.shutdown()
 ray.init(ignore_reinit_error=True)
@@ -30,7 +30,7 @@ config = {
 }
 
 # Create our RLlib Trainer.
-trainer = PPOTrainer(config=config)
+trainer = PPO(config=config)
 
 # Run it for n training iterations. A training iteration includes
 # parallel sample collection by the environment workers as well as
