@@ -140,3 +140,6 @@ nohup.out
 wandb/
 
 notebooks/
+
+# poetry lock file
+poetry.lock
