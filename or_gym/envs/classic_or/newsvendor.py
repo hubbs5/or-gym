@@ -59,7 +59,7 @@ class NewsvendorEnv(gym.Env):
 
         self.obs_dim = self.lead_time + 5
         self.observation_space = spaces.Box(
-            low=np.zeros(self.obs_dim),
+            low=np.zeros(self.obs_dim, dtype=np.float32),
             high=np.array(
                 [self.p_max, self.p_max, self.h_max, self.k_max, self.mu_max] +
                 [self.max_order_quantity] * self.lead_time),
@@ -93,7 +93,7 @@ class NewsvendorEnv(gym.Env):
         new_inventory = np.zeros(self.lead_time)
         new_inventory[:-1] += inventory[1:]
         new_inventory[-1] += order_qty
-        self.state = np.hstack([self.state[:5], new_inventory])
+        self.state = np.hstack([self.state[:5], new_inventory] , dtype=np.float32)
 
         self.step_count += 1
         if self.step_count >= self.step_limit:
@@ -111,7 +111,7 @@ class NewsvendorEnv(gym.Env):
         self.h = np.random.rand() * min(self.cost, self.h_max)
         self.k = np.random.rand() * self.k_max
         self.mu = np.random.rand() * self.mu_max
-        self.state = np.zeros(self.obs_dim)
+        self.state = np.zeros(self.obs_dim, dtype=np.float32)
         self.state[:5] = np.array([self.price, self.cost, self.h,
             self.k, self.mu])
 

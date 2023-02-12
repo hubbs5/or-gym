@@ -69,8 +69,8 @@ class KnapsackEnv(gym.Env):
         self.action_space = spaces.Discrete(self.N)
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int32),
-                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int16),
+                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.uint8),
+                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.uint8),
                 "state": obs_space
                 })
         else:
@@ -102,22 +102,21 @@ class KnapsackEnv(gym.Env):
     
     def _update_state(self):
         if self.mask:
-            mask = np.where(self.current_weight + self.item_weights > self.max_weight,
-            0, 1)
+            mask = np.where(self.current_weight + self.item_weights > self.max_weight, 0, 1).astype(np.uint8)
             state = np.hstack([
                 self.item_weights,
                 self.item_values,
                 np.array([self.current_weight])
-                ])
+                ], dtype=np.int32)
             self.state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N, dtype=np.int16),
+                "avail_actions": np.ones(self.N, dtype=np.uint8),
                 "state": state
                 }
         else:
             state = np.vstack([
                 self.item_weights,
-                self.item_values])
+                self.item_values], dtype=np.int32)
             self.state = np.hstack([
                 state,
                 np.array([
@@ -206,8 +205,8 @@ class BinaryKnapsackEnv(KnapsackEnv):
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(len(self.item_limits),)),
-                "avail_actions": spaces.Box(0, 1, shape=(len(self.item_limits),)),
+                "action_mask": spaces.Box(0, 1, shape=(len(self.item_limits),), dtype=np.uint8),
+                "avail_actions": spaces.Box(0, 1, shape=(len(self.item_limits),), dtype=np.uint8),
                 "state": obs_space
             })
         else:
@@ -245,21 +244,20 @@ class BinaryKnapsackEnv(KnapsackEnv):
             self.item_weights,
             self.item_values,
             self.item_limits
-        ])
+        ], dtype=np.int32)
         state = np.hstack([
             state_items, 
             np.array([[self.max_weight],
                       [self.current_weight], 
                       [0] # Serves as place holder
                 ])
-        ])
+        ], dtype=np.int32)
         if self.mask:
-            mask = np.where(self.current_weight + self.item_weights > self.max_weight,
-                0, 1)
+            mask = np.where(self.current_weight + self.item_weights > self.max_weight, 0, 1).astype(np.uint8)
             mask = np.where(self.item_limits > 0, mask, 0)
             self.state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N),
+                "avail_actions": np.ones(self.N, dtype=np.uint8),
                 "state": state
             }
         else:
@@ -274,7 +272,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
             self.item_weights = np.random.randint(1, 100, size=self.N)
             self.item_values = np.random.randint(0, 100, size=self.N)
         self.current_weight = 0
-        self.item_limits = np.ones(self.N)
+        self.item_limits = np.ones(self.N, dtype=np.int32)
         self._update_state()
         return self.state
 
@@ -318,11 +316,11 @@ class BoundedKnapsackEnv(KnapsackEnv):
     '''
     def __init__(self, *args, **kwargs):
         self.N = 200
-        self.item_limits_init = np.random.randint(1, 10, size=self.N)
+        self.item_limits_init = np.random.randint(1, 10, size=self.N, dtype=np.int32)
         self.item_limits = self.item_limits_init.copy()
         super().__init__()
-        self.item_weights = np.random.randint(1, 100, size=self.N)
-        self.item_values = np.random.randint(0, 100, size=self.N)
+        self.item_weights = np.random.randint(1, 100, size=self.N, dtype=np.int32)
+        self.item_values = np.random.randint(0, 100, size=self.N, dtype=np.int32)
 
         assign_env_config(self, kwargs)
 
@@ -330,8 +328,8 @@ class BoundedKnapsackEnv(KnapsackEnv):
             0, self.max_weight, shape=(3, self.N + 1), dtype=np.int32)
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(len(self.item_limits),)),
-                "avail_actions": spaces.Box(0, 1, shape=(len(self.item_limits),)),
+                "action_mask": spaces.Box(0, 1, shape=(len(self.item_limits),), dtype=np.uint8),
+                "avail_actions": spaces.Box(0, 1, shape=(len(self.item_limits),), dtype=np.uint8),
                 "state": obs_space
             })
         else:
@@ -367,21 +365,20 @@ class BoundedKnapsackEnv(KnapsackEnv):
             self.item_weights,
             self.item_values,
             self.item_limits
-        ])
+        ], dtype=np.int32)
         state = np.hstack([
             state_items, 
             np.array([[self.max_weight],
                       [self.current_weight], 
                       [0] # Serves as place holder
-                ])
+                ], dtype=np.int32)
         ])
         if self.mask:
-            mask = np.where(self.current_weight + self.item_weights > self.max_weight,
-                0, 1)
+            mask = np.where(self.current_weight + self.item_weights > self.max_weight, 0, 1).astype(np.uint8)
             mask = np.where(self.item_limits > 0, mask, 0)
             self.state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N),
+                "avail_actions": np.ones(self.N, dtype=np.uint8),
                 "state": state
             }
         else:
@@ -393,9 +390,9 @@ class BoundedKnapsackEnv(KnapsackEnv):
     
     def _RESET(self):
         if self.randomize_params_on_reset:
-            self.item_weights = np.random.randint(1, 100, size=self.N)
-            self.item_values = np.random.randint(0, 100, size=self.N)
-            self.item_limits = np.random.randint(1, 10, size=self.N)
+            self.item_weights = np.random.randint(1, 100, size=self.N, dtype=np.int32)
+            self.item_values = np.random.randint(0, 100, size=self.N, dtype=np.int32)
+            self.item_limits = np.random.randint(1, 10, size=self.N, dtype=np.int32)
         else:
             self.item_limits = self.item_limits_init.copy()
 
@@ -446,12 +443,12 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         assign_env_config(self, kwargs)
         self.action_space = spaces.Discrete(2)
 
-        obs_space = spaces.Box(0, self.max_weight, shape=(4,))
+        obs_space = spaces.Box(0, self.max_weight, shape=(4,), dtype=np.int32)
         if self.mask:
             self.observation_space = spaces.Dict({
                 'state': obs_space,
-                'avail_actions': spaces.Box(0, 1, shape=(2,)),
-                'action_mask': spaces.Box(0, 1, shape=(2,))
+                'avail_actions': spaces.Box(0, 1, shape=(2,), dtype=np.uint8),
+                'action_mask': spaces.Box(0, 1, shape=(2,), dtype=np.uint8)
             })
         else:
             self.observation_space = obs_space
@@ -495,14 +492,14 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
                 self.current_item,
                 current_item_weight,
                 self.item_values[self.current_item]
-                ])
+                ],)
         if self.mask:
-            mask = np.ones(2)
+            mask = np.ones(2, dtype=np.uint8)
             if current_item_weight + self.current_weight > self.max_weight:
                 mask[1] = 0
             self.state = {
                 'state': state,
-                'avail_actions': np.ones(2),
+                'avail_actions': np.ones(2, dtype=np.uint8),
                 'action_mask': mask
             }            
         else:
@@ -513,9 +510,9 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
     
     def _RESET(self):
         if self.randomize_params_on_reset:
-            self.item_weights = np.random.randint(1, 100, size=self.N)
-            self.item_values = np.random.randint(0, 100, size=self.N)
-            self.item_limits = np.random.randint(1, 10, size=self.N)
+            self.item_weights = np.random.randint(1, 100, size=self.N, dtype=np.int32)
+            self.item_values = np.random.randint(0, 100, size=self.N, dtype=np.int32)
+            self.item_limits = np.random.randint(1, 10, size=self.N, dtype=np.int32)
         else:
             self.item_limits = self.item_limits_init.copy()
 

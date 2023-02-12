@@ -111,13 +111,13 @@ class BinPackingEnv(gym.Env):
 
     def _update_state(self):
         self.item_size = self.get_item()
-        state = np.array(self.bin_levels + [self.item_size])
+        state = np.array(self.bin_levels + [self.item_size], dtype=np.uint32)
         if self.mask:
             state_dict = {
                 'state': state,
-                'avail_actions': np.ones(self.bin_capacity)}
+                'avail_actions': np.ones(self.bin_capacity, dtype=np.uint8)}
             # Mask actions for closed bins
-            mask = np.ones(self.bin_capacity) * np.array(state[:-1])
+            mask = np.ones(self.bin_capacity, dtype=np.uint8) * np.array(state[:-1])
             # Mask actions where packing would exceed capacity
             overflow = self.bin_capacity - self.item_size
             mask[overflow+1:] = 0

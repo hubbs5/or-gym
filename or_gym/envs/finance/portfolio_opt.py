@@ -77,8 +77,8 @@ class PortfolioOptEnv(gym.Env):
         # Cash on hand, asset prices, num of shares, portfolio value
         self.obs_length = 1 + 2 * self.num_assets
 
-        self.observation_space = spaces.Box(-20000, 20000, shape=(self.obs_length,))
-        self.action_space = spaces.Box(-2000, 2000, shape=(self.num_assets,))
+        self.observation_space = spaces.Box(-20000, 20000, shape=(self.obs_length,), dtype=np.float32)
+        self.action_space = spaces.Box(-2000, 2000, shape=(self.num_assets,), dtype=np.float32)
         
         self.seed()
         self.reset()
@@ -92,7 +92,8 @@ class PortfolioOptEnv(gym.Env):
         self.state = np.hstack([
             self.initial_cash,
             self.asset_prices[:, self.step_count],
-            self.holdings])
+            self.holdings],
+            dtype=np.float32)
         return self.state
     
     def _generate_asset_prices(self):
@@ -155,7 +156,7 @@ class PortfolioOptEnv(gym.Env):
             self.cash,
             self.asset_prices[:, self.step_count],
             self.holdings
-        ])
+        ], dtype=np.float32)
 
     def step(self, action):
         return self._STEP(action)

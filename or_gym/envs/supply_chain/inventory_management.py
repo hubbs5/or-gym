@@ -210,7 +210,7 @@ class InvManagementMasterEnv(gym.Env):
         self.period = 0 # initialize time
         self.I[0,:]=np.array(I0) # initial inventory
         self.T[0,:]=np.zeros(m-1) # initial pipeline inventory 
-        self.action_log = np.zeros((periods, m-1))
+        self.action_log = np.zeros((periods, m-1), dtype=np.int32)
         # set state
         self._update_state()
         
@@ -220,7 +220,7 @@ class InvManagementMasterEnv(gym.Env):
         m = self.num_stages - 1
         t = self.period
         lt_max = self.lead_time.max()
-        state = np.zeros(m*(lt_max + 1))
+        state = np.zeros(m*(lt_max + 1), dtype=np.int32)
         # state = np.zeros(m)
         if t == 0:
             state[:m] = self.I0

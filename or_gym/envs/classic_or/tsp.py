@@ -112,14 +112,14 @@ class TSPEnv(gym.Env):
         node_connections[np.where(self.adjacency_matrix==0)] = 0
 
         connections = node_connections.flatten().astype(int)
-        obs = np.hstack([self.current_node, connections])
+        obs = np.hstack([self.current_node, connections], dtype=np.int32)
         if self.mask:
             mask = node_connections[self.current_node]
             # mask = np.array([1 if c==1 and v==0 else 0 
             #     for c, v in zip(cons_from_node, self.visit_log.values())])
             state = {
                 "action_mask": mask,
-                "avail_actions": np.ones(self.N),
+                "avail_actions": np.ones(self.N, dtype=np.uint8),
                 "state": obs,
             }
         else:
