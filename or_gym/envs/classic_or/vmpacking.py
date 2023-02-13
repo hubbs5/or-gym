@@ -53,23 +53,24 @@ class VMPackingEnv(gym.Env):
 
         if self.mask:
             self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.n_pms,)),
-                "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,)),
-                "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+                "action_mask": spaces.Box(0, 1, shape=(self.n_pms,), dtype=np.uint8),
+                "avail_actions": spaces.Box(0, 1, shape=(self.n_pms,), dtype=np.uint8),
+                "state": spaces.Box(0, 1, shape=(self.n_pms+1, 3), dtype=np.float32)
             })
         else:
-            self.observation_space = spaces.Box(0, 1, shape=(self.n_pms+1, 3))
+            self.observation_space = spaces.Box(0, 1, shape=(self.n_pms+1, 3), dtype=np.float32)
         self.reset()
         
     def _RESET(self):
         self.demand = self.generate_demand()
         self.current_step = 0
         self.state = {
-            "action_mask": np.ones(self.n_pms),
-            "avail_actions": np.ones(self.n_pms),
+            "action_mask": np.ones(self.n_pms, dtype=np.uint8),
+            "avail_actions": np.ones(self.n_pms, dtype=np.uint8),
             "state": np.vstack([
                 np.zeros((self.n_pms, 3)),
-                self.demand[self.current_step]])
+                self.demand[self.current_step]],
+                dtype=np.float32)
         }
         self.assignment = {}
         return self.state
@@ -103,14 +104,14 @@ class VMPackingEnv(gym.Env):
     def update_state(self, pm_state):
         # Make action selection impossible if the PM would exceed capacity
         step = self.current_step if self.current_step < self.step_limit else self.step_limit-1
-        data_center = np.vstack([pm_state, self.demand[step]])
+        data_center = np.vstack([pm_state, self.demand[step]], dtype=np.float32)
         data_center = np.where(data_center>1,1,data_center) # Fix rounding errors
         self.state["state"] = data_center
-        self.state["action_mask"] = np.ones(self.n_pms)
-        self.state["avail_actions"] = np.ones(self.n_pms)
+        self.state["action_mask"] = np.ones(self.n_pms, dtype=np.uint8)
+        self.state["avail_actions"] = np.ones(self.n_pms, dtype=np.uint8)
         if self.mask:
             action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
-            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
+            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(np.uint8)
 
     def sample_action(self):
         return self.action_space.sample()

@@ -262,12 +262,12 @@ class NetInvMgmtMasterEnv(gym.Env):
         self.action_space = gym.spaces.Box(
             low=np.zeros(num_reorder_links),
             high=np.ones(num_reorder_links)*(self.init_inv_max + self.capacity_max*self.num_periods), 
-            dtype=np.int32)
+            dtype=np.float64)
         # observation space (total inventory at each node, which is any integer value)
         self.observation_space = gym.spaces.Box(
             low=np.ones(self.obs_dim)*np.iinfo(np.int32).min,
             high=np.ones(self.obs_dim)*np.iinfo(np.int32).max,
-            dtype=np.int32)
+            dtype=np.float64)
             # low=-np.ones(self.pipeline_length)*(self.init_inv_max + self.capacity_max*self.num_periods)*10,
             # high=np.ones(self.pipeline_length)*(self.init_inv_max + self.capacity_max*self.num_periods), 
             # dtype=np.int32)

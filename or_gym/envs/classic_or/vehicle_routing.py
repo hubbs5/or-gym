@@ -257,18 +257,18 @@ class VehicleRoutingEnv(gym.Env):
             np.hstack(self.driver_loc),
             np.hstack([self.vehicle_load, self.vehicle_capacity]),
             order_array.flatten()
-        ])
+        ], dtype=np.float16)
         if self.mask:
             action_mask = self._update_mask(state)
             state = {
                 'state': state,
                 'action_mask': action_mask,
-                'avail_actions': np.ones(self.action_dim)
+                'avail_actions': np.ones(self.action_dim, dtype=np.uint8)
             }
         return state
 
     def _update_mask(self, state):
-        action_mask = np.zeros(self.action_dim)
+        action_mask = np.zeros(self.action_dim, dtype=np.uint8)
         # Wait and return to restaurant are always allowed
         action_mask[0] = 1
         action_mask[(3 * self.max_orders + 1)                    :(3 * self.max_orders + self.n_restaurants + 1)] = 1
