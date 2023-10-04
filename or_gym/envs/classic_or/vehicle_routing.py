@@ -1,30 +1,32 @@
-'''
+"""
 Example taken from Balaji et al.
 Paper: https://arxiv.org/abs/1911.10641
 GitHub: https://github.com/awslabs/or-rl-benchmarks
-'''
+"""
+import random
+
 import gymnasium as gym
+import numpy as np
 from gymnasium import spaces
+from scipy.stats import truncnorm
+
 import or_gym
 from or_gym.utils import assign_env_config
-import random
-import numpy as np
-from scipy.stats import truncnorm
 
 
 class VehicleRoutingEnv(gym.Env):
-    '''
+    """
     Dynamic Vehicle Routing Problem
 
     This environment simulates a driver working with a food delivery app
     to move through a city, accept orders, pick them up from restaurants,
     and deliver them to waiting customers. Each order has a specific
-    delivery value, restaurant, and delivery location, all of which are 
+    delivery value, restaurant, and delivery location, all of which are
     known by the driver before he accepts the order. After accepting, the
     driver must navigate to the restaurant to collect the order and then
     deliver it. If an order isn't accepted, it may be taken by another
     driver. Additionally, the driver has 60 minutes to make a delivery
-    from the time an order is created. 
+    from the time an order is created.
     The city is represented as a grid with different zones that have
     different statistics for order creation and value. At each time step,
     new orders are created with a fixed probability unique to each zone.
@@ -45,7 +47,7 @@ class VehicleRoutingEnv(gym.Env):
         e = time elapsed since order generation
         v = order value
 
-    Action: 
+    Action:
         Type: Discrete
         0 = wait
         1:max_orders = accept order
@@ -60,7 +62,7 @@ class VehicleRoutingEnv(gym.Env):
         The agent recieves 1/3 of the order value for accepting an order,
         picking it up, and delivering the order. The cost is comprised of
         three elements: delivery time, delivery distance, and cost of failure
-        (if the driver does not deliver the item). 
+        (if the driver does not deliver the item).
 
     Starting State:
         Restaurant and driver locations are randomized at the start of each
@@ -68,7 +70,7 @@ class VehicleRoutingEnv(gym.Env):
 
     Episode Terimantion:
         Episode termination occurs when the total time has elapsed.
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
         self.n_restaurants = 2
@@ -92,39 +94,51 @@ class VehicleRoutingEnv(gym.Env):
 
         assign_env_config(self, kwargs)
         self._order_nums = np.arange(self.max_orders)
-        self.loc_permutations = [(x, y) for x in range(self.grid[0])
-                                 for y in range(self.grid[1])]
+        self.loc_permutations = [
+            (x, y) for x in range(self.grid[0]) for y in range(self.grid[1])
+        ]
         self.action_dim = 1 + 3 * self.max_orders + self.n_restaurants
         self.obs_dim = 2 * self.n_restaurants + 4 + 6 * self.max_orders
         box_low = np.zeros(self.obs_dim)
-        box_high = np.hstack([
-            np.repeat(
-                max(self.grid), 2 * self.n_restaurants + 2),  # Locations 0-5
-            np.repeat(self.vehicle_capacity, 2),  # Vehicle capacities 6-7
-            np.tile(np.hstack([4, self.n_restaurants, self.grid,
-                               self.order_promise, max(self.order_reward_max)]), self.max_orders)
-        ])
+        box_high = np.hstack(
+            [
+                np.repeat(max(self.grid), 2 * self.n_restaurants + 2),  # Locations 0-5
+                np.repeat(self.vehicle_capacity, 2),  # Vehicle capacities 6-7
+                np.tile(
+                    np.hstack(
+                        [
+                            4,
+                            self.n_restaurants,
+                            self.grid,
+                            self.order_promise,
+                            max(self.order_reward_max),
+                        ]
+                    ),
+                    self.max_orders,
+                ),
+            ]
+        )
 
         if self.mask:
-            self.observation_space = spaces.Dict({
-                'action_mask': spaces.Box(
-                    low=np.zeros(self.action_dim),
-                    high=np.ones(self.action_dim),
-                    dtype=np.uint8),
-                'avail_actions': spaces.Box(
-                    low=np.zeros(self.action_dim),
-                    high=np.ones(self.action_dim),
-                    dtype=np.uint8),
-                'state': spaces.Box(
-                    low=box_low,
-                    high=box_high,
-                    dtype=np.float16)
-            })
+            self.observation_space = spaces.Dict(
+                {
+                    "action_mask": spaces.Box(
+                        low=np.zeros(self.action_dim),
+                        high=np.ones(self.action_dim),
+                        dtype=np.uint8,
+                    ),
+                    "avail_actions": spaces.Box(
+                        low=np.zeros(self.action_dim),
+                        high=np.ones(self.action_dim),
+                        dtype=np.uint8,
+                    ),
+                    "state": spaces.Box(low=box_low, high=box_high, dtype=np.float16),
+                }
+            )
         else:
             self.observation_space = spaces.Box(
-                low=box_low,
-                high=box_high,
-                dtype=np.float16)
+                low=box_low, high=box_high, dtype=np.float16
+            )
 
         self.action_space = spaces.Discrete(self.action_dim)
 
@@ -146,8 +160,7 @@ class VehicleRoutingEnv(gym.Env):
         elif action <= 3 * self.max_orders + self.n_restaurants:
             self.return_to_restaurant(action)
         else:
-            raise Exception(
-                f"Selected action ({action}) outside of action space.")
+            raise Exception(f"Selected action ({action}) outside of action space.")
 
         self.state = self._update_state()
 
@@ -167,9 +180,9 @@ class VehicleRoutingEnv(gym.Env):
         if order_idx not in self.order_dict.keys():
             # Invalid action, do nothing
             pass
-        elif self.order_dict[order_idx]['Status'] == 1:
-            self.order_dict[order_idx]['Status'] = 2
-            self.reward += self.order_dict[order_idx]['Value'] / 3
+        elif self.order_dict[order_idx]["Status"] == 1:
+            self.order_dict[order_idx]["Status"] = 2
+            self.reward += self.order_dict[order_idx]["Value"] / 3
 
     def pickup_order(self, action):
         order_idx = action - self.max_orders - 1
@@ -177,16 +190,20 @@ class VehicleRoutingEnv(gym.Env):
             # Invalid action, do nothing
             pass
         else:
-            restaurant = self.order_dict[order_idx]['RestaurantID']
+            restaurant = self.order_dict[order_idx]["RestaurantID"]
             restaurant_loc = self.restaurant_loc[restaurant]
             self._go_to_destination(restaurant_loc)
             self.reward -= self.penalty_per_move
             # Movement and pickup can occur during same time step
-            if self.order_dict[order_idx]['Status'] == 2 and self.driver_loc[0] == restaurant_loc[0] and self.driver_loc[1] == restaurant_loc[1]:
+            if (
+                self.order_dict[order_idx]["Status"] == 2
+                and self.driver_loc[0] == restaurant_loc[0]
+                and self.driver_loc[1] == restaurant_loc[1]
+            ):
                 if self.vehicle_load < self.vehicle_capacity:
-                    self.order_dict[order_idx]['Status'] = 3
+                    self.order_dict[order_idx]["Status"] = 3
                     self.vehicle_load += 1
-                    self.reward += self.order_dict[order_idx]['Value'] / 3
+                    self.reward += self.order_dict[order_idx]["Value"] / 3
 
     def deliver_order(self, action):
         order_idx = action - 2 * self.max_orders - 1
@@ -194,16 +211,20 @@ class VehicleRoutingEnv(gym.Env):
             # Invalid action, do nothing
             pass
         else:
-            order_loc = self.order_dict[order_idx]['DeliveryLoc']
+            order_loc = self.order_dict[order_idx]["DeliveryLoc"]
             self._go_to_destination(order_loc)
             self.reward -= self.penalty_per_move
             # Can deliver multiple orders simultaneously
             for k, v in self.order_dict.items():
-                if v['Status'] == 3 and v['DeliveryLoc'][0] == self.driver_loc[0] and v['DeliveryLoc'][1] == self.driver_loc[1]:
-                    if v['Time'] <= self.order_promise:
-                        self.reward = v['Value'] / 3
+                if (
+                    v["Status"] == 3
+                    and v["DeliveryLoc"][0] == self.driver_loc[0]
+                    and v["DeliveryLoc"][1] == self.driver_loc[1]
+                ):
+                    if v["Time"] <= self.order_promise:
+                        self.reward = v["Value"] / 3
                     self.vehicle_load -= 1
-                    v['Status'] = 4  # Delivered
+                    v["Status"] = 4  # Delivered
 
     def return_to_restaurant(self, action):
         restaurant = action - 3 * self.max_orders - 1
@@ -220,22 +241,24 @@ class VehicleRoutingEnv(gym.Env):
         # Remove orders if they're over due
         orders_to_delete = []
         for k, v in self.order_dict.items():
-            if v['Time'] >= self.order_promise:
-                if v['Status'] >= 2:
+            if v["Time"] >= self.order_promise:
+                if v["Status"] >= 2:
                     # Apply penalty and remove associated rewards
-                    self.reward -= (self.order_miss_penalty +
-                                    v['Value'] * (v['Status'] == 2)/3 +
-                                    v['Value'] * (v['Status'] == 3) * 2/3)
+                    self.reward -= (
+                        self.order_miss_penalty
+                        + v["Value"] * (v["Status"] == 2) / 3
+                        + v["Value"] * (v["Status"] == 3) * 2 / 3
+                    )
                     self.late_penalty += self.order_miss_penalty
-                if v['Status'] == 3:
+                if v["Status"] == 3:
                     self.vehicle_capacity -= 1
                 orders_to_delete.append(k)
 
-            elif v['Status'] == 4:
+            elif v["Status"] == 4:
                 orders_to_delete.append(k)
 
             # Probabalistically remove open orders
-            elif v['Status'] == 1 and np.random.random() < self.order_timeout_prob:
+            elif v["Status"] == 1 and np.random.random() < self.order_timeout_prob:
                 orders_to_delete.append(k)
 
         for k in orders_to_delete:
@@ -246,24 +269,28 @@ class VehicleRoutingEnv(gym.Env):
         # Placeholder for order data
         order_array = np.zeros((self.max_orders, 6))
         try:
-            order_data = np.hstack([v1 for v in self.order_dict.values()
-                                    for v1 in v.values()]).reshape(-1, 7)
+            order_data = np.hstack(
+                [v1 for v in self.order_dict.values() for v1 in v.values()]
+            ).reshape(-1, 7)
             order_array[order_data[:, 0].astype(int)] += order_data[:, 1:]
         except ValueError:
             # Occurs when order_data is empty
             pass
-        state = np.hstack([
-            np.hstack(self.restaurant_loc),
-            np.hstack(self.driver_loc),
-            np.hstack([self.vehicle_load, self.vehicle_capacity]),
-            order_array.flatten()
-        ], dtype=np.float16)
+        state = np.hstack(
+            [
+                np.hstack(self.restaurant_loc),
+                np.hstack(self.driver_loc),
+                np.hstack([self.vehicle_load, self.vehicle_capacity]),
+                order_array.flatten(),
+            ],
+            dtype=np.float16,
+        )
         if self.mask:
             action_mask = self._update_mask(state)
             state = {
-                'state': state,
-                'action_mask': action_mask,
-                'avail_actions': np.ones(self.action_dim, dtype=np.uint8)
+                "state": state,
+                "action_mask": action_mask,
+                "avail_actions": np.ones(self.action_dim, dtype=np.uint8),
             }
         return state
 
@@ -271,10 +298,12 @@ class VehicleRoutingEnv(gym.Env):
         action_mask = np.zeros(self.action_dim, dtype=np.uint8)
         # Wait and return to restaurant are always allowed
         action_mask[0] = 1
-        action_mask[(3 * self.max_orders + 1)                    :(3 * self.max_orders + self.n_restaurants + 1)] = 1
+        action_mask[
+            (3 * self.max_orders + 1) : (3 * self.max_orders + self.n_restaurants + 1)
+        ] = 1
 
         for k, v in self.order_dict.items():
-            status = v['Status']
+            status = v["Status"]
             # Allow accepting an open order
             if status == 1:
                 action_mask[k + 1] = 1
@@ -298,12 +327,13 @@ class VehicleRoutingEnv(gym.Env):
 
     def _update_order_times(self):
         for k, v in self.order_dict.items():
-            if v['Status'] >= 1:
-                v['Time'] += 1
+            if v["Status"] >= 1:
+                v["Time"] += 1
 
     def _generate_orders(self):
-        open_slots = self._order_nums[~np.isin(self._order_nums,
-                                               np.array([k for k in self.order_dict.keys()]))]
+        open_slots = self._order_nums[
+            ~np.isin(self._order_nums, np.array([k for k in self.order_dict.keys()]))
+        ]
         try:
             order_num = open_slots.min()
         except ValueError:
@@ -311,8 +341,7 @@ class VehicleRoutingEnv(gym.Env):
         for n in open_slots:
             # Probabalistically create a new order
             if np.random.random() < self.order_prob:
-                zone = np.random.choice(
-                    self.num_zones, p=self.order_probs_per_zone)
+                zone = np.random.choice(self.num_zones, p=self.order_probs_per_zone)
                 order = self._get_order_from_zone(zone, order_num)
                 self.order_dict[order_num] = order
                 order_num += 1
@@ -320,26 +349,28 @@ class VehicleRoutingEnv(gym.Env):
     def _get_order_from_zone(self, zone, n):
         delivery_loc = random.choice(self.zone_loc[zone])
         restaurant_idx = np.random.choice(self.n_restaurants)
-        value = truncnorm.rvs(0,
-                              (self.order_reward_max[zone] -
-                               self.order_reward_min[zone])
-                              / self.half_norm_scale_reward_per_zone[zone],
-                              self.order_reward_min[zone],
-                              self.half_norm_scale_reward_per_zone[zone])
-        return {'Number': n,
-                'Status': 1,
-                'RestaurantID': restaurant_idx,
-                'DeliveryLoc': delivery_loc,
-                'Time': 0,
-                'Value': value}
+        value = truncnorm.rvs(
+            0,
+            (self.order_reward_max[zone] - self.order_reward_min[zone])
+            / self.half_norm_scale_reward_per_zone[zone],
+            self.order_reward_min[zone],
+            self.half_norm_scale_reward_per_zone[zone],
+        )
+        return {
+            "Number": n,
+            "Status": 1,
+            "RestaurantID": restaurant_idx,
+            "DeliveryLoc": delivery_loc,
+            "Time": 0,
+            "Value": value,
+        }
 
     def randomize_locations(self):
         self._place_restaurants()
         self._place_driver()
 
     def _place_restaurants(self):
-        self.restaurant_loc = random.sample(
-            self.loc_permutations, self.n_restaurants)
+        self.restaurant_loc = random.sample(self.loc_permutations, self.n_restaurants)
 
     def _place_driver(self):
         self.driver_loc = list(random.sample(self.loc_permutations, 1)[0])
@@ -385,13 +416,14 @@ class VehicleRoutingEnv(gym.Env):
                 direction = 1
             elif y_diff < 0:
                 direction = 0
-        print('direction ',direction)
+        print("direction ", direction)
         self._move_driver(direction)
 
     def _get_num_spaces_per_zone(self):
         total_spaces = self.grid[0] * self.grid[1]
-        spaces_per_zone = np.array([np.floor(total_spaces / self.num_zones)
-                                    for i in range(self.num_zones)])
+        spaces_per_zone = np.array(
+            [np.floor(total_spaces / self.num_zones) for i in range(self.num_zones)]
+        )
         for i in range(total_spaces % self.num_zones):
             spaces_per_zone[i] += 1
         return spaces_per_zone.astype(int)
@@ -402,7 +434,7 @@ class VehicleRoutingEnv(gym.Env):
         zones = {}
         for i, n in enumerate(spaces_per_zone):
             x = sum(spaces_per_zone[:i])
-            zones[i] = self.loc_permutations[x:x+n]
+            zones[i] = self.loc_permutations[x : x + n]
 
         zones = self._remove_restaurants_from_zone_locs(zones)
         return zones

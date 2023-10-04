@@ -1,12 +1,15 @@
-import numpy as np
-import gymnasium as gym
-from gymnasium import spaces
-from or_gym import utils
 from copy import copy, deepcopy
+
+import gymnasium as gym
 import matplotlib.pyplot as plt
+import numpy as np
+from gymnasium import spaces
+
+from or_gym import utils
+
 
 class TSPEnv(gym.Env):
-    '''
+    """
     Bi-directional connections and uniform cost
 
     This version of the TSP uses a sparse graph with uniform cost.
@@ -14,13 +17,13 @@ class TSPEnv(gym.Env):
     network. All connections are bi-directional meaning if a connection
     between nodes n and m exist, then the agent can move in either direction.
     The network is randomly generated with N nodes when the environment is
-    initialized using or_gym.make(). 
-    
+    initialized using or_gym.make().
+
     TSP-v0 allows repeat visits to nodes with no additional penalty beyond
     the nominal movement cost.
 
     Observation:
-        
+
 
     Actions:
         Type: Discrete
@@ -42,7 +45,8 @@ class TSPEnv(gym.Env):
     Episode Termination:
         All nodes have been visited or the maximimum number of steps (2N)
         have been reached.
-    '''
+    """
+
     def __init__(self, *args, **kwargs):
         self.N = 50
         self.move_cost = -1
@@ -51,21 +55,23 @@ class TSPEnv(gym.Env):
         utils.assign_env_config(self, kwargs)
 
         self.nodes = np.arange(self.N)
-        self.step_limit = 2*self.N
-        self.obs_dim = 1+self.N**2
+        self.step_limit = 2 * self.N
+        self.obs_dim = 1 + self.N**2
         obs_space = spaces.Box(-1, self.N, shape=(self.obs_dim,), dtype=np.int32)
         if self.mask:
-            self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
-                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
-                "state": obs_space
-            })
+            self.observation_space = spaces.Dict(
+                {
+                    "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
+                    "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
+                    "state": obs_space,
+                }
+            )
         else:
             self.observation_space = obs_space
         self.action_space = spaces.Discrete(self.N)
-        
+
         self.reset()
-        
+
     def _STEP(self, action):
         done = False
         connections = self.node_dict[self.current_node]
@@ -77,45 +83,43 @@ class TSPEnv(gym.Env):
             self.current_node = action
             reward = self.move_cost
             self.visit_log[self.current_node] += 1
-            
+
         self.state = self._update_state()
         self.step_count += 1
         # See if all nodes have been visited
-        unique_visits = sum([1 if v > 0 else 0 
-            for v in self.visit_log.values()])
+        unique_visits = sum([1 if v > 0 else 0 for v in self.visit_log.values()])
         if unique_visits >= self.N:
             done = True
             reward += 1000
         if self.step_count >= self.step_limit:
             done = True
-            
+
         return self.state, reward, done, {}
-        
+
     def _RESET(self):
         self.step_count = 0
         self._generate_connections()
         self.current_node = np.random.choice(self.nodes)
         self.visit_log = {n: 0 for n in self.nodes}
         self.visit_log[self.current_node] += 1
-        
+
         self.state = self._update_state()
         return self.state
-        
+
     def _update_state(self):
         node_connections = self.adjacency_matrix.copy()
         # Set value to 1 for existing, un-visited nodes
         # Set value to -1 for existing, visited nodes
         # Set value to 0 if connection doesn't exist
-        visited = np.array([bool(min(v, 1))
-            for v in self.visit_log.values()])
+        visited = np.array([bool(min(v, 1)) for v in self.visit_log.values()])
         node_connections[:, visited] = -1
-        node_connections[np.where(self.adjacency_matrix==0)] = 0
+        node_connections[np.where(self.adjacency_matrix == 0)] = 0
 
         connections = node_connections.flatten().astype(int)
         obs = np.hstack([self.current_node, connections], dtype=np.int32)
         if self.mask:
             mask = node_connections[self.current_node]
-            # mask = np.array([1 if c==1 and v==0 else 0 
+            # mask = np.array([1 if c==1 and v==0 else 0
             #     for c, v in zip(cons_from_node, self.visit_log.values())])
             state = {
                 "action_mask": mask,
@@ -126,14 +130,18 @@ class TSPEnv(gym.Env):
             state = obs.copy()
 
         return state
-        
+
     def _generate_connections(self):
         node_dict = {}
         for n in range(self.N):
             connections = np.random.randint(2, self.N - 1)
             node_dict[n] = np.sort(
-               np.random.choice(self.nodes[np.where(self.nodes!=n)],
-                                 size=connections, replace=False))
+                np.random.choice(
+                    self.nodes[np.where(self.nodes != n)],
+                    size=connections,
+                    replace=False,
+                )
+            )
         # Get unique, bi-directional connections
         for k, v in node_dict.items():
             for k1, v1 in node_dict.items():
@@ -145,35 +153,35 @@ class TSPEnv(gym.Env):
             node_dict[k] = np.sort(v.copy())
         self.node_dict = deepcopy(node_dict)
         self._generate_adjacency_matrix()
-    
+
     def _generate_adjacency_matrix(self):
         self.adjacency_matrix = np.zeros((self.N, self.N))
         for k, v in self.node_dict.items():
             self.adjacency_matrix[k][v] += 1
         self.adjacency_matrix.astype(int)
-            
+
     def _generate_coordinates(self):
-        n = np.linspace(0, 2*np.pi, self.N+1)
+        n = np.linspace(0, 2 * np.pi, self.N + 1)
         x = np.cos(n)
         y = np.sin(n)
         return np.vstack([x, y])
 
     def _get_node_distance(self, N0, N1):
         return np.sqrt(np.power(N0[0] - N1[0], 2) + np.power(N0[1] - N1[1], 2))
-            
+
     def plot_network(self, offset=(0.02, 0.02)):
         coords = self._generate_coordinates()
-        fig, ax = plt.subplots(figsize=(12,8))
+        fig, ax = plt.subplots(figsize=(12, 8))
         ax.scatter(coords[0], coords[1], s=40)
         for n, c in self.node_dict.items():
             for k in c:
                 line = np.vstack([coords[:, n], coords[:, k]])
                 dis = self._get_node_distance(line[0], line[1])
-                # dis = np.sqrt(np.power(line[0, 0] - line[1, 0], 2) + 
+                # dis = np.sqrt(np.power(line[0, 0] - line[1, 0], 2) +
                 #               np.power(line[0, 1] - line[1, 1], 2))
-                ax.plot(line[:,0], line[:,1], c='g', zorder=-1)
-        #         ax.arrow(line[0, 0], line[0, 1], line[1, 0], line[1, 1])
-            ax.annotate(r"$N_{:d}$".format(n), xy=(line[0]+offset), zorder=2)
+                ax.plot(line[:, 0], line[:, 1], c="g", zorder=-1)
+            #         ax.arrow(line[0, 0], line[0, 1], line[1, 0], line[1, 1])
+            ax.annotate(r"$N_{:d}$".format(n), xy=(line[0] + offset), zorder=2)
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
         plt.show()
@@ -184,19 +192,20 @@ class TSPEnv(gym.Env):
     def reset(self):
         return self._RESET()
 
+
 class TSPDistCost(TSPEnv):
-    '''
+    """
     Fully connected network with distance-based cost.
 
-    This environment enables travel between all nodes in the network and 
+    This environment enables travel between all nodes in the network and
     incurs cost based on the Euclidean distance between nodes. The goal is to
-    minimize the cost to traverse all of the nodes in the network exactly 
-    once. The agent incurs a large penalty and ends the episode if it moves to 
-    a node more than once. All connections are bi-directional meaning if a 
-    connection between nodes n and m exist, then the agent can move in either 
-    direction. The network is randomly generated with N nodes when the 
-    environment is initialized using or_gym.make(). 
-    
+    minimize the cost to traverse all of the nodes in the network exactly
+    once. The agent incurs a large penalty and ends the episode if it moves to
+    a node more than once. All connections are bi-directional meaning if a
+    connection between nodes n and m exist, then the agent can move in either
+    direction. The network is randomly generated with N nodes when the
+    environment is initialized using or_gym.make().
+
     Observation:
         Type: Box
         0: Current Node
@@ -221,7 +230,8 @@ class TSPDistCost(TSPEnv):
 
     Episode Termination:
         All nodes have been visited or a node has been visited again.
-    '''
+    """
+
     def __init__(self, *args, **kwargs):
         self.N = 50
         self.invalid_action_cost = -100
@@ -231,19 +241,21 @@ class TSPDistCost(TSPEnv):
         self.coords = self._generate_coordinates()
         self.distance_matrix = self._get_distance_matrix()
 
-        self.obs_dim = 1+self.N
+        self.obs_dim = 1 + self.N
         obs_space = spaces.Box(-1, self.N, shape=(self.obs_dim,), dtype=np.int32)
         if self.mask:
-            self.observation_space = spaces.Dict({
-                "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
-                "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
-                "state": obs_space
-            })
+            self.observation_space = spaces.Dict(
+                {
+                    "action_mask": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
+                    "avail_actions": spaces.Box(0, 1, shape=(self.N,), dtype=np.int8),
+                    "state": obs_space,
+                }
+            )
         else:
             self.observation_space = obs_space
 
         self.action_space = spaces.Discrete(self.N)
-        
+
         self.reset()
 
     def _STEP(self, action):
@@ -256,13 +268,13 @@ class TSPDistCost(TSPEnv):
             reward = self.distance_matrix[self.current_node, action]
             self.current_node = action
             self.visit_log[self.current_node] = 1
-            
+
         self.state = self._update_state()
         # See if all nodes have been visited
         unique_visits = self.visit_log.sum()
         if unique_visits == self.N:
             done = True
-            
+
         return self.state, reward, done, {}
 
     def _RESET(self):
@@ -270,7 +282,7 @@ class TSPDistCost(TSPEnv):
         self.current_node = np.random.choice(self.nodes)
         self.visit_log = np.zeros(self.N)
         self.visit_log[self.current_node] += 1
-        
+
         self.state = self._update_state()
         return self.state
 
@@ -287,18 +299,18 @@ class TSPDistCost(TSPEnv):
                     continue
                 d = self._get_node_distance(self.coords[:, i], self.coords[:, j])
                 distance_matrix[i, j] += d
-                
+
         distance_matrix += distance_matrix.T
         return distance_matrix
 
     def _update_state(self):
-        mask = np.where(self.visit_log==0, 0 , 1)
+        mask = np.where(self.visit_log == 0, 0, 1)
         obs = np.hstack([self.current_node, mask])
         if self.mask:
             state = {
                 "avail_actions": np.ones(self.N),
                 "action_mask": mask,
-                "state": obs
+                "state": obs,
             }
         else:
             state = obs.copy()
@@ -309,4 +321,3 @@ class TSPDistCost(TSPEnv):
 
     def reset(self):
         return self._RESET()
-    
