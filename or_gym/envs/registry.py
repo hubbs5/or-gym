@@ -1,4 +1,4 @@
-from gym.envs.registration import EnvRegistry
+from gymnasium.envs.registration import EnvRegistry
 
 registry = EnvRegistry()
 

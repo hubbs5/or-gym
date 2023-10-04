@@ -9,7 +9,7 @@ Created on Thu Dec 30 16:04:12 2021
 @author: Philipp Willms
 """
 import or_gym
-import gym
+import gymnasium as gym
 import numpy as np
 
 

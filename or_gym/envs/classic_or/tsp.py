@@ -1,6 +1,6 @@
 import numpy as np
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 from or_gym import utils
 from copy import copy, deepcopy
 import matplotlib.pyplot as plt

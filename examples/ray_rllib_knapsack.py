@@ -11,7 +11,7 @@ from ray.rllib.models import ModelCatalog
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.tf.fcnet import FullyConnectedNetwork
 from ray.rllib.utils import try_import_tf
-from gym import spaces
+from gymnasium import spaces
 import or_gym
 from or_gym.utils import create_env
 import numpy as np

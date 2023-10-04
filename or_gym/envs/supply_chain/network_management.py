@@ -4,7 +4,7 @@ Hector Perez, Christian Hubbs, Can Li
 9/14/2020
 '''
 
-import gym
+import gymnasium as gym
 import itertools
 import numpy as np
 import networkx as nx

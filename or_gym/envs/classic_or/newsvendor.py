@@ -3,8 +3,8 @@ Example taken from Balaji et al.
 Paper: https://arxiv.org/abs/1911.10641
 GitHub: https://github.com/awslabs/or-rl-benchmarks
 '''
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import itertools
 import numpy as np
 from collections.abc import Iterable
