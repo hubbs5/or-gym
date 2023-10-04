@@ -18,7 +18,19 @@ classifiers = [
 packages = [{include = "or_gym"}]
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.9,<3.13"
+gymnasium = "^0.29.1"
+numpy = "^1.26.0"
+pandas = "^2.1.1"
+scipy = "^1.11.3"
+matplotlib = "^3.8.0"
+networkx = "^3.1"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
+black = "^23.9.1"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
 
 [build-system]
 requires = ["poetry-core"]
