@@ -134,7 +134,7 @@ class KnapsackEnv(gym.Env):
         self.current_weight = 0
         self._collected_items.clear()
         self._update_state()
-        return self.state
+        return self.state, {}
 
     def sample_action(self):
         return np.random.choice(self.item_numbers)
@@ -145,7 +145,7 @@ class KnapsackEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()
 
     def step(self, action):
@@ -291,7 +291,7 @@ class BinaryKnapsackEnv(KnapsackEnv):
         self.current_weight = 0
         self.item_limits = np.ones(self.N, dtype=np.int32)
         self._update_state()
-        return self.state
+        return self.state, {}
 
 
 class BoundedKnapsackEnv(KnapsackEnv):
@@ -429,7 +429,7 @@ class BoundedKnapsackEnv(KnapsackEnv):
 
         self.current_weight = 0
         self._update_state()
-        return self.state
+        return self.state, {}
 
 
 class OnlineKnapsackEnv(BoundedKnapsackEnv):
@@ -561,4 +561,4 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self.current_weight = 0
         self.step_counter = 0
         self._update_state()
-        return self.state
+        return self.state, {}
