@@ -71,7 +71,6 @@ class BinPackingEnv(gym.Env):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
 
     def _STEP(self, action):
@@ -214,7 +213,6 @@ class BinPackingLW1(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
 
 
@@ -230,7 +228,6 @@ class BinPackingPP0(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
 
 
@@ -249,7 +246,6 @@ class BinPackingPP1(BinPackingPP0):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
 
 
@@ -265,7 +261,6 @@ class BinPackingBW0(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
 
 
@@ -284,5 +279,4 @@ class BinPackingBW1(BinPackingBW0):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.seed()
         self.state = self.reset()
