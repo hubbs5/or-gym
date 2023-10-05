@@ -94,7 +94,6 @@ class PortfolioOptEnv(gym.Env):
             -2000, 2000, shape=(self.num_assets,), dtype=np.float32
         )
 
-        self.seed()
         self.reset()
 
     def _RESET(self):
@@ -177,9 +176,8 @@ class PortfolioOptEnv(gym.Env):
     def step(self, action):
         return self._STEP(action)
 
-    def reset(self):
+    def reset(self, seed=None):
+        super().reset(seed=seed)
         return self._RESET()
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    
