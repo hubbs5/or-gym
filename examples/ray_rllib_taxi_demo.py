@@ -26,7 +26,7 @@ config = {
     # Only for evaluation runs, render the env.
     "evaluation_config": {
         "render_env": True,
-    }
+    },
 }
 
 # Create our RLlib Trainer.

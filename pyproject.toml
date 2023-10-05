@@ -1,33 +1,41 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
+[tool.poetry]
 name = "or-gym"
 version = "0.5.0"
 authors = [
-  { name="Christian Hubbs", email="christiandhubbs@gmail.com"},
-  { name="Owais Sarwar", email="owais.sarwar@gmail.com"},
-  { name="Hector Perez", email="hdperez@cmu.edu"}
+  "Christian Hubbs <christiandhubbs@gmail.com>",
+  "Owais Sarwar <owais.sarwar@gmail.com>",
+  "Hector Perez <hdperez@cmu.edu>",
 ]
+maintainers = ["Shun Makino <shun.makino@flect.co.jp>"]
 description = "OR-Gym: A set of environments for developing reinforcement learning agents for OR problems."
 readme = "README.md"
-license = { file="LICENSE" }
-requires-python = ">=3.7"
-dependencies = [
-    'gym<=0.21.0',
-    'numpy>=1.16.1',
-    'pandas>=1.2',
-    'scipy>=1.0',
-    'matplotlib>=3.1',
-    'networkx>=2.3'
-]
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+packages = [{include = "or_gym"}]
 
-[project.urls]
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+gymnasium = "^0.29.1"
+numpy = "^1.26.0"
+pandas = "^2.1.1"
+scipy = "^1.11.3"
+matplotlib = "^3.8.0"
+networkx = "^3.1"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
+black = "^23.9.1"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
 "Homepage" = "https://github.com/hubbs5/or-gym"
 "Bug Tracker" = "https://github.com/hubbs5/or-gym/issues"
