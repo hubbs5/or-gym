@@ -9,7 +9,7 @@ from collections import deque
 
 import gymnasium as gym
 import numpy as np
-from scipy.stats import *
+from scipy.stats import poisson, binom, randint, geom
 
 from or_gym.utils import assign_env_config
 
