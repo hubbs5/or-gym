@@ -452,5 +452,5 @@ class VehicleRoutingEnv(gym.Env):
     def step(self, action):
         return self._STEP(action)
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()

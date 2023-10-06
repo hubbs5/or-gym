@@ -191,7 +191,7 @@ class BinPackingEnv(gym.Env):
             + " ({}) and sizes ({})".format(len(self.item_probs), len(self.item_sizes))
         )
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()
 
     def step(self, action):

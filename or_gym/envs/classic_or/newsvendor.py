@@ -127,7 +127,7 @@ class NewsvendorEnv(gym.Env):
 
         return self.state, {}
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()
 
     def step(self, action):
