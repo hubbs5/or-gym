@@ -10,8 +10,7 @@ from gymnasium.core import (
     RewardWrapper,
     Wrapper,
 )
-from gymnasium.envs import make, register, spec
+from gymnasium.envs.registration import make, register, spec
 
 from or_gym.envs import classic_or, finance, supply_chain
 from or_gym.utils import *
-from or_gym.version import VERSION as __version__
