@@ -1,5 +1,4 @@
 from gymnasium.envs.registration import register
-from gymnasium.wrappers.compatibility import EnvCompatibility
 from gymnasium.wrappers.step_api_compatibility import StepAPICompatibility
 
 # Knapsack Environments
@@ -29,39 +28,59 @@ register(
 
 # Bin Packing Environments
 register(
-    id="BinPacking-v0", entry_point="or_gym.envs.classic_or.binpacking:BinPackingEnv", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v0",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="BinPacking-v1", entry_point="or_gym.envs.classic_or.binpacking:BinPackingLW1", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v1",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingLW1",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="BinPacking-v2", entry_point="or_gym.envs.classic_or.binpacking:BinPackingPP0", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v2",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingPP0",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="BinPacking-v3", entry_point="or_gym.envs.classic_or.binpacking:BinPackingPP1", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v3",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingPP1",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="BinPacking-v4", entry_point="or_gym.envs.classic_or.binpacking:BinPackingBW0", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v4",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingBW0",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="BinPacking-v5", entry_point="or_gym.envs.classic_or.binpacking:BinPackingBW1", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="BinPacking-v5",
+    entry_point="or_gym.envs.classic_or.binpacking:BinPackingBW1",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 # Newsvendor Envs
 register(
-    id="Newsvendor-v0", entry_point="or_gym.envs.classic_or.newsvendor:NewsvendorEnv", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="Newsvendor-v0",
+    entry_point="or_gym.envs.classic_or.newsvendor:NewsvendorEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 # Virtual Machine Packing Envs
-register(id="VMPacking-v0", entry_point="or_gym.envs.classic_or.vmpacking:VMPackingEnv",additional_wrappers=(StepAPICompatibility.wrapper_spec(),))
+register(
+    id="VMPacking-v0",
+    entry_point="or_gym.envs.classic_or.vmpacking:VMPackingEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
+)
 
 register(
-    id="VMPacking-v1", entry_point="or_gym.envs.classic_or.vmpacking:TempVMPackingEnv", additional_wrappers=(StepAPICompatibility.wrapper_spec(),)
+    id="VMPacking-v1",
+    entry_point="or_gym.envs.classic_or.vmpacking:TempVMPackingEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 # Vehicle Routing Envs
@@ -72,9 +91,17 @@ register(
 )
 
 # TSP
-register(id="TSP-v0", entry_point="or_gym.envs.classic_or.tsp:TSPEnv", additional_wrappers=(StepAPICompatibility.wrapper_spec(),))
+register(
+    id="TSP-v0",
+    entry_point="or_gym.envs.classic_or.tsp:TSPEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
+)
 
-register(id="TSP-v1", entry_point="or_gym.envs.classic_or.tsp:TSPDistCost",additional_wrappers=(StepAPICompatibility.wrapper_spec(),))
+register(
+    id="TSP-v1",
+    entry_point="or_gym.envs.classic_or.tsp:TSPDistCost",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
+)
 
 # Inventory Management Envs
 register(
