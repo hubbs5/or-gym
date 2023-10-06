@@ -1,18 +1,30 @@
 from gymnasium.envs.registration import register
+from gymnasium.wrappers.compatibility import EnvCompatibility
+from gymnasium.wrappers.step_api_compatibility import StepAPICompatibility
 
 # Knapsack Environments
-register(id="Knapsack-v0", entry_point="or_gym.envs.classic_or.knapsack:KnapsackEnv")
-
 register(
-    id="Knapsack-v1", entry_point="or_gym.envs.classic_or.knapsack:BinaryKnapsackEnv"
+    id="Knapsack-v0",
+    entry_point="or_gym.envs.classic_or.knapsack:KnapsackEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="Knapsack-v2", entry_point="or_gym.envs.classic_or.knapsack:BoundedKnapsackEnv"
+    id="Knapsack-v1",
+    entry_point="or_gym.envs.classic_or.knapsack:BinaryKnapsackEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 register(
-    id="Knapsack-v3", entry_point="or_gym.envs.classic_or.knapsack:OnlineKnapsackEnv"
+    id="Knapsack-v2",
+    entry_point="or_gym.envs.classic_or.knapsack:BoundedKnapsackEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
+)
+
+register(
+    id="Knapsack-v3",
+    entry_point="or_gym.envs.classic_or.knapsack:OnlineKnapsackEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
 
 # Bin Packing Environments
@@ -88,4 +100,5 @@ register(
 register(
     id="PortfolioOpt-v0",
     entry_point="or_gym.envs.finance.portfolio_opt:PortfolioOptEnv",
+    additional_wrappers=(StepAPICompatibility.wrapper_spec(),),
 )
