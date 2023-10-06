@@ -258,7 +258,7 @@ class InvManagementMasterEnv(gym.Env):
         # set state
         self._update_state()
 
-        return self.state
+        return self.state, {}
 
     def _update_state(self):
         m = self.num_stages - 1

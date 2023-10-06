@@ -429,7 +429,7 @@ class NetInvMgmtMasterEnv(gym.Env):
         # set state
         self._update_state()
 
-        return self.state
+        return self.state, {}
 
     def _update_state(self):
         # State is a concatenation of demand, inventory, and pipeline at each time step

@@ -104,7 +104,7 @@ class TSPEnv(gym.Env):
         self.visit_log[self.current_node] += 1
 
         self.state = self._update_state()
-        return self.state
+        return self.state, {}
 
     def _update_state(self):
         node_connections = self.adjacency_matrix.copy()
@@ -284,7 +284,7 @@ class TSPDistCost(TSPEnv):
         self.visit_log[self.current_node] += 1
 
         self.state = self._update_state()
-        return self.state
+        return self.state, {}
 
     def _generate_coordinates(self):
         return np.vstack([np.random.rand(self.N), np.random.rand(self.N)])

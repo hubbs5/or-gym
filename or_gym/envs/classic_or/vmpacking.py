@@ -87,7 +87,7 @@ class VMPackingEnv(gym.Env):
             ),
         }
         self.assignment = {}
-        return self.state
+        return self.state, {}
 
     def _STEP(self, action):
         done = False
@@ -193,7 +193,7 @@ class TempVMPackingEnv(VMPackingEnv):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
     def step(self, action):
         done = False
@@ -254,7 +254,7 @@ class TempVMPackingEnv(VMPackingEnv):
         self.demand = self.generate_demand()
         self.durations = generate_durations(self.demand)
         self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
-        return self.state
+        return self.state, {}
 
     def step(self, action):
         return self._STEP(action)

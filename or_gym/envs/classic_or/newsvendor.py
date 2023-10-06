@@ -125,7 +125,7 @@ class NewsvendorEnv(gym.Env):
 
         self.step_count = 0
 
-        return self.state
+        return self.state, {}
 
     def reset(self):
         return self._RESET()

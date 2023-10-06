@@ -491,7 +491,7 @@ class OnlineKnapsackEnv(BoundedKnapsackEnv):
         self.step_counter = 0
         self.step_limit = 50
 
-        self.state = self.reset()
+        self.state, _ = self.reset()
         self._max_reward = 600
 
     def _STEP(self, action):
