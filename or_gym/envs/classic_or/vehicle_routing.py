@@ -323,7 +323,7 @@ class VehicleRoutingEnv(gym.Env):
         self.zone_loc = self._get_zones()
         self.order_dict = {}
         self.state = self._update_state()
-        return self.state
+        return self.state, {}
 
     def _update_order_times(self):
         for k, v in self.order_dict.items():
@@ -452,5 +452,5 @@ class VehicleRoutingEnv(gym.Env):
     def step(self, action):
         return self._STEP(action)
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()

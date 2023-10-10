@@ -105,7 +105,7 @@ class PortfolioOptEnv(gym.Env):
             [self.initial_cash, self.asset_prices[:, self.step_count], self.holdings],
             dtype=np.float32,
         )
-        return self.state
+        return self.state, {}
 
     def _generate_asset_prices(self):
         asset_prices = np.array(
@@ -179,5 +179,3 @@ class PortfolioOptEnv(gym.Env):
     def reset(self, seed=None):
         super().reset(seed=seed)
         return self._RESET()
-
-    

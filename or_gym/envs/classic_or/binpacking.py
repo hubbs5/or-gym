@@ -71,7 +71,7 @@ class BinPackingEnv(gym.Env):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
     def _STEP(self, action):
         done = False
@@ -150,7 +150,7 @@ class BinPackingEnv(gym.Env):
         self.bin_levels = [0] * self.bin_capacity
         self.item_size = self.get_item()
         self.state = self._update_state()
-        return self.state
+        return self.state, {}
 
     def _build_obs_space(self):
         if self.mask:
@@ -191,7 +191,7 @@ class BinPackingEnv(gym.Env):
             + " ({}) and sizes ({})".format(len(self.item_probs), len(self.item_sizes))
         )
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()
 
     def step(self, action):
@@ -213,7 +213,7 @@ class BinPackingLW1(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
 
 class BinPackingPP0(BinPackingEnv):
@@ -228,7 +228,7 @@ class BinPackingPP0(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
 
 class BinPackingPP1(BinPackingPP0):
@@ -246,7 +246,7 @@ class BinPackingPP1(BinPackingPP0):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
 
 class BinPackingBW0(BinPackingEnv):
@@ -261,7 +261,7 @@ class BinPackingBW0(BinPackingEnv):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()
 
 
 class BinPackingBW1(BinPackingBW0):
@@ -279,4 +279,4 @@ class BinPackingBW1(BinPackingBW0):
         assign_env_config(self, kwargs)
         self._build_obs_space()
         self._check_settings()
-        self.state = self.reset()
+        self.state, _ = self.reset()

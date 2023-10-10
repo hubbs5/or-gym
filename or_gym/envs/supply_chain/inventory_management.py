@@ -9,7 +9,7 @@ from collections import deque
 
 import gymnasium as gym
 import numpy as np
-from scipy.stats import *
+from scipy.stats import poisson, binom, randint, geom
 
 from or_gym.utils import assign_env_config
 
@@ -258,7 +258,7 @@ class InvManagementMasterEnv(gym.Env):
         # set state
         self._update_state()
 
-        return self.state
+        return self.state, {}
 
     def _update_state(self):
         m = self.num_stages - 1
@@ -448,7 +448,7 @@ class InvManagementMasterEnv(gym.Env):
     def step(self, action):
         return self._STEP(action)
 
-    def reset(self):
+    def reset(self, seed=None):
         return self._RESET()
 
 
