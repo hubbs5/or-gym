@@ -52,8 +52,8 @@ class TestEnv:
                     state
                 ), f"State out of range of observation space: {state}"
                 action = env.action_space.sample()
-                state, reward, done, info = env.step(action)
-                if done:
+                observation, reward, terminated, truncated, info = env.step(action)
+                if done:=terminated or truncated:
                     break
 
         assert done
