@@ -172,7 +172,7 @@ class TempVMPackingEnv(VMPackingEnv):
         super().__init__()       
         self.state = self.reset()
 
-    def step(self, action):
+    def _STEP(self, action):
         done = False
         pm_state = self.state["state"][:-1]
         demand = self.state["state"][-1, 1:]
@@ -198,7 +198,8 @@ class TempVMPackingEnv(VMPackingEnv):
                 # Remove process from PM
                 if self.durations[process] == self.current_step:
                     pm = self.assignment[process] # Find PM where process was assigned
-                    pm_state[pm, self.load_idx] -= self.demand[process]
+                    pm_state[pm, self.load_idx] -= self.demand[process][1:] # Index to exclude first element of demand array
+                    pm_state[pm, self.load_idx] = np.where(pm_state[pm, self.load_idx]<self.tol, 0., pm_state[pm, self.load_idx]) # Address rounding
                     # Shut down PM's if state is 0
                     if pm_state[pm, self.load_idx].sum() == 0:
                         pm_state[pm, 0] = 0
@@ -212,21 +213,29 @@ class TempVMPackingEnv(VMPackingEnv):
     def update_state(self, pm_state):
         # Make action selection impossible if the PM would exceed capacity
         step = self.current_step if self.current_step < self.step_limit else self.step_limit-1
-        data_center = np.vstack([pm_state, self.demand[step]])
+        data_center = np.vstack([pm_state, self.demand[step]], dtype=np.float32)
         data_center = np.where(data_center>1,1,data_center) # Fix rounding errors
         self.state["state"] = data_center
-        self.state["action_mask"] = np.ones(self.n_pms)
-        self.state["avail_actions"] = np.ones(self.n_pms)
+        self.state["action_mask"] = np.ones(self.n_pms, dtype=np.uint8)
+        self.state["avail_actions"] = np.ones(self.n_pms, dtype=np.uint8)
         if self.mask:
             action_mask = (pm_state[:, 1:] + self.demand[step, 1:]) <= 1
-            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(int)
+            self.state["action_mask"] = (action_mask.sum(axis=1)==2).astype(np.uint8)
         
     def _RESET(self):
         self.current_step = 0
         self.assignment = {}
         self.demand = self.generate_demand()
         self.durations = generate_durations(self.demand)
-        self.state = (np.zeros((self.n_pms, 3)), self.demand[0])
+        
+        self.state = {
+            "action_mask": np.ones(self.n_pms, dtype=np.uint8),
+            "avail_actions": np.ones(self.n_pms, dtype=np.uint8),
+            "state": np.vstack([
+                np.zeros((self.n_pms, 3)),
+                self.demand[self.current_step]],
+                dtype=np.float32)
+        }
         return self.state
 
     def step(self, action):
