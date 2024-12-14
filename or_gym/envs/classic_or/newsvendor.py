@@ -83,7 +83,7 @@ class NewsvendorEnv(gym.Env):
         sales = min(inv_on_hand, demand) * self.price
         excess_inventory = max(0, inv_on_hand - demand)
         short_inventory = max(0, demand - inv_on_hand)
-        purchase_cost = excess_inventory * self.cost * order_qty * \
+        purchase_cost = self.cost * order_qty * \
             self.gamma ** self.lead_time
         holding_cost = excess_inventory * self.h
         lost_sales_penalty = short_inventory * self.k
